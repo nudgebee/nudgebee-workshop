@@ -1,0 +1,65 @@
+# ==============================================================================
+# SRE Agent Workshop · Agent Configuration (config.yaml)
+# ==============================================================================
+# Attendees: Modify this file to select models, toggle tools, adjust limits,
+# and select target namespaces. No Python coding required!
+
+# ------------------------------------------------------------------------------
+# 1. MODEL SELECTION (Module 2: Small vs Frontier Models)
+# ------------------------------------------------------------------------------
+# Available Workshop Models on NudgeBee Gateway:
+#   - "gemini-3.8-flash"                       # High-end frontier reasoning model (fast, deep)
+#   - "qwen/qwen3-235b-a22b-instruct-2507-maas" # High-end open model (235B parameters, fast tool calling)
+#   - "NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"    # Small model (great for tool ceiling & drift experiments)
+#   - "mock"                                   # Deterministic simulation (0 external API calls)
+model: "gemini-3.8-flash"
+
+# Gateway credentials (preconfigured for workshop cluster)
+api_base: "https://llm-gateway.dev.nudgebee.pollux.in/v1"
+api_key: "sk-nb-5c514d14e03d4881e1f072d063ae902cb129a4bf08268b99b35be8f4ecdf63d3"
+
+# ------------------------------------------------------------------------------
+# 2. ACTIVE TOOLS (Module 3 & 6: Tool Accuracy & Tool Ceilings)
+# Comment out any tool to observe how the agent behaves under tool deprivation!
+# ------------------------------------------------------------------------------
+enabled_tools:
+  - query_prometheus         # Instant PromQL queries for error rates, latency percentiles, and memory soak
+  - get_k8s_events           # Inspects pod restarts, crashloops, and OOMKills
+  - query_pod_logs           # Fetches and filters recent container stdout/stderr
+  - inspect_topology         # 1-hop microservice dependency lookup (Module 5)
+  - ask_human_approval       # Human-in-the-loop security gate before mutating remediation (Module 7)
+  - get_deploy_history       # Rollout history, commit hashes, author & config diffs (Session 1 & 2C)
+  - search_incident_history   # Episodic memory store of past post-mortems and prior fixes (Session 2A)
+
+# ------------------------------------------------------------------------------
+# 3. TARGET ENVIRONMENT & SCENARIO
+# ------------------------------------------------------------------------------
+namespace: "group-1"
+
+# Available Scenarios (from Workshop Curriculum):
+#   - "badDeploy1405"        # Session 1 & 2C: Checkout latency spike after 14:05 timeout deploy
+#   - "episodicRecurrence"   # Session 2A: Connection pool starvation matching INC-4092 (14 March)
+#   - "postgresFailure"      # Module 2 & 3: Database pool starvation / unreachable (gRPC 13 INTERNAL)
+#   - "emailMemoryLeak"      # Module 4: Unbounded heap buffer growth leading to OOMKill Exit Code 137
+#   - "postgresSlow"         # Module 4: Injected database query sleep (p99 latency without 500s)
+#   - "poisonedEntity"       # Session 4: Red-team hallucination & abstention testing (stale/fake entity)
+scenario: "episodicRecurrence"
+
+# ------------------------------------------------------------------------------
+# 4. EPISODIC MEMORY (Session 2A: Memory ON vs Memory OFF)
+# ------------------------------------------------------------------------------
+# Turn 1: false -> Agent investigates from scratch and appends post-mortem to memory/
+# Turn 2: true  -> Agent recalls saved post-mortems from memory/ and references prior fixes!
+enable_memory: true
+
+# ------------------------------------------------------------------------------
+# 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)
+# ------------------------------------------------------------------------------
+# Options: "structured_summary" (2k tokens) | "filtered_regex" (8k tokens) | "raw_80k" (80k uncurated dump)
+context_mode: "filtered_regex"
+enable_prompt_caching: true
+
+# ------------------------------------------------------------------------------
+# 5. INVESTIGATION LIMITS
+# ------------------------------------------------------------------------------
+max_turns: 10

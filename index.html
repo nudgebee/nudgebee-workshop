@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic AIOps Workshop Tools · Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          },
+          colors: {
+            canvas: '#070A10',
+            card: '#0F1522',
+            'card-subtle': '#141C2E',
+            accent: '#00F2FE',
+            'accent-purple': '#A855F7',
+            'accent-emerald': '#10B981',
+            'accent-amber': '#F59E0B',
+            'border-subtle': '#1B2436',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-canvas text-slate-100 font-sans min-h-screen p-6 lg:p-12 flex flex-col justify-between selection:bg-accent selection:text-black">
+
+  <div class="max-w-6xl mx-auto w-full">
+    <!-- Header -->
+    <header class="border-b border-border-subtle pb-8 mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-3 justify-center sm:justify-start">
+          <span class="px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span> Executive SRE Masterclass
+          </span>
+          <span class="text-xs font-mono text-slate-400">Production Syllabus</span>
+        </div>
+        <h1 class="text-4xl lg:text-5xl font-display font-bold text-white tracking-tight">Agentic AIOps in Production</h1>
+        <p class="text-base text-slate-400 mt-2 max-w-2xl">
+          Hands-on decision frameworks, live multi-agent incident labs, and unit economics simulators designed for engineering leadership.
+        </p>
+      </div>
+      <div class="text-center sm:text-right font-mono text-xs text-slate-400">
+        <span class="text-slate-300 block font-semibold">Self-Service Lab Suite</span>
+        <span>4 Core Sessions · Run on any device</span>
+      </div>
+    </header>
+
+    <!-- 4-Session Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+      <!-- SESSION 1: Buy vs Build Scorecard -->
+      <div class="group bg-card border border-border-subtle hover:border-accent/50 rounded-2xl p-7 transition-all duration-300 hover:shadow-2xl hover:shadow-accent/5 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Session 1 · 30 Min
+            </span>
+            <span class="text-[11px] font-mono text-slate-400">Interactive Tool</span>
+          </div>
+          <h2 class="text-2xl font-display font-bold text-white group-hover:text-accent transition-colors">
+            Architectural Decoupling: Buy vs. Build
+          </h2>
+          <p class="text-sm text-slate-400 mt-2.5 leading-relaxed">
+            Score your organization across 6 operational axes (Telemetry, CMDB, AI Capacity, Runway, Regulatory Egress, Runbooks) to reach an objective verdict.
+          </p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono">
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-accent font-bold">✓</span> Evaluates: Build in-house vs. Buy platform vs. The Hybrid Seam
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-accent font-bold">✓</span> Real-time anonymous sync to stage scatter plot
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <a href="./scorecard.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-black font-mono font-bold text-xs hover:opacity-90 transition">
+            Launch Scorecard <span>→</span>
+          </a>
+          <a href="./projector.html" target="_blank" class="text-xs font-mono text-slate-400 hover:text-accent transition">
+            Open Stage Map ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- SESSION 2: Multi-Agent RCA Under Fire (Hands-On Lab) -->
+      <div class="group bg-card border border-border-subtle hover:border-accent-emerald/50 rounded-2xl p-7 transition-all duration-300 hover:shadow-2xl hover:shadow-accent-emerald/5 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-accent-emerald/5 rounded-full blur-2xl group-hover:bg-accent-emerald/10 transition-colors"></div>
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent-emerald"></span> Session 2 · 4 Hours · 10 Pairs
+            </span>
+            <span class="text-[11px] font-mono text-emerald-400 font-semibold">8-Module Masterclass</span>
+          </div>
+          <h2 class="text-2xl font-display font-bold text-white group-hover:text-accent-emerald transition-colors">
+            Building AI Agents for SRE &amp; AIOps
+          </h2>
+          <p class="text-sm text-slate-400 mt-2.5 leading-relaxed">
+            Hands-on systems engineering lab. Build and evaluate an incident agent across 8 modules using a single running payments-service latency incident. Measure token cost, latency, and accuracy in pairs.
+          </p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono">
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-accent-emerald font-bold">✓</span> Modules 1–3: Model drift eval gates, small model ROI, &amp; tool harnesses
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-accent-emerald font-bold">✓</span> Modules 4–5: Context stuffing vs. filtering &amp; Knowledge Graph blast radius
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-accent-emerald font-bold">✓</span> Modules 6–8: 50-tool ceiling routing, SRE skills, &amp; memory tier sizing
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <a href="./lab.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-emerald text-black font-mono font-bold text-xs hover:opacity-90 transition">
+            Launch 8-Module Playbook <span>→</span>
+          </a>
+          <a href="./scoreboard.html" target="_blank" class="text-xs font-mono text-purple-400 hover:text-purple-300 transition flex items-center gap-1">
+            <span>📊</span> Room Scoreboard ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- SESSION 3: Unit Economics & Cost Engineering -->
+      <div class="group bg-card border border-border-subtle hover:border-accent-purple/50 rounded-2xl p-7 transition-all duration-300 hover:shadow-2xl hover:shadow-accent-purple/5 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-accent-purple/5 rounded-full blur-2xl group-hover:bg-accent-purple/10 transition-colors"></div>
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/60 text-purple-300 border border-purple-800/60 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent-purple"></span> Session 3 · 30 Min
+            </span>
+            <span class="text-[11px] font-mono text-slate-400">Interactive Tool</span>
+          </div>
+          <h2 class="text-2xl font-display font-bold text-white group-hover:text-purple-300 transition-colors">
+            Production Unit Economics Calculator
+          </h2>
+          <p class="text-sm text-slate-400 mt-2.5 leading-relaxed">
+            Simulate token burn and monthly infrastructure bill across an enterprise SRE incident funnel (75,000 alerts &rarr; 7,500 episodes &rarr; 75 real incidents).
+          </p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono">
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-purple-400 font-bold">✓</span> Compare Naive vs. Tiered Routing vs. Hardened Caching
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-purple-400 font-bold">✓</span> Dual sliders for Normal (P3) and Major (P1) loop depths
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <a href="./calculator.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-purple text-white font-mono font-bold text-xs hover:opacity-90 transition">
+            Launch Calculator <span>→</span>
+          </a>
+          <span class="text-xs font-mono text-slate-400">3-Tier Cost Pyramid</span>
+        </div>
+      </div>
+
+      <!-- SESSION 4: Enterprise Governance & Guardrails -->
+      <div class="group bg-card border border-border-subtle hover:border-amber-500/50 rounded-2xl p-7 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/5 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors"></div>
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-950/60 text-amber-300 border border-amber-800/60 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent-amber"></span> Session 4 · 30 Min
+            </span>
+            <span class="text-[11px] font-mono text-slate-400">Interactive Tool</span>
+          </div>
+          <h2 class="text-2xl font-display font-bold text-white group-hover:text-amber-300 transition-colors">
+            Enterprise Guardrails & Day-2 Operations
+          </h2>
+          <p class="text-sm text-slate-400 mt-2.5 leading-relaxed">
+            Move safely from PoC to production. Establish least-privilege tool execution, destructive command blocking, hallucination traps, and complete auditability.
+          </p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono">
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-amber-400 font-bold">🛡️</span> Destructive command blocking (rm -rf, DROP TABLE, cascade reboot)
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-amber-400 font-bold">🛡️</span> Multi-tier RBAC approval policies & rollback automation
+            </div>
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-amber-400 font-bold">🛡️</span> Full audit trails: Replay prompt-and-tool chains turn-by-turn
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <a href="./guardrails.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 text-black font-mono font-bold text-xs hover:opacity-90 transition">
+            Launch Guardrails Simulator <span>→</span>
+          </a>
+          <span class="text-xs font-mono text-slate-400">Red-Team Sandbox</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Presenter Section: Stage Projector Link -->
+    <div class="bg-card-subtle border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">Presenter Screen</span>
+          <h3 class="text-base font-display font-bold text-white">Live Room Scatter Plot (Stage Display)</h3>
+        </div>
+        <p class="text-xs text-slate-400">
+          The main projector screen for the presenter. Aggregates attendee submissions anonymously in real time into the 4-quadrant decision map.
+        </p>
+      </div>
+      <a href="./projector.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-mono text-xs font-semibold whitespace-nowrap transition flex items-center justify-center gap-2">
+        <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        Open Projector View
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="max-w-6xl mx-auto w-full mt-10 pt-6 border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-3">
+    <div>NudgeBee Executive SRE Masterclass Series</div>
+    <div class="text-slate-400">Architecture · Enterprise Systems · Unit Economics · Production Guardrails</div>
+  </footer>
+
+</body>
+</html>

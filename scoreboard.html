@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRE Agent Builder Scoreboard · Room Live Metrics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          },
+          colors: {
+            canvas: '#070A10',
+            card: '#0F1522',
+            'card-subtle': '#141C2E',
+            accent: '#00F2FE',
+            'accent-emerald': '#10B981',
+            'accent-purple': '#A855F7',
+            'accent-amber': '#F59E0B',
+            'accent-rose': '#F43F5E',
+            'border-subtle': '#1B2436',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-canvas text-slate-100 font-sans min-h-screen p-6 lg:p-12 flex flex-col justify-between selection:bg-accent selection:text-black">
+
+  <div class="max-w-7xl mx-auto w-full">
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-6 mb-8 gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <a href="./index.html" class="text-xs font-mono text-slate-400 hover:text-accent transition flex items-center gap-1">
+            <span>←</span> Workshop Portal
+          </a>
+          <span class="text-slate-600">/</span>
+          <a href="./lab.html" class="text-xs font-mono text-slate-400 hover:text-accent-emerald transition flex items-center gap-1">
+            8-Module Lab Playbook
+          </a>
+          <span class="text-slate-600">/</span>
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-purple-950/60 text-purple-300 border border-purple-800/60">
+            Room Scoreboard
+          </span>
+        </div>
+        <h1 class="text-3xl font-display font-bold text-white">SRE Agent Builder: Live Room Scoreboard</h1>
+        <p class="text-sm text-slate-400 mt-1">Real-time token burn, latency, cost, and accuracy tracking across 10 participant pairs.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="syncStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></span>
+          <span>Connecting to Relay...</span>
+        </div>
+        <button onclick="seedDemoData()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-mono text-xs transition">
+          Seed Sample Data
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPI Banner -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono text-xs">
+      <div class="p-4 rounded-xl bg-card border border-border-subtle">
+        <span class="text-slate-500 block text-[10px] uppercase">Total Tokens Logged</span>
+        <span id="kpiTokens" class="text-2xl font-bold text-accent font-display">0</span>
+        <span class="text-slate-500 text-[10px] block mt-1">Across all completed pair runs</span>
+      </div>
+      <div class="p-4 rounded-xl bg-card border border-border-subtle">
+        <span class="text-slate-500 block text-[10px] uppercase">Total Room Spend</span>
+        <span id="kpiSpend" class="text-2xl font-bold text-accent-emerald font-display">$0.000</span>
+        <span class="text-slate-500 text-[10px] block mt-1">Simulated model API bills</span>
+      </div>
+      <div class="p-4 rounded-xl bg-card border border-border-subtle">
+        <span class="text-slate-500 block text-[10px] uppercase">Mean Tool Accuracy</span>
+        <span id="kpiAccuracy" class="text-2xl font-bold text-purple-400 font-display">0%</span>
+        <span class="text-slate-500 text-[10px] block mt-1">Against planted ground truth</span>
+      </div>
+      <div class="p-4 rounded-xl bg-card border border-border-subtle">
+        <span class="text-slate-500 block text-[10px] uppercase">Fastest Triage Turn</span>
+        <span id="kpiLatency" class="text-2xl font-bold text-amber-400 font-display">--</span>
+        <span class="text-slate-500 text-[10px] block mt-1">From alert to valid RCA</span>
+      </div>
+    </div>
+
+    <!-- Main Grid: Submission Form (Left) & Real-time Charts (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+
+      <!-- Pair Submission Drawer -->
+      <div class="lg:col-span-4 bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex items-center justify-between border-b border-border-subtle pb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-accent"></span>
+            <h2 class="text-base font-display font-bold text-white">Log Your Pair's Results</h2>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400">Live Sync</span>
+        </div>
+
+        <form id="submissionForm" onsubmit="handleFormSubmit(event)" class="space-y-4 text-xs font-mono">
+          <!-- Select Pair -->
+          <div>
+            <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Your Assigned Pair</label>
+            <select id="inputPair" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
+              <option value="Pair 01">Pair 01</option>
+              <option value="Pair 02">Pair 02</option>
+              <option value="Pair 03">Pair 03</option>
+              <option value="Pair 04">Pair 04</option>
+              <option value="Pair 05">Pair 05</option>
+              <option value="Pair 06">Pair 06</option>
+              <option value="Pair 07">Pair 07</option>
+              <option value="Pair 08">Pair 08</option>
+              <option value="Pair 09">Pair 09</option>
+              <option value="Pair 10">Pair 10</option>
+            </select>
+          </div>
+
+          <!-- Select Module -->
+          <div>
+            <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Workshop Module</label>
+            <select id="inputModule" onchange="updateModuleContext()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
+              <option value="M1">Module 1: Version Drift &amp; Eval Gates</option>
+              <option value="M2">Module 2: Small vs. Large Models</option>
+              <option value="M3">Module 3: Tool-Calling Accuracy</option>
+              <option value="M4">Module 4: Context Stuffing vs Filtered</option>
+              <option value="M5">Module 5: Blast Radius via KG</option>
+              <option value="M6">Module 6: Tool Count Ceiling (5 vs 60)</option>
+              <option value="M7">Module 7: SRE Skill Triggers</option>
+              <option value="M8">Module 8: Memory Tiers &amp; Sizing</option>
+            </select>
+          </div>
+
+          <!-- Model & Parameters -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Model Used</label>
+              <select id="inputModel" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
+                <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                <option value="GPT-4o">GPT-4o</option>
+                <option value="GPT-4o-mini">GPT-4o-mini</option>
+                <option value="Gemini 1.5 Pro">Gemini 1.5 Pro</option>
+                <option value="Gemini 1.5 Flash">Gemini 1.5 Flash</option>
+                <option value="Llama 3.1 8B">Llama 3.1 8B</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Accuracy / Match</label>
+              <div class="flex items-center">
+                <input type="number" id="inputAccuracy" min="0" max="100" value="90" required class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
+                <span class="ml-1 text-slate-500">%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tokens & Latency -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Tokens (In + Out)</label>
+              <input type="number" id="inputTokens" min="0" value="4500" required oninput="calculateCost()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Turn Latency (s)</label>
+              <input type="number" step="0.1" id="inputLatency" min="0" value="3.2" required class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
+            </div>
+          </div>
+
+          <!-- Auto-computed Cost -->
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+            <span class="text-slate-400 text-[11px]">Calculated Cost:</span>
+            <span id="displayCost" class="text-accent-emerald font-bold text-sm">$0.018</span>
+          </div>
+
+          <!-- Observations -->
+          <div>
+            <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Observation / Failure Note</label>
+            <input type="text" id="inputNotes" placeholder="e.g. Hallucinated memory limit; picked wrong schema" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent text-[11px]">
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-accent text-black font-mono font-bold text-xs hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40">
+            <span>⚡</span> Broadcast Result to Room
+          </button>
+        </form>
+      </div>
+
+      <!-- Real-time Room Charts (Right 8 Cols) -->
+      <div class="lg:col-span-8 space-y-6">
+        <!-- Chart 1: Tool Count Ceiling vs Accuracy (Module 6) -->
+        <div class="bg-card border border-border-subtle rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+            <div>
+              <h3 class="text-sm font-display font-bold text-white">Module 6: Tool-Count Ceiling vs Selection Accuracy</h3>
+              <p class="text-xs text-slate-400">Comparing accuracy dropoff and schema token overhead as tool count scales (5 &rarr; 20 &rarr; 60 tools).</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">M6 Key Finding</span>
+          </div>
+          <div class="h-56">
+            <canvas id="chartToolCeiling"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Small vs Large Model Trade-Off (Module 2) -->
+        <div class="bg-card border border-border-subtle rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+            <div>
+              <h3 class="text-sm font-display font-bold text-white">Module 2: Small vs. Frontier Model ROI</h3>
+              <p class="text-xs text-slate-400">Where smaller models achieve 95%+ accuracy at 1/10th the cost (e.g. log extraction).</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">M2 Economics</span>
+          </div>
+          <div class="h-56">
+            <canvas id="chartModelROI"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Aggregate Room Leaderboard Table -->
+    <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl mb-10 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-base font-display font-bold text-white">10-Pair Live Incident Matrix</h2>
+          <p class="text-xs text-slate-400">Every design decision tracked across tokens, latency, cost, and ground-truth accuracy.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="clearRoomData()" class="px-2.5 py-1 rounded bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/80 text-[10px] font-mono transition">
+            Reset Scoreboard
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left font-mono text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-[11px] uppercase">
+              <th class="py-2.5 px-3">Pair ID</th>
+              <th class="py-2.5 px-3">Active Module</th>
+              <th class="py-2.5 px-3">Model Architecture</th>
+              <th class="py-2.5 px-3">Tokens</th>
+              <th class="py-2.5 px-3">Turn Latency</th>
+              <th class="py-2.5 px-3">Accuracy</th>
+              <th class="py-2.5 px-3">Cost ($)</th>
+              <th class="py-2.5 px-3">Key Observation</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody" class="divide-y divide-slate-800/60 text-slate-300">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto w-full mt-6 pt-6 border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-3">
+    <div>NudgeBee Executive SRE Masterclass Series · Building AI Agents for SRE &amp; AIOps</div>
+    <div class="text-slate-400">Real-Time Room WebSocket Relay · EMQX Broker</div>
+  </footer>
+
+  <script>
+    // State
+    const pairsData = {};
+    for (let i = 1; i <= 10; i++) {
+      const id = 'Pair ' + (i < 10 ? '0' + i : i);
+      pairsData[id] = {
+        pair: id,
+        module: 'M1',
+        model: 'Claude 3.5 Sonnet',
+        tokens: 0,
+        latency: 0,
+        accuracy: 0,
+        cost: 0,
+        notes: 'Awaiting submission...'
+      };
+    }
+
+    // Cost Model lookup ($ per 1k tokens blended approx)
+    const MODEL_PRICES = {
+      'Claude 3.5 Sonnet': 0.005,
+      'GPT-4o': 0.006,
+      'GPT-4o-mini': 0.0003,
+      'Gemini 1.5 Pro': 0.004,
+      'Gemini 1.5 Flash': 0.0002,
+      'Llama 3.1 8B': 0.0001
+    };
+
+    function calculateCost() {
+      const model = document.getElementById('inputModel').value;
+      const tokens = parseInt(document.getElementById('inputTokens').value) || 0;
+      const rate = MODEL_PRICES[model] || 0.004;
+      const cost = (tokens / 1000) * rate;
+      document.getElementById('displayCost').innerText = '$' + cost.toFixed(4);
+      return cost;
+    }
+
+    document.getElementById('inputModel').addEventListener('change', calculateCost);
+
+    function updateModuleContext() {
+      const m = document.getElementById('inputModule').value;
+      const notes = document.getElementById('inputNotes');
+      if (m === 'M1') notes.placeholder = 'e.g. 3 drift mismatches observed between v1 and v2';
+      else if (m === 'M2') notes.placeholder = 'e.g. Small model caught log error with 98% accuracy';
+      else if (m === 'M3') notes.placeholder = 'e.g. Model called query_logs before get_metrics';
+      else if (m === 'M4') notes.placeholder = 'e.g. 80k raw context caused 1 planted hallucination';
+      else if (m === 'M5') notes.placeholder = 'e.g. 1-hop graph resolved blast radius in 240ms';
+      else if (m === 'M6') notes.placeholder = 'e.g. Accuracy dropped from 93% (5 tools) to 65% (60 tools)';
+      else if (m === 'M7') notes.placeholder = 'e.g. Skill trigger matched accurately on kafka-lag alert';
+      else if (m === 'M8') notes.placeholder = 'e.g. Sized 3-tier memory at $0.04/incident';
+    }
+
+    // MQTT Relay Connection
+    const MQTT_BROKER = "broker.emqx.io";
+    const MQTT_PORT = 8084; // Secure WSS
+    const MQTT_TOPIC = "nudgebee/workshop/scoreboard/v1";
+    const CLIENT_ID = "nb_sb_" + Math.random().toString(16).substring(2, 10);
+    let mqttClient = null;
+
+    function initMQTT() {
+      const statusEl = document.getElementById('syncStatus');
+      try {
+        mqttClient = new Paho.MQTT.Client(MQTT_BROKER, MQTT_PORT, CLIENT_ID);
+        mqttClient.onConnectionLost = onConnectionLost;
+        mqttClient.onMessageArrived = onMessageArrived;
+
+        mqttClient.connect({
+          useSSL: true,
+          timeout: 5,
+          onSuccess: () => {
+            statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></span><span>🟢 Room Sync Active</span>';
+            mqttClient.subscribe(MQTT_TOPIC);
+          },
+          onFailure: (err) => {
+            console.warn("MQTT WSS connect failed, running in local room mode:", err);
+            statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>🟡 Local Mode</span>';
+          }
+        });
+      } catch (e) {
+        console.warn("MQTT init error:", e);
+        statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>Offline Mode</span>';
+      }
+    }
+
+    function onConnectionLost(responseObject) {
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Reconnecting...</span>';
+      setTimeout(initMQTT, 3000);
+    }
+
+    function onMessageArrived(message) {
+      try {
+        const payload = JSON.parse(message.payloadString);
+        if (payload && payload.pair) {
+          pairsData[payload.pair] = payload;
+          renderAll();
+        }
+      } catch (e) {
+        console.error("Failed to parse message:", e);
+      }
+    }
+
+    function broadcastSubmission(data) {
+      if (mqttClient && mqttClient.isConnected()) {
+        const msg = new Paho.MQTT.Message(JSON.stringify(data));
+        msg.destinationName = MQTT_TOPIC;
+        msg.retained = true;
+        mqttClient.send(msg);
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const pair = document.getElementById('inputPair').value;
+      const mod = document.getElementById('inputModule').value;
+      const model = document.getElementById('inputModel').value;
+      const tokens = parseInt(document.getElementById('inputTokens').value) || 0;
+      const latency = parseFloat(document.getElementById('inputLatency').value) || 0;
+      const accuracy = parseInt(document.getElementById('inputAccuracy').value) || 0;
+      const cost = calculateCost();
+      const notes = document.getElementById('inputNotes').value || 'Completed run.';
+
+      const submission = {
+        pair,
+        module: mod,
+        model,
+        tokens,
+        latency,
+        accuracy,
+        cost,
+        notes
+      };
+
+      pairsData[pair] = submission;
+      broadcastSubmission(submission);
+      renderAll();
+
+      // Quick visual feedback
+      const btn = e.target.querySelector('button[type="submit"]');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span>✓</span> Logged &amp; Broadcasted!';
+      btn.classList.add('bg-accent-emerald');
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.classList.remove('bg-accent-emerald');
+      }, 1800);
+    }
+
+    // Charts Setup
+    let chartToolCeilingInstance = null;
+    let chartModelROIInstance = null;
+
+    function initCharts() {
+      const ctx1 = document.getElementById('chartToolCeiling').getContext('2d');
+      chartToolCeilingInstance = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: ['5 Tools', '10 Tools', '20 Tools', '35 Tools', '50 Tools', '60 Tools'],
+          datasets: [
+            {
+              label: 'Selection Accuracy (%)',
+              data: [96, 94, 88, 81, 72, 64],
+              borderColor: '#A855F7',
+              backgroundColor: 'rgba(168, 85, 247, 0.15)',
+              tension: 0.3,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Schema Prompt Overhead (Tokens)',
+              data: [420, 840, 1680, 2940, 4200, 5040],
+              borderColor: '#00F2FE',
+              borderDash: [5, 5],
+              tension: 0.2,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              min: 50,
+              max: 100,
+              ticks: { color: '#94A3B8' },
+              grid: { color: '#1B2436' }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              ticks: { color: '#00F2FE' },
+              grid: { drawOnChartArea: false }
+            },
+            x: {
+              ticks: { color: '#94A3B8' },
+              grid: { color: '#1B2436' }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#E2E8F0', font: { family: 'IBM Plex Mono' } } }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('chartModelROI').getContext('2d');
+      chartModelROIInstance = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['Log Summarization', 'Runbook Retrieval', 'Multi-Hop Trace RCA', 'Blast Radius Graph'],
+          datasets: [
+            {
+              label: 'Frontier Model (Claude / GPT-4o)',
+              data: [98, 97, 95, 96],
+              backgroundColor: 'rgba(0, 242, 254, 0.7)'
+            },
+            {
+              label: 'Small Model (Flash / 8B)',
+              data: [96, 92, 68, 94],
+              backgroundColor: 'rgba(16, 185, 129, 0.7)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              min: 50,
+              max: 100,
+              ticks: { color: '#94A3B8' },
+              grid: { color: '#1B2436' }
+            },
+            x: {
+              ticks: { color: '#94A3B8' },
+              grid: { color: '#1B2436' }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#E2E8F0', font: { family: 'IBM Plex Mono' } } }
+          }
+        }
+      });
+    }
+
+    function renderAll() {
+      // 1. Table
+      const tbody = document.getElementById('leaderboardBody');
+      tbody.innerHTML = '';
+
+      let totalToks = 0;
+      let totalCost = 0;
+      let totalAcc = 0;
+      let accCount = 0;
+      let minLat = 999;
+
+      Object.values(pairsData).forEach(p => {
+        totalToks += p.tokens;
+        totalCost += p.cost;
+        if (p.accuracy > 0) {
+          totalAcc += p.accuracy;
+          accCount++;
+        }
+        if (p.latency > 0 && p.latency < minLat) {
+          minLat = p.latency;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-white flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full ${p.tokens > 0 ? 'bg-accent-emerald' : 'bg-slate-600'}"></span>
+            ${p.pair}
+          </td>
+          <td class="py-3 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] bg-purple-950/70 text-purple-300 border border-purple-800/60 font-semibold">${p.module}</span>
+          </td>
+          <td class="py-3 px-3 text-slate-300">${p.model}</td>
+          <td class="py-3 px-3 text-accent font-mono">${p.tokens.toLocaleString()}</td>
+          <td class="py-3 px-3 text-amber-300 font-mono">${p.latency > 0 ? p.latency.toFixed(1) + 's' : '--'}</td>
+          <td class="py-3 px-3">
+            <span class="font-bold ${p.accuracy >= 90 ? 'text-emerald-400' : p.accuracy >= 75 ? 'text-amber-400' : 'text-slate-400'}">${p.accuracy > 0 ? p.accuracy + '%' : '--'}</span>
+          </td>
+          <td class="py-3 px-3 text-emerald-400 font-mono">$${p.cost.toFixed(3)}</td>
+          <td class="py-3 px-3 text-slate-400 text-[11px] max-w-xs truncate">${p.notes}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 2. KPIs
+      document.getElementById('kpiTokens').innerText = totalToks.toLocaleString();
+      document.getElementById('kpiSpend').innerText = '$' + totalCost.toFixed(3);
+      document.getElementById('kpiAccuracy').innerText = accCount > 0 ? Math.round(totalAcc / accCount) + '%' : '0%';
+      document.getElementById('kpiLatency').innerText = minLat < 999 ? minLat.toFixed(1) + 's' : '--';
+    }
+
+    function seedDemoData() {
+      const sampleModels = ['Claude 3.5 Sonnet', 'GPT-4o', 'GPT-4o-mini', 'Gemini 1.5 Flash'];
+      const sampleNotes = [
+        'M1: Caught 3 version drift mismatches via eval gate',
+        'M2: Flash model cut cost by 89% with zero missed logs',
+        'M3: Parallel tool calls succeeded on 14/15 alerts',
+        'M4: 8k filtered context eliminated planted hallucination',
+        'M5: Knowledge Graph resolved payments blast radius in 180ms',
+        'M6: 60 tools caused schema prompt to eat 5k tokens',
+        'M7: Kafka lag skill triggered with 100% precision',
+        'M8: Session state layer sized at $0.038 per incident'
+      ];
+
+      for (let i = 1; i <= 10; i++) {
+        const id = 'Pair ' + (i < 10 ? '0' + i : i);
+        const modNum = Math.min(i, 8);
+        const model = sampleModels[i % sampleModels.length];
+        const tokens = 2500 + Math.floor(Math.random() * 5000);
+        const latency = 1.8 + Math.random() * 3.5;
+        const accuracy = 75 + Math.floor(Math.random() * 25);
+        const cost = (tokens / 1000) * (MODEL_PRICES[model] || 0.004);
+
+        pairsData[id] = {
+          pair: id,
+          module: 'M' + modNum,
+          model,
+          tokens,
+          latency,
+          accuracy,
+          cost,
+          notes: sampleNotes[modNum - 1]
+        };
+      }
+
+      renderAll();
+    }
+
+    function clearRoomData() {
+      if (confirm("Reset all 10 pair entries?")) {
+        for (let i = 1; i <= 10; i++) {
+          const id = 'Pair ' + (i < 10 ? '0' + i : i);
+          pairsData[id] = {
+            pair: id,
+            module: 'M1',
+            model: 'Claude 3.5 Sonnet',
+            tokens: 0,
+            latency: 0,
+            accuracy: 0,
+            cost: 0,
+            notes: 'Awaiting submission...'
+          };
+        }
+        renderAll();
+      }
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      renderAll();
+      initMQTT();
+      calculateCost();
+    });
+  </script>
+</body>
+</html>

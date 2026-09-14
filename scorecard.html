@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy vs Build Decision Scorecard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          },
+          colors: {
+            canvas: '#0B0F17',
+            card: '#121824',
+            accent: '#00F2FE',
+            'accent-emerald': '#10B981',
+            'border-subtle': '#1E293B',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    input[type=range] {
+      accent-color: #00F2FE;
+    }
+  </style>
+</head>
+<body class="bg-canvas text-slate-200 font-sans min-h-screen p-4 sm:p-8">
+
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-6 mb-8 gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20">Session 1 · Buy vs Build</span>
+        </div>
+        <h1 class="text-3xl font-display font-bold text-white">Score Your Own Path</h1>
+        <p class="text-sm text-slate-400 mt-1">Score your own organization across six operational axes. Leave with an objective verdict.</p>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-mono text-slate-400 block">Exercise 1A (8 min)</span>
+        <span class="text-xs font-semibold text-accent font-mono">Build the seam, buy the rest.</span>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Form (7 cols) -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-6" id="axesContainer">
+
+          <!-- View Mode Toggle & Instructions -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-subtle pb-4">
+            <div>
+              <h2 class="text-base font-display font-bold text-white">6 Evaluation Axes</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Click any maturity level below or drag the slider.</p>
+            </div>
+            <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs font-mono self-start sm:self-auto">
+              <button id="viewAllBtn" class="px-2.5 py-1 rounded-lg bg-accent text-black font-semibold transition">
+                📋 All Levels
+              </button>
+              <button id="viewCompactBtn" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">
+                🎚️ Sliders
+              </button>
+            </div>
+          </div>
+
+          <!-- Axis 1 -->
+          <div class="axis-card p-4 rounded-xl bg-card-subtle border border-slate-800 space-y-3" data-axis="1">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white font-medium text-sm">1. Telemetry Maturity</label>
+                <p class="text-[11px] text-slate-400">Observability stack across logs, metrics, and traces</p>
+              </div>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span class="text-xs text-slate-400">Level:</span>
+                <span class="text-accent font-bold text-base px-2 py-0.5 rounded bg-accent/10 border border-accent/20" id="val1">3</span>
+              </div>
+            </div>
+            <input type="range" id="axis1" min="1" max="5" step="1" value="3" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="options-list space-y-1.5 pt-1" id="options1"></div>
+          </div>
+
+          <!-- Axis 2 -->
+          <div class="axis-card p-4 rounded-xl bg-card-subtle border border-slate-800 space-y-3" data-axis="2">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white font-medium text-sm">2. Topology & CMDB Quality</label>
+                <p class="text-[11px] text-slate-400">Service dependency mapping and runtime graph discovery</p>
+              </div>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span class="text-xs text-slate-400">Level:</span>
+                <span class="text-accent font-bold text-base px-2 py-0.5 rounded bg-accent/10 border border-accent/20" id="val2">2</span>
+              </div>
+            </div>
+            <input type="range" id="axis2" min="1" max="5" step="1" value="2" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="options-list space-y-1.5 pt-1" id="options2"></div>
+          </div>
+
+          <!-- Axis 3 -->
+          <div class="axis-card p-4 rounded-xl bg-card-subtle border border-slate-800 space-y-3" data-axis="3">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white font-medium text-sm">3. In-House AI Engineering Capacity</label>
+                <p class="text-[11px] text-slate-400">Dedicated platform engineers for evals, harness & agents</p>
+              </div>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span class="text-xs text-slate-400">Level:</span>
+                <span class="text-accent font-bold text-base px-2 py-0.5 rounded bg-accent/10 border border-accent/20" id="val3">2</span>
+              </div>
+            </div>
+            <input type="range" id="axis3" min="1" max="5" step="1" value="2" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="options-list space-y-1.5 pt-1" id="options3"></div>
+          </div>
+
+          <!-- Axis 4 -->
+          <div class="axis-card p-4 rounded-xl bg-card-subtle border border-slate-800 space-y-3" data-axis="4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white font-medium text-sm">4. Tolerance for a 9-Month Build</label>
+                <p class="text-[11px] text-slate-400">Organization runway before requiring proven production ROI</p>
+              </div>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span class="text-xs text-slate-400">Level:</span>
+                <span class="text-accent font-bold text-base px-2 py-0.5 rounded bg-accent/10 border border-accent/20" id="val4">2</span>
+              </div>
+            </div>
+            <input type="range" id="axis4" min="1" max="5" step="1" value="2" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="options-list space-y-1.5 pt-1" id="options4"></div>
+          </div>
+
+          <!-- Axis 5 -->
+          <div class="axis-card p-4 rounded-xl bg-card-subtle border border-slate-800 space-y-3" data-axis="5">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white font-medium text-sm">5. Regulatory & Data Egress Constraints</label>
+                <p class="text-[11px] text-slate-400">Cloud model egress, air-gap mandates, and privacy compliance</p>
+              </div>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span class="text-xs text-slate-400">Level:</span>
+                <span class="text-accent font-bold text-base px-2 py-0.5 rounded bg-accent/10 border border-accent/20" id="val5">4</span>
+              </div>
+            </div>
+            <input type="range" id="axis5" min="1" max="5" step="1" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="options-list space-y-1.5 pt-1" id="options5"></div>
+          </div>
+
+          <!-- Axis 6 -->
+          <div class="axis-card p-4 rounded-xl bg-card-subtle border border-slate-800 space-y-3" data-axis="6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white font-medium text-sm">6. Runbook Differentiation</label>
+                <p class="text-[11px] text-slate-400">Proprietary business logic vs standard Kubernetes remediation</p>
+              </div>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span class="text-xs text-slate-400">Level:</span>
+                <span class="text-accent font-bold text-base px-2 py-0.5 rounded bg-accent/10 border border-accent/20" id="val6">3</span>
+              </div>
+            </div>
+            <input type="range" id="axis6" min="1" max="5" step="1" value="3" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="options-list space-y-1.5 pt-1" id="options6"></div>
+          </div>
+
+        </div>
+
+        <button id="broadcastBtn" class="w-full py-3 px-4 rounded-xl bg-accent text-black font-display font-bold text-sm hover:opacity-90 transition active:scale-[0.99] flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+          Plot Anonymously to Stage Projector
+        </button>
+        <p id="broadcastMsg" class="text-xs text-center text-accent-emerald font-mono hidden">✓ Submitted! Watch your dot appear on the room's scatter screen.</p>
+      </div>
+
+      <!-- Verdict Column (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-5 sticky top-8">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">Your Organization Verdict</span>
+
+          <!-- Badge -->
+          <div id="verdictBadge" class="p-4 rounded-xl border text-center transition-all duration-300">
+            <h2 id="verdictTitle" class="text-2xl font-display font-bold">HYBRID SEAM</h2>
+            <p id="verdictSubtitle" class="text-xs mt-1 text-slate-300">Buy the core platform; build your own runbook & topology seam.</p>
+          </div>
+
+          <!-- Decisive Axes -->
+          <div class="space-y-3 pt-2">
+            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span class="text-[10px] font-mono uppercase text-accent font-semibold block mb-1">The 2 Axes That Decided It</span>
+              <p id="decisiveAxes" class="text-xs text-slate-200 font-medium">In-House AI Capacity & Tolerance for 9-Month Build</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
+              <span class="text-[10px] font-mono uppercase text-amber-400 font-semibold block mb-1">The 1 Axis That Would Flip It</span>
+              <p id="flipAxis" class="text-xs text-slate-300">Lowering Regulatory Constraints from 4 to 1.</p>
+            </div>
+          </div>
+
+          <!-- The Seam Recommendation -->
+          <div class="border-t border-border-subtle pt-4">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">The Production Seam</h4>
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              <div class="bg-rose-950/20 border border-rose-900/30 p-2.5 rounded">
+                <span class="text-rose-400 font-bold block mb-1">✕ DON'T BUILD</span>
+                <span class="text-slate-400">Telemetry connectors, multi-tenant RBAC, LLM eval harness, model pinning.</span>
+              </div>
+              <div class="bg-accent-emerald/10 border border-accent-emerald/30 p-2.5 rounded">
+                <span class="text-accent-emerald font-bold block mb-1">✓ DO BUILD</span>
+                <span class="text-slate-300">Custom runbooks, CMDB taxonomy, escalation policies, approval gate rules.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const descriptions = {
+      1: [
+        "1: Fragmented, un-indexed stdout logs. No tracing.",
+        "2: Metrics in Grafana, scattered log silos.",
+        "3: Prometheus + basic Loki. Some OTel traces.",
+        "4: Unified OpenTelemetry across 70%+ of services.",
+        "5: Golden signals, unified OTel traces, logs & metrics."
+      ],
+      2: [
+        "1: Outdated Confluence wiki. Nobody knows dependencies.",
+        "2: Static architecture diagram updated 6 months ago.",
+        "3: Service ownership catalog (e.g. Backstage), manual edges.",
+        "4: Semi-automated CMDB with weekly dependency discovery.",
+        "5: Real-time automated service dependency graph."
+      ],
+      3: [
+        "1: Zero dedicated AI/LLM engineers on the platform team.",
+        "2: 1-2 engineers experimenting with LangChain in spare time.",
+        "3: Dedicated AI squad, but focused on customer product.",
+        "4: Platform engineers experienced in LLM evals & harness design.",
+        "5: Full dedicated AI Platform & Infrastructure engineering team."
+      ],
+      4: [
+        "1: Must be in production this quarter (No tolerance).",
+        "2: 3-4 months max for a working PoC.",
+        "3: 6 months acceptable if milestone-gated.",
+        "4: 9 months acceptable with dedicated executive sponsor.",
+        "5: 12+ months: Long-term strategic R&D platform initiative."
+      ],
+      5: [
+        "1: Strict on-prem air-gap. Zero data egress allowed to any cloud LLM.",
+        "2: Private VPC self-hosted models only.",
+        "3: Dedicated enterprise agreement cloud LLM (Azure/GCP Vertex) only.",
+        "4: Commercial LLM APIs allowed with PII masking & zero-data-retention.",
+        "5: Standard SaaS / Cloud LLM APIs fully approved."
+      ],
+      6: [
+        "1: Generic playbooks (restart pod, scale HPA, bounce DB).",
+        "2: Mostly standard k8s runbooks with custom alerts.",
+        "3: Mix of standard operational steps and team-specific workflows.",
+        "4: Highly customized operational pipelines and scripts.",
+        "5: Deeply proprietary business logic, complex stateful recovery."
+      ]
+    };
+
+    const axes = [1, 2, 3, 4, 5, 6];
+
+    // Render all 5 option cards for all 6 axes
+    function renderOptions() {
+      axes.forEach(i => {
+        const container = document.getElementById(`options${i}`);
+        container.innerHTML = '';
+        descriptions[i].forEach((desc, idx) => {
+          const level = idx + 1;
+          const cleanText = desc.replace(/^\d+:\s*/, '');
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `option-btn w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-start gap-2.5 cursor-pointer`;
+          btn.dataset.axis = i;
+          btn.dataset.level = level;
+
+          btn.innerHTML = `
+            <span class="level-badge font-mono font-bold px-2 py-0.5 rounded text-[11px] shrink-0 transition-colors">
+              ${level}
+            </span>
+            <span class="option-text flex-1 transition-colors leading-snug">
+              ${cleanText}
+            </span>
+            <span class="check-icon text-accent font-bold text-sm shrink-0 hidden">✓</span>
+          `;
+
+          btn.addEventListener('click', () => {
+            const slider = document.getElementById(`axis${i}`);
+            slider.value = level;
+            syncSelection(i, level);
+            evaluateVerdict();
+          });
+
+          container.appendChild(btn);
+        });
+      });
+    }
+
+    // Highlight selected card and sync level badge
+    function syncSelection(axisIndex, level) {
+      document.getElementById(`val${axisIndex}`).textContent = level;
+      const container = document.getElementById(`options${axisIndex}`);
+      const buttons = container.querySelectorAll('.option-btn');
+
+      buttons.forEach(btn => {
+        const btnLevel = parseInt(btn.dataset.level, 10);
+        const badge = btn.querySelector('.level-badge');
+        const text = btn.querySelector('.option-text');
+        const check = btn.querySelector('.check-icon');
+
+        if (btnLevel === level) {
+          btn.className = 'option-btn w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-start gap-2.5 cursor-pointer bg-accent/10 border-accent/60 shadow-md shadow-accent/5';
+          badge.className = 'level-badge font-mono font-bold px-2 py-0.5 rounded text-[11px] shrink-0 bg-accent text-black';
+          text.className = 'option-text flex-1 text-white font-medium leading-snug';
+          check.classList.remove('hidden');
+        } else {
+          btn.className = 'option-btn w-full text-left p-2.5 rounded-xl border text-xs transition-all flex items-start gap-2.5 cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border-slate-800/90';
+          badge.className = 'level-badge font-mono font-semibold px-2 py-0.5 rounded text-[11px] shrink-0 bg-slate-800 text-slate-400';
+          text.className = 'option-text flex-1 text-slate-400 leading-snug';
+          check.classList.add('hidden');
+        }
+      });
+    }
+
+    function syncAllSelections() {
+      axes.forEach(i => {
+        const val = parseInt(document.getElementById(`axis${i}`).value, 10);
+        syncSelection(i, val);
+      });
+    }
+
+    function evaluateVerdict() {
+      const a1 = parseInt(document.getElementById('axis1').value, 10); // Telemetry
+      const a2 = parseInt(document.getElementById('axis2').value, 10); // Topology
+      const a3 = parseInt(document.getElementById('axis3').value, 10); // AI Capacity
+      const a4 = parseInt(document.getElementById('axis4').value, 10); // 9-Month Tolerance
+      const a5 = parseInt(document.getElementById('axis5').value, 10); // Regulatory/Egress
+      const a6 = parseInt(document.getElementById('axis6').value, 10); // Runbook Diff
+
+      const badge = document.getElementById('verdictBadge');
+      const title = document.getElementById('verdictTitle');
+      const subtitle = document.getElementById('verdictSubtitle');
+      const decisive = document.getElementById('decisiveAxes');
+      const flip = document.getElementById('flipAxis');
+
+      // Decision engine logic
+      if ((a3 >= 4 && a4 >= 4) || (a5 <= 2 && a3 >= 3 && a4 >= 3)) {
+        // Pure Build
+        badge.className = 'p-4 rounded-xl border text-center transition-all duration-300 bg-amber-950/30 border-amber-600/50 text-amber-300';
+        title.textContent = 'BUILD IN-HOUSE';
+        if (a5 <= 2) {
+          subtitle.textContent = 'Strict air-gap data egress restrictions combined with in-house AI capacity necessitate building an internal platform.';
+          decisive.textContent = 'Strict Air-Gap Egress & Dedicated AI Engineering Runway.';
+          flip.textContent = 'Approving Cloud LLM SaaS (Axis 5 → 4) would flip you to The Hybrid Seam.';
+        } else {
+          subtitle.textContent = 'High in-house AI engineering capacity and a 9–12+ month strategic runway justify building a proprietary internal platform.';
+          decisive.textContent = 'In-House AI Capacity (high) & 9-Month Tolerance (high runway).';
+          flip.textContent = 'Shortening your timeline to this quarter (Axis 4 → 1) would flip you to The Hybrid Seam.';
+        }
+      } else if (a3 <= 2 && a4 <= 2) {
+        // Pure Buy
+        badge.className = 'p-4 rounded-xl border text-center transition-all duration-300 bg-blue-950/30 border-blue-500/50 text-blue-300';
+        title.textContent = 'BUY THE PLATFORM';
+        subtitle.textContent = 'Low in-house AI bandwidth and urgent production timeline make building in-house an extreme risk.';
+        decisive.textContent = 'In-House AI Capacity (low) & 9-Month Tolerance (low).';
+        flip.textContent = 'Increasing in-house AI engineering headcount would flip you to Hybrid.';
+      } else {
+        // Hybrid Seam
+        badge.className = 'p-4 rounded-xl border text-center transition-all duration-300 bg-accent-emerald/15 border-accent-emerald/50 text-accent-emerald';
+        title.textContent = 'THE HYBRID SEAM';
+        subtitle.textContent = 'Buy the multi-tenant harness, OTel connectors and eval gate. Build your runbook logic & topology seam.';
+        decisive.textContent = 'Runbook Differentiation & AI Platform Opportunity Cost.';
+        flip.textContent = 'A zero-tolerance deadline (Axis 4 → 1) would flip you to immediate Buy.';
+      }
+    }
+
+    // Handle Slider Input
+    axes.forEach(i => {
+      document.getElementById(`axis${i}`).addEventListener('input', (e) => {
+        syncSelection(i, parseInt(e.target.value, 10));
+        evaluateVerdict();
+      });
+    });
+
+    // View Mode Toggle (All Levels vs Sliders Only)
+    const viewAllBtn = document.getElementById('viewAllBtn');
+    const viewCompactBtn = document.getElementById('viewCompactBtn');
+    const optionLists = document.querySelectorAll('.options-list');
+
+    viewAllBtn.addEventListener('click', () => {
+      optionLists.forEach(el => el.classList.remove('hidden'));
+      viewAllBtn.className = 'px-2.5 py-1 rounded-lg bg-accent text-black font-semibold transition';
+      viewCompactBtn.className = 'px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition';
+    });
+
+    viewCompactBtn.addEventListener('click', () => {
+      optionLists.forEach(el => el.classList.add('hidden'));
+      viewCompactBtn.className = 'px-2.5 py-1 rounded-lg bg-accent text-black font-semibold transition';
+      viewAllBtn.className = 'px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition';
+    });
+
+    // Initial render
+    renderOptions();
+    syncAllSelections();
+    evaluateVerdict();
+
+    // Real-Time Cross-Device WebSocket Sync (MQTT over WSS)
+    const MQTT_TOPIC = 'nudgebee/aiops-workshop/submissions';
+    let mqttClient = null;
+    try {
+      if (typeof mqtt !== 'undefined') {
+        mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+          clientId: 'scorecard_' + Math.random().toString(16).substring(2, 8),
+          keepalive: 60,
+          clean: true
+        });
+        mqttClient.on('connect', () => {
+          console.log('Connected to Stage Real-Time WebSocket relay');
+        });
+      }
+    } catch (e) {
+      console.warn('WebSocket relay fallback:', e);
+    }
+
+    // Local tab BroadcastChannel fallback
+    const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('aiops_workshop_channel') : null;
+
+    document.getElementById('broadcastBtn').addEventListener('click', () => {
+      const data = {
+        aiCapacity: parseInt(document.getElementById('axis3').value, 10),
+        buildTolerance: parseInt(document.getElementById('axis4').value, 10),
+        verdict: document.getElementById('verdictTitle').textContent,
+        ts: Date.now()
+      };
+
+      // 1. Send via Real-Time Cloud WebSocket across all laptops
+      if (mqttClient && mqttClient.connected) {
+        mqttClient.publish(MQTT_TOPIC, JSON.stringify(data));
+      }
+
+      // 2. Send via local BroadcastChannel as backup
+      if (channel) {
+        try { channel.postMessage(data); } catch (err) {}
+      }
+
+      // 3. Save to localStorage as local backup
+      const existing = JSON.parse(localStorage.getItem('aiops_submissions') || '[]');
+      existing.push(data);
+      localStorage.setItem('aiops_submissions', JSON.stringify(existing));
+
+      const msg = document.getElementById('broadcastMsg');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 4000);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# ==============================================================================
+# Building AI Agents for SRE & AIOps · Dependencies
+# ==============================================================================
+
+# Core Dependencies
+pyyaml>=6.0.1          # Required for loading prompts.yaml
+
+# Optional Providers (Install if running live frontier models with API keys)
+openai>=1.30.0         # OpenAI API & compatible gateway client
+google-genai>=0.1.0    # Google Gemini client
+anthropic>=0.25.0      # Anthropic Claude client
+requests>=2.31.0       # Optional HTTP utilities

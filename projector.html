@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Scatter · Buy vs Build</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          },
+          colors: {
+            canvas: '#070A10',
+            card: '#0F1522',
+            accent: '#00F2FE',
+            'accent-emerald': '#10B981',
+            'border-subtle': '#1B2436',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-canvas text-slate-100 font-sans min-h-screen p-6 lg:p-10 flex flex-col justify-between">
+
+  <div>
+    <!-- Stage Header -->
+    <header class="flex items-center justify-between border-b border-border-subtle pb-6 mb-6">
+      <div>
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="px-2.5 py-0.5 rounded text-xs font-mono font-semibold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20">Live Room Map</span>
+          <span id="relayStatus" class="px-2.5 py-0.5 rounded text-xs font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Connecting Cloud Relay...
+          </span>
+        </div>
+        <h1 class="text-3xl lg:text-4xl font-display font-bold text-white tracking-tight">The Buy vs Build Room Scatter</h1>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <div class="text-right">
+          <span class="text-xs text-slate-400 font-mono block">Submissions</span>
+          <span class="text-2xl font-display font-bold text-accent" id="countDisplay">0 / 24</span>
+        </div>
+        <button id="seedBtn" class="text-xs font-mono px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          Seed 20 Sample Seats
+        </button>
+        <button id="clearBtn" class="text-xs font-mono px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 transition">
+          Clear
+        </button>
+      </div>
+    </header>
+
+    <!-- Quadrant Explainer Strip -->
+    <div class="grid grid-cols-4 gap-3 mb-6 font-mono text-xs">
+      <div class="bg-card/70 border border-rose-900/40 p-2.5 rounded-xl text-center">
+        <span class="text-rose-400 font-bold block">Top-Left: PoC Graveyard</span>
+        <span class="text-slate-400 text-[11px]">Low In-House AI + High Tolerance</span>
+      </div>
+      <div class="bg-card/70 border border-amber-800/40 p-2.5 rounded-xl text-center">
+        <span class="text-amber-300 font-bold block">Top-Right: In-House Builders</span>
+        <span class="text-slate-400 text-[11px]">High In-House AI + 9-Month Build</span>
+      </div>
+      <div class="bg-card/70 border border-blue-900/40 p-2.5 rounded-xl text-center">
+        <span class="text-blue-400 font-bold block">Bottom-Left: Pure Platform Buyers</span>
+        <span class="text-slate-400 text-[11px]">Low AI Team + Urgent Timeline</span>
+      </div>
+      <div class="bg-card/70 border border-accent-emerald/40 p-2.5 rounded-xl text-center">
+        <span class="text-accent-emerald font-bold block">Bottom-Right: The Hybrid Seam</span>
+        <span class="text-slate-400 text-[11px]">High AI Team + Fast Production Deadline</span>
+      </div>
+    </div>
+
+    <!-- Main Scatter Chart Canvas -->
+    <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-2xl relative">
+      <div class="h-[520px]">
+        <canvas id="scatterChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-6 flex items-center justify-between text-xs text-slate-500 font-mono border-t border-border-subtle pt-4">
+    <div>X-Axis: In-House AI Capacity (1-5) &nbsp;|&nbsp; Y-Axis: Tolerance for 9-Month Build (1-5)</div>
+    <div class="text-slate-400">Moderator: Rakesh &nbsp;·&nbsp; Shiv (Architect) &nbsp;·&nbsp; Vinay (Enterprise) &nbsp;·&nbsp; Hem (Economics)</div>
+  </footer>
+
+  <script>
+    let scatterChart;
+    let points = [];
+
+    // Real-Time Cross-Device WebSocket Sync (MQTT over WSS)
+    const MQTT_TOPIC = 'nudgebee/aiops-workshop/submissions';
+    const relayStatus = document.getElementById('relayStatus');
+
+    try {
+      if (typeof mqtt !== 'undefined') {
+        const mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+          clientId: 'projector_' + Math.random().toString(16).substring(2, 8),
+          keepalive: 60,
+          clean: true
+        });
+
+        mqttClient.on('connect', () => {
+          console.log('Projector connected to Stage Real-Time WebSocket relay');
+          mqttClient.subscribe(MQTT_TOPIC);
+          if (relayStatus) {
+            relayStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></span> Cloud Relay Live';
+            relayStatus.className = 'px-2.5 py-0.5 rounded text-xs font-mono font-semibold bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20 flex items-center gap-1.5';
+          }
+        });
+
+        mqttClient.on('message', (topic, message) => {
+          try {
+            const item = JSON.parse(message.toString());
+            addSubmission(item);
+          } catch(e) {
+            console.error('Error parsing submission:', e);
+          }
+        });
+      }
+    } catch(e) {
+      console.warn('WebSocket relay fallback:', e);
+    }
+
+    // Local tab BroadcastChannel fallback
+    const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('aiops_workshop_channel') : null;
+    if (channel) {
+      channel.onmessage = (event) => {
+        addSubmission(event.data);
+      };
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('scatterChart').getContext('2d');
+      scatterChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'The Hybrid Seam',
+              data: [],
+              backgroundColor: '#10B981',
+              pointRadius: 10,
+              pointHoverRadius: 13,
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 1.5,
+            },
+            {
+              label: 'Buy the Platform',
+              data: [],
+              backgroundColor: '#38BDF8',
+              pointRadius: 10,
+              pointHoverRadius: 13,
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 1.5,
+            },
+            {
+              label: 'Build In-House',
+              data: [],
+              backgroundColor: '#F59E0B',
+              pointRadius: 10,
+              pointHoverRadius: 13,
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 1.5,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#CBD5E1',
+                font: { family: 'Space Grotesk', size: 12 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ` ${ctx.dataset.label} (AI Capacity: ${ctx.raw.x}, Tolerance: ${ctx.raw.y})`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              min: 0.5,
+              max: 5.5,
+              title: {
+                display: true,
+                text: '← Low In-House AI Capacity ──────── In-House AI Engineering Capacity ──────── High AI Capacity →',
+                color: '#94A3B8',
+                font: { family: 'Space Grotesk', size: 13, weight: 'bold' }
+              },
+              grid: { color: '#1B2436' },
+              ticks: { stepSize: 1, color: '#94A3B8' }
+            },
+            y: {
+              min: 0.5,
+              max: 5.5,
+              title: {
+                display: true,
+                text: '← Urgent (No 9-Month Tolerance) ──────── 9-Month Tolerance ──────── High Tolerance (Long R&D) →',
+                color: '#94A3B8',
+                font: { family: 'Space Grotesk', size: 13, weight: 'bold' }
+              },
+              grid: { color: '#1B2436' },
+              ticks: { stepSize: 1, color: '#94A3B8' }
+            }
+          }
+        }
+      });
+    }
+
+    function addSubmission(item) {
+      // Small jitter so overlapping points are visible
+      const jitter = () => (Math.random() - 0.5) * 0.22;
+      const point = {
+        x: item.aiCapacity + jitter(),
+        y: item.buildTolerance + jitter(),
+        verdict: item.verdict
+      };
+      points.push(point);
+
+      if (item.verdict.includes('HYBRID')) {
+        scatterChart.data.datasets[0].data.push(point);
+      } else if (item.verdict.includes('BUY')) {
+        scatterChart.data.datasets[1].data.push(point);
+      } else {
+        scatterChart.data.datasets[2].data.push(point);
+      }
+
+      scatterChart.update();
+      document.getElementById('countDisplay').textContent = `${points.length} / 24`;
+    }
+
+    // Seed realistic sample data
+    document.getElementById('seedBtn').addEventListener('click', () => {
+      clearAll();
+      const sample = [
+        { aiCapacity: 2, buildTolerance: 1, verdict: 'BUY' },
+        { aiCapacity: 1, buildTolerance: 2, verdict: 'BUY' },
+        { aiCapacity: 2, buildTolerance: 2, verdict: 'BUY' },
+        { aiCapacity: 1, buildTolerance: 1, verdict: 'BUY' },
+        { aiCapacity: 3, buildTolerance: 2, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 4, buildTolerance: 1, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 3, buildTolerance: 3, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 4, buildTolerance: 2, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 5, buildTolerance: 2, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 3, buildTolerance: 4, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 2, buildTolerance: 5, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 4, buildTolerance: 4, verdict: 'BUILD IN-HOUSE' },
+        { aiCapacity: 5, buildTolerance: 5, verdict: 'BUILD IN-HOUSE' },
+        { aiCapacity: 4, buildTolerance: 5, verdict: 'BUILD IN-HOUSE' },
+        { aiCapacity: 5, buildTolerance: 4, verdict: 'BUILD IN-HOUSE' },
+        { aiCapacity: 2, buildTolerance: 3, verdict: 'BUY' },
+        { aiCapacity: 3, buildTolerance: 1, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 4, buildTolerance: 3, verdict: 'THE HYBRID SEAM' },
+        { aiCapacity: 1, buildTolerance: 4, verdict: 'BUY' },
+        { aiCapacity: 3, buildTolerance: 2, verdict: 'THE HYBRID SEAM' }
+      ];
+      sample.forEach(s => addSubmission(s));
+    });
+
+    function clearAll() {
+      points = [];
+      scatterChart.data.datasets.forEach(ds => ds.data = []);
+      scatterChart.update();
+      document.getElementById('countDisplay').textContent = `0 / 24`;
+      localStorage.removeItem('aiops_submissions');
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+    initChart();
+
+    // Check localStorage on load
+    const saved = JSON.parse(localStorage.getItem('aiops_submissions') || '[]');
+    if (saved.length > 0) {
+      saved.forEach(s => addSubmission(s));
+    }
+  </script>
+</body>
+</html>
