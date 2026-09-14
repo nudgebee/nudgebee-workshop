@@ -20,7 +20,8 @@ def call_openai_chat_completions(
     model: str,
     messages: List[Dict[str, Any]],
     tools: Optional[List[Dict[str, Any]]] = None,
-    timeout: int = 35
+    tool_choice: Optional[str] = None,
+    timeout: int = 60
 ) -> Dict[str, Any]:
     """
     Invokes any OpenAI-compatible /v1/chat/completions endpoint with native function calling.
@@ -39,7 +40,9 @@ def call_openai_chat_completions(
     }
     if tools:
         payload["tools"] = tools
-        payload["tool_choice"] = "auto"
+        payload["tool_choice"] = tool_choice or "auto"
+    elif tool_choice:
+        payload["tool_choice"] = tool_choice
 
     req = urllib.request.Request(
         endpoint,

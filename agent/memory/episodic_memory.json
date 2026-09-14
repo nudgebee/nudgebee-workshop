@@ -1,0 +1,163 @@
+[
+  {
+    "incident_id": "INC-20260914-153601",
+    "date": "14 September, 15:36 UTC",
+    "timestamp": "2026-09-14T15:36:01.061456",
+    "namespace": "group-1",
+    "scenario": "badDeploy1405",
+    "service": "checkout",
+    "model": "mock",
+    "title": "Bad configuration deployment on 'checkout' service at 14:05 UTC.",
+    "keywords": [
+      "baddeploy1405",
+      "checkout",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario badDeploy1405.",
+    "root_cause": "ROOT CAUSE IDENTIFIED: Bad configuration deployment on 'checkout' service at 14:05 UTC. Evidence:   1. Commit a7f39b1 (@ 14:05 UTC by payments team) bumped payment_client_timeout from 500ms to 5000ms.   2. Synchronous worker threads were held open for 5s under load, cascading 5xx to storefront. Remediation:   - Action Approved via Security Gate: 'kubectl -n group-1 rollout undo deployment/checkout",
+    "fix": "Remediation:",
+    "did_fix_hold": "Recorded from run by mock at 14 September, 15:36 UTC."
+  },
+  {
+    "incident_id": "INC-20260914-153604",
+    "date": "14 September, 15:36 UTC",
+    "timestamp": "2026-09-14T15:36:04.304426",
+    "namespace": "group-1",
+    "scenario": "episodicRecurrence",
+    "service": "product-catalog",
+    "model": "mock",
+    "title": "PostgreSQL connection pool starvation on 'astronomy-db' (Recurrence of INC-4092).",
+    "keywords": [
+      "episodicrecurrence",
+      "product-catalog",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario episodicRecurrence.",
+    "root_cause": "ROOT CAUSE IDENTIFIED: PostgreSQL connection pool starvation on 'astronomy-db' (Recurrence of INC-4092). Evidence:   1. product-catalog returned gRPC status 13 INTERNAL upon catalog queries.   2. Episodic Memory Match: Matches INC-4092 from 14 March with identical symptoms.   3. Memory Diff Insight: Prior fix increased DB max_connections to 300, but client-side max_idle_conns remained unbounded. R",
+    "fix": "Remediation:",
+    "did_fix_hold": "Recorded from run by mock at 14 September, 15:36 UTC."
+  },
+  {
+    "incident_id": "INC-20260914-153612",
+    "date": "14 September, 15:36 UTC",
+    "timestamp": "2026-09-14T15:36:12.100904",
+    "namespace": "group-1",
+    "scenario": "postgresFailure",
+    "service": "checkout",
+    "model": "mock",
+    "title": "Database connection pool starvation on 'astronomy-db' (PostgreSQL).",
+    "keywords": [
+      "postgresfailure",
+      "checkout",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario postgresFailure.",
+    "root_cause": "ROOT CAUSE IDENTIFIED: Database connection pool starvation on 'astronomy-db' (PostgreSQL). Evidence:   1. product-catalog threw gRPC status 13 INTERNAL upon catalog queries.   2. Logs confirm dial timeout / connection exhaustion to postgresql:5432.   3. Downstream checkout service cascaded failures 29s later. Remediation & Guardrails:   - Action Approved via Security Gate: 'kubectl -n group-1 roll",
+    "fix": "Remediation & Guardrails:",
+    "did_fix_hold": "Recorded from run by mock at 14 September, 15:36 UTC."
+  },
+  {
+    "incident_id": "INC-20260914-153616",
+    "date": "14 September, 15:36 UTC",
+    "timestamp": "2026-09-14T15:36:16.389784",
+    "namespace": "group-1",
+    "scenario": "emailMemoryLeak",
+    "service": "email",
+    "model": "mock",
+    "title": "Unbounded heap buffer growth in email service (Memory Leak).",
+    "keywords": [
+      "emailmemoryleak",
+      "email",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario emailMemoryLeak.",
+    "root_cause": "ROOT CAUSE IDENTIFIED: Unbounded heap buffer growth in email service (Memory Leak). Evidence:   1. Kernel OOM killer invoked with Exit Code 137 at 100Mi container limit.   2. Memory soak derivative deriv(...) > 0 proves progressive heap leakage.   3. SRE Caveat: Bumping limit to 200Mi is a naive anti-pattern; leak will continue until in-code buffer is closed.",
+    "fix": "Rollback or configuration adjustment documented in audit trace.",
+    "did_fix_hold": "Recorded from run by mock at 14 September, 15:36 UTC."
+  },
+  {
+    "incident_id": "INC-20260914-153623",
+    "date": "14 September, 15:36 UTC",
+    "timestamp": "2026-09-14T15:36:23.452909",
+    "namespace": "group-1",
+    "scenario": "postgresSlow",
+    "service": "checkout",
+    "model": "mock",
+    "title": "Database query execution latency on 'astronomy-db'.",
+    "keywords": [
+      "postgresslow",
+      "checkout",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario postgresSlow.",
+    "root_cause": "ROOT CAUSE IDENTIFIED: Database query execution latency on 'astronomy-db'. Evidence:   1. Queries executing SELECT pg_sleep($1) causing ~6.8s delay (baseline 0.8s).   2. Database connection pool saturated, causing latency cascades into checkout.",
+    "fix": "Rollback or configuration adjustment documented in audit trace.",
+    "did_fix_hold": "Recorded from run by mock at 14 September, 15:36 UTC."
+  },
+  {
+    "incident_id": "INC-20260914-153627",
+    "date": "14 September, 15:36 UTC",
+    "timestamp": "2026-09-14T15:36:27.486098",
+    "namespace": "group-1",
+    "scenario": "poisonedEntity",
+    "service": "microservices",
+    "model": "mock",
+    "title": "Incident investigation on poisonedEntity (group-1)",
+    "keywords": [
+      "poisonedentity",
+      "microservices",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario poisonedEntity.",
+    "root_cause": "GROUNDING VERDICT & ABSTENTION:   - Entity Verification Failed: Service 'billing-worker' does NOT exist in namespace or topology.   - Telemetry Audit: Zero active pods, endpoints, or Prometheus series found.   - Agent Decision: ABSTAIN from diagnosing non-existent entity. No hallucinated root cause emitted.",
+    "fix": "Rollback or configuration adjustment documented in audit trace.",
+    "did_fix_hold": "Recorded from run by mock at 14 September, 15:36 UTC."
+  },
+  {
+    "incident_id": "INC-20260914-154001",
+    "date": "14 September, 15:40 UTC",
+    "timestamp": "2026-09-14T15:40:01.150927",
+    "namespace": "group-1",
+    "scenario": "episodicRecurrence",
+    "service": "checkout",
+    "model": "gemini-3.8-flash",
+    "title": "### ROOT CAUSE IDENTIFIED",
+    "keywords": [
+      "episodicrecurrence",
+      "checkout",
+      "failure",
+      "timeout",
+      "latency",
+      "starvation",
+      "leak"
+    ],
+    "symptoms": "Anomalies detected in namespace group-1 under scenario episodicRecurrence.",
+    "root_cause": "### Rigorous 4-Step Incident Investigation  #### 1. Symptom Verification * **User-Facing Anomaly**: Storefront users are unable to load catalog products. * **Error Code**: gRPC Status Code `13 INTERNAL`:   ```   Error: 13 INTERNAL: failed to load products: PostgreSQL unavailable (postgresFailure feature flag enabled)   ``` * **Traffic & Telemetry**: Frontend gRPC requests to product catalog fail r",
+    "fix": "### Remediation Recommendations",
+    "did_fix_hold": "Recorded from run by gemini-3.8-flash at 14 September, 15:40 UTC."
+  }
+]

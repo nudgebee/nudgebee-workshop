@@ -233,14 +233,19 @@ def run_investigation():
                     CONFIG["api_key"],
                     model,
                     synth_messages,
-                    tools=[]  # Pure text synthesis without tools
+                    tools=None,
+                    tool_choice="none",
+                    timeout=60
                 )
                 choice = resp["choices"][0]["message"]
-                final_diagnosis = (choice.get("reasoning_content") or choice.get("content") or "").strip()
+                final_diagnosis = (choice.get("content") or choice.get("reasoning_content") or "").strip()
+                if not final_diagnosis:
+                    final_diagnosis = f"Investigation concluded after {CONFIG['max_turns']} turns. Telemetry gathered in log."
                 usage = resp.get("usage", {})
                 total_prompt_tokens += usage.get("prompt_tokens", 800)
                 total_completion_tokens += usage.get("completion_tokens", 100)
             except Exception as e:
+                print(f"  ⚠️ Synthesis notice: {e}")
                 final_diagnosis = f"Investigation concluded after {CONFIG['max_turns']} turns. Telemetry gathered in log."
         else:
             final_diagnosis = f"Investigation concluded after {CONFIG['max_turns']} turns."

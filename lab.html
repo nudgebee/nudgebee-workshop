@@ -32,10 +32,17 @@
       }
     }
   </script>
+  <style>
+    /* Custom scrollbar for sidebar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #070A10; }
+    ::-webkit-scrollbar-thumb { background: #1B2436; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00F2FE; }
+  </style>
 </head>
-<body class="bg-canvas text-slate-100 font-sans min-h-screen p-6 lg:p-12 flex flex-col justify-between selection:bg-accent selection:text-black">
+<body class="bg-canvas text-slate-100 font-sans min-h-screen p-4 sm:p-6 lg:p-10 flex flex-col justify-between selection:bg-accent selection:text-black">
 
-  <div class="max-w-6xl mx-auto w-full">
+  <div class="max-w-7xl mx-auto w-full">
     <!-- Header -->
     <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-6 mb-8 gap-4">
       <div>
@@ -94,597 +101,821 @@
       </div>
     </div>
 
-    <!-- Sticky Module Navigator Strip -->
-    <div class="sticky top-4 z-40 bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-xl p-2.5 mb-8 shadow-xl overflow-x-auto flex items-center gap-2 text-xs font-mono">
-      <span class="text-slate-500 text-[10px] uppercase font-bold px-2 whitespace-nowrap">Jump to Module:</span>
-      <a href="#m1" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M1: Drift</a>
-      <a href="#m2" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M2: Small Models</a>
-      <a href="#m3" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M3: Tool Accuracy</a>
-      <a href="#m4" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M4: Context</a>
-      <a href="#m5" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M5: Graph Blast</a>
-      <a href="#m6" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M6: Tool Ceiling</a>
-      <a href="#m7" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M7: Skills</a>
-      <a href="#m8" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-accent whitespace-nowrap transition">M8: Memory Tiers</a>
-      <a href="./scoreboard.html" target="_blank" class="ml-auto px-2.5 py-1 rounded bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-700 whitespace-nowrap font-bold transition">
-        Log Scoreboard ↗
-      </a>
-    </div>
+    <!-- MAIN 2-COLUMN WORKSPACE -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
 
-    <!-- MODULES CONTAINER -->
-    <div class="space-y-8 mb-12">
-
-      <!-- ================= MODULE 1 ================= -->
-      <section id="m1" class="bg-card border border-border-subtle hover:border-accent/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30">
-              Module 1 · 20 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">Catching Version Drift Before Production</h3>
+      <!-- ================= LEFT NAVIGATION SIDEBAR ================= -->
+      <aside class="lg:col-span-4 bg-card border border-border-subtle rounded-2xl p-4 lg:p-5 shadow-2xl lg:sticky lg:top-6 space-y-3">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="text-accent text-sm font-bold">📚</span>
+            <span class="text-xs font-display font-bold uppercase tracking-wider text-white">Workshop Modules</span>
           </div>
-          <span class="text-xs font-mono text-slate-400 italic">"I upgraded the model and my incident agent stopped behaving."</span>
+          <span id="progress-counter" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/80">0 / 8 Complete</span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-accent font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>Same model family, new release: output format shifts, tool-call sequence reverses, verbosity or refusals spike. Teams find out from a broken incident channel or a confused on-call engineer. Here we implement an automated pre-flight eval gate.</p>
-            </div>
-
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">Timing Breakdown (20 Min):</span>
-              <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-accent font-bold">8 Min</span>Framing &amp; Diff Demo</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-emerald-400 font-bold">10 Min</span>Pair Eval Gate Run</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-purple-400 font-bold">2 Min</span>Gate Debrief</div>
+        <nav class="space-y-1.5 font-mono text-xs" id="nav-modules">
+          <!-- M1 -->
+          <button onclick="showModule('m1')" id="nav-btn-m1" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-900/90 border-accent/60 text-white shadow-lg shadow-cyan-950/20">
+            <input type="checkbox" id="check-m1" onclick="toggleComplete('m1', event)" class="mt-1 accent-cyan-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-accent uppercase">M1 · 20 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold">PREFLIGHT</span>
               </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Catching Version Drift</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">Automated eval gate &amp; prompt inspect</div>
             </div>
+          </button>
 
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">Support Material to Prepare:</span>
-              <ul class="list-disc pl-4 space-y-0.5 text-slate-400 text-[11px]">
-                <li>Golden eval set: 10–15 alert payloads with expected tool sequences &amp; pass/fail script.</li>
-                <li>Side-by-side diff notebook (Model v1 vs Model v2 highlighted diffs).</li>
-                <li>One-page model upgrade checklist: version pinning, eval gate, canary, rollback.</li>
+          <!-- M2 -->
+          <button onclick="showModule('m2')" id="nav-btn-m2" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m2" onclick="toggleComplete('m2', event)" class="mt-1 accent-emerald-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-accent-emerald uppercase">M2 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-semibold">MODEL ROI</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Small vs. Frontier Models</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">Token cost vs reasoning depth</div>
+            </div>
+          </button>
+
+          <!-- M3 -->
+          <button onclick="showModule('m3')" id="nav-btn-m3" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m3" onclick="toggleComplete('m3', event)" class="mt-1 accent-purple-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-accent-purple uppercase">M3 · 20 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/60 font-semibold">RED-TEAM</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Tool Accuracy &amp; Abstention</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">poisonedEntity &amp; hallucinations</div>
+            </div>
+          </button>
+
+          <!-- M4 -->
+          <button onclick="showModule('m4')" id="nav-btn-m4" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m4" onclick="toggleComplete('m4', event)" class="mt-1 accent-amber-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-accent-amber uppercase">M4 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800/60 font-semibold">CONTEXT</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Precise vs. Big Context</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">emailMemoryLeak &amp; 80k decoy</div>
+            </div>
+          </button>
+
+          <!-- M5 -->
+          <button onclick="showModule('m5')" id="nav-btn-m5" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m5" onclick="toggleComplete('m5', event)" class="mt-1 accent-cyan-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-cyan-400 uppercase">M5 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold">TOPOLOGY</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Graph Blast Radius</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">postgresSlow &amp; 1-hop traversal</div>
+            </div>
+          </button>
+
+          <!-- M6 -->
+          <button onclick="showModule('m6')" id="nav-btn-m6" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m6" onclick="toggleComplete('m6', event)" class="mt-1 accent-rose-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-accent-rose uppercase">M6 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800/60 font-semibold">badDeploy1405</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">The 50-Tool Ceiling</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">Add a tool, change the answer</div>
+            </div>
+          </button>
+
+          <!-- M7 -->
+          <button onclick="showModule('m7')" id="nav-btn-m7" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m7" onclick="toggleComplete('m7', event)" class="mt-1 accent-emerald-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-emerald-400 uppercase">M7 · 30 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-semibold">GUARDRAILS</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Guardrails &amp; Human Gate</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">ask_human_approval &amp; rollback</div>
+            </div>
+          </button>
+
+          <!-- M8 -->
+          <button onclick="showModule('m8')" id="nav-btn-m8" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
+            <input type="checkbox" id="check-m8" onclick="toggleComplete('m8', event)" class="mt-1 accent-purple-400 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1 mb-0.5">
+                <span class="text-[10px] font-bold text-purple-400 uppercase">M8 · 35 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/60 font-semibold">EPISODIC</span>
+              </div>
+              <div class="font-sans font-bold text-sm truncate text-white">Episodic Memory Tiers</div>
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">Memory ON vs OFF · INC-4092</div>
+            </div>
+          </button>
+        </nav>
+
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <a href="./calculator.html" target="_blank" class="hover:text-accent flex items-center gap-1 transition">
+            <span>🧮</span> ROI Calculator <span>↗</span>
+          </a>
+          <a href="./guardrails.html" target="_blank" class="hover:text-accent-emerald flex items-center gap-1 transition">
+            <span>🛡️</span> Security Gate <span>↗</span>
+          </a>
+        </div>
+      </aside>
+
+
+      <!-- ================= RIGHT DETAIL STAGE ================= -->
+      <main class="lg:col-span-8 space-y-6">
+
+        <!-- ================= PANEL: MODULE 1 ================= -->
+        <article id="panel-m1" class="module-panel bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30">
+                Module 1 · 20 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 font-semibold">Preflight Check</span>
+            </div>
+            <span class="text-xs font-mono text-slate-400 italic">"I upgraded the model and my incident agent stopped behaving."</span>
+          </div>
+
+          <h2 class="text-2xl font-display font-bold text-white">Catching Version Drift Before Production</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-accent font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              Same model family, new release: output format shifts, tool-call sequence reverses, verbosity or refusals spike. Teams find out from a broken incident channel or a confused on-call engineer. Here we verify preflight baseline tool health, prompt schemas, and setup.
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --test-tools && python3 mini_agent.py --prompt', this)" class="text-accent hover:underline lowercase">copy command</button>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --test-tools &amp;&amp; python3 mini_agent.py --prompt</code>
+            </div>
+            <div class="text-[11px] text-slate-400 space-y-1">
+              <div><strong>Active Configuration:</strong> Default settings in <code>config.yaml</code> (Zero edits required).</div>
+              <div><strong>Target Namespace:</strong> <code>group-1</code> (Live OpenTelemetry microservices on GKE).</div>
+            </div>
+          </div>
+
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">1. Run <code>python3 mini_agent.py --test-tools</code> to verify live cluster tool calling health.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">2. Confirm all 7 tools return <code>✅ PASS</code> status (Kubernetes events, PromQL, pod logs, topology, deploy history).</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">3. Run <code>python3 mini_agent.py --prompt</code> to inspect the assembled system prompt and registered OpenAPI schemas.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">4. Note prompt token baseline (~1,400 tokens) before adding investigation turns.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Tool Health:</strong> All 7 cluster tools return <code>✅ PASS</code>.</li>
+              <li><strong>Zero Dependencies:</strong> The agent loads with pure Python standard library (no PyYAML or external SDK required).</li>
+              <li><strong>Registered Schemas:</strong> Full OpenAPI function-calling definitions rendered for the 7 tools.</li>
+            </ul>
+          </div>
+
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <span class="text-slate-500">Module 1 of 8</span>
+            <button onclick="showModule('m2')" class="px-4 py-2 rounded-xl bg-accent-emerald text-black font-bold hover:opacity-90 transition flex items-center gap-1">
+              Next: Small vs Frontier (M2) &rarr;
+            </button>
+          </div>
+        </article>
+
+
+        <!-- ================= PANEL: MODULE 2 ================= -->
+        <article id="panel-m2" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                Module 2 · 25 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-emerald-400 font-semibold">Model ROI Benchmark</span>
+            </div>
+            <span class="text-xs font-mono text-slate-400 italic">"Why are we paying frontier prices to summarise a log file?"</span>
+          </div>
+
+          <h2 class="text-2xl font-display font-bold text-white">Small Models vs. Frontier Models</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-accent-emerald font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              Most SRE pipelines have steps that do not require deep frontier reasoning: classifying alerts, summarizing 2k lines of logs, extracting runbook chapters. Pairs measure tokens, cost, latency, and quality to discover where small models win and where they break.
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-emerald-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy frontier</button>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure</code>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto mt-2">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure</code>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>model: "gemini-3.8-flash"</code> then switch to <code>"NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"</code> or <code>"qwen/qwen3-235b-a22b-instruct-2507-maas"</code>.
+            </div>
+          </div>
+
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">1. Run the investigation with <code>gemini-3.8-flash</code> on <code>postgresFailure</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">2. Check the scorecard: note Active Prompt Tokens, Total Latency, and Estimated API Cost (~$0.010).</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">3. Switch <code>model</code> to <code>NVIDIA-Nemotron-3-Nano-30B-A3B-BF16</code> and re-run.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">4. Note the token cost delta (3x cheaper rate at $0.0001 vs $0.0003/1k tokens) and submit metrics to the Room Scoreboard.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Frontier Model:</strong> Formulates complete 4-step Deep RCA: queries PromQL, isolates product-catalog gRPC status 13 <code>INTERNAL</code>, identifies <code>astronomy-db</code> pool exhaustion, and passes safety gate.</li>
+              <li><strong>Small Model:</strong> Solves single-step classification faster, but requires constrained prompt formats to avoid repetitive tool loops.</li>
+              <li><strong>Scorecard Output:</strong> Verified ground truth <code>✅ SUCCESS</code> with breakdown of active vs cached tokens.</li>
+            </ul>
+          </div>
+
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m1')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M1)
+            </button>
+            <button onclick="showModule('m3')" class="px-4 py-2 rounded-xl bg-accent-purple text-white font-bold hover:opacity-90 transition">
+              Next: Tool Accuracy &amp; Red-Team (M3) &rarr;
+            </button>
+          </div>
+        </article>
+
+
+        <!-- ================= PANEL: MODULE 3 ================= -->
+        <article id="panel-m3" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-800">
+                Module 3 · 20 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-purple-300 font-semibold">Scenario: poisonedEntity</span>
+            </div>
+            <span class="text-xs font-mono text-slate-400 italic">"Two models, same tools: one gets 95%, the other invents fake logs."</span>
+          </div>
+
+          <h2 class="text-2xl font-display font-bold text-white">Tool Accuracy &amp; Red-Teaming (Abstention)</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-purple-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              In real on-call rotations, noise and corrupted alerts arrive citing non-existent microservices or stale pod identifiers. Un-grounded agents hallucinate plausible explanations, inventing error codes and phantom stack traces. Here we test the agent with an ungrounded alert payload and verify <strong>strict abstention enforcement</strong>.
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-purple-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario poisonedEntity', this)" class="text-accent hover:underline lowercase">copy command</button>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-purple-300 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario poisonedEntity</code>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>scenario: "poisonedEntity"</code>.
+            </div>
+          </div>
+
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">1. Launch the agent under scenario <code>poisonedEntity</code> (alert targets fake service <code>billing-worker</code>).</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">2. Observe Turn 1: Agent dispatches <code>inspect_topology({"service_name": "billing-worker"})</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">3. Observe Turn 2: Verify that the agent checks the grounding policy and refuses to invent root cause.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">4. Run <code>python3 mini_agent.py --logs</code> to view the full audit trace and abstention rationale.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Topology Observation:</strong> <code>Service 'billing-worker' not found in knowledge graph topology.</code></li>
+              <li><strong>Agent Decision:</strong> Explicit <code>ABSTAIN</code> emitted:
+                <pre class="p-2 rounded bg-black/40 text-[10px] text-slate-300 mt-1">GROUNDING VERDICT & ABSTENTION:
+- Entity Verification Failed: Service 'billing-worker' does NOT exist.
+- Agent Decision: ABSTAIN from diagnosing non-existent entity.</pre>
+              </li>
+              <li><strong>Ground Truth Score:</strong> <code>✅ SUCCESS</code> (Validates robust abstention behavior).</li>
+            </ul>
+          </div>
+
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m2')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M2)
+            </button>
+            <button onclick="showModule('m4')" class="px-4 py-2 rounded-xl bg-accent-amber text-black font-bold hover:opacity-90 transition">
+              Next: Context &amp; Needle (M4) &rarr;
+            </button>
+          </div>
+        </article>
+
+
+        <!-- ================= PANEL: MODULE 4 ================= -->
+        <article id="panel-m4" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-950/80 text-amber-300 border border-amber-800">
+                Module 4 · 25 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-amber-300 font-semibold">Scenario: emailMemoryLeak</span>
+            </div>
+            <span class="text-xs font-mono text-slate-400 italic">"We dumped 80k tokens into context — and the agent missed the needle."</span>
+          </div>
+
+          <h2 class="text-2xl font-display font-bold text-white">Precise Context Beats Big Context</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-amber-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              Order confirmations are dropping intermittently. Pods are killed by the Linux kernel with Exit Code 137. Naive SREs simply bump container memory from 100Mi to 200Mi. Here we test context modes and use calculus (memory derivative slope <code>deriv(...)</code>) to distinguish a real leak from a temporary traffic burst.
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-amber-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario emailMemoryLeak', this)" class="text-accent hover:underline lowercase">copy command</button>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario emailMemoryLeak</code>
+            </div>
+            <div class="text-[11px] text-slate-400 space-y-1">
+              <div><strong>Context Levers in <code>config.yaml</code>:</strong></div>
+              <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
+                <li><code>context_mode: "filtered_regex"</code> (8k tokens · Fast &amp; focused)</li>
+                <li><code>context_mode: "raw_80k"</code> (80k uncurated dump · Injects 12k+ token overhead per turn)</li>
+                <li><code>enable_prompt_caching: true</code> (Observe 75% prompt token discount on turns 2–5)</li>
               </ul>
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-accent">10 Min</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">1. Clone &amp; run eval gate script across Model v1 &amp; v2</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">2. Send payments-latency alert payload to both versions</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">3. Count schema mismatches &amp; tool order differences</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">4. Log mismatch count &amp; latency on Room Scoreboard</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Terminal Setup &amp; Preflight</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py --test-tools && python3 mini_agent.py --prompt', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-accent overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py --test-tools &amp;&amp; python3 mini_agent.py --prompt</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ================= MODULE 2 ================= -->
-      <section id="m2" class="bg-card border border-border-subtle hover:border-accent-emerald/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-              Module 2 · 25 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">Small Models vs. Frontier Models</h3>
-          </div>
-          <span class="text-xs font-mono text-slate-400 italic">"Why are we paying frontier-model prices to summarise a log file?"</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-accent-emerald font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>Most SRE pipelines have steps that do not require deep frontier reasoning: classifying alerts, summarizing 2k lines of logs, extracting runbook chapters. Pairs measure tokens, cost, latency, and quality to discover where small models win and where they break.</p>
-            </div>
-
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">Timing Breakdown (25 Min):</span>
-              <div class="grid grid-cols-4 gap-2 text-center text-[10px]">
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-accent font-bold">3 Min</span>Framing</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-emerald-400 font-bold">8 Min</span>Task A: Logs</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-purple-400 font-bold">8 Min</span>Task B: Runbook</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-amber-400 font-bold">6 Min</span>Scoreboard</div>
-              </div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">Quality Rubric (0–100%):</span>
-              <p class="text-slate-400 text-[11px]">Accuracy of extracted error code (40%), missed anomaly signals (30%), absence of hallucinated timestamps or services (30%).</p>
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
+                <span class="text-slate-300">1. Run <code>emailMemoryLeak</code> with <code>context_mode: "filtered_regex"</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
+                <span class="text-slate-300">2. Inspect PromQL derivative: <code>deriv(container_memory_working_set_bytes[5m])</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
+                <span class="text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and note prompt token inflation on the scorecard.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
+                <span class="text-slate-300">4. Check prompt cache savings (<code>cached_tokens_saved</code>) and submit numbers to Scoreboard.</span>
+              </label>
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-emerald-400">16 Min Total</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">1. Run Task A (2k line log summary) on Frontier model</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">2. Run Task A on Small model (Llama 3.1 8B / Flash)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">3. Run Task B (Runbook triage retrieval) on both</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">4. Note token cost delta &amp; post scores to Scoreboard</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Model Benchmark Run</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-emerald-400 overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py (Tweak config.yaml: model)</code>
-              </div>
-            </div>
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Exit Code 137:</strong> Kernel OOMKill triggered when pod hits 100Mi cgroup limit.</li>
+              <li><strong>Derivative Slope:</strong> Positive rate (e.g. <code>+1272 B/s</code>) proves persistent in-code heap leak.</li>
+              <li><strong>Engineering Caveat:</strong> Agent correctly explains that bumping limit to 200Mi merely delays the next crash.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> in 4 turns.</li>
+            </ul>
           </div>
-        </div>
-      </section>
 
-
-      <!-- ================= MODULE 3 ================= -->
-      <section id="m3" class="bg-card border border-border-subtle hover:border-purple-500/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-800">
-              Module 3 · 20 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">Picking a Model for Tool Calling</h3>
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m3')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M3)
+            </button>
+            <button onclick="showModule('m5')" class="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold hover:opacity-90 transition">
+              Next: Graph Blast Radius (M5) &rarr;
+            </button>
           </div>
-          <span class="text-xs font-mono text-slate-400 italic">"Two frontier models, same tools: one gets 95%, the other 70%."</span>
-        </div>
+        </article>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-purple-400 font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>Tool-calling accuracy varies wildly across models even within the same tier: choosing wrong tools, passing malformed arguments, triggering unnecessary sequential queries where parallel calls were optimal. Pairs run a rigorous scoring harness against 8 mock SRE tools.</p>
+
+        <!-- ================= PANEL: MODULE 5 ================= -->
+        <article id="panel-m5" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-cyan-950/80 text-cyan-300 border border-cyan-800">
+                Module 5 · 25 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-cyan-300 font-semibold">Scenario: postgresSlow</span>
             </div>
+            <span class="text-xs font-mono text-slate-400 italic">"A DB query slowed down — what else is on fire?"</span>
+          </div>
 
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">Timing Breakdown (20 Min):</span>
-              <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-accent font-bold">5 Min</span>Framing &amp; Harness</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-emerald-400 font-bold">10 Min</span>Pair 15-Alert Test</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-purple-400 font-bold">5 Min</span>Comparison Table</div>
-              </div>
+          <h2 class="text-2xl font-display font-bold text-white">Blast Radius via Knowledge Graphs</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-cyan-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              When an agent discovers topology at runtime via trial-and-error, it executes 5 sequential CLI calls (services, ingresses, DNS, RDS endpoints), taking 18–30s and giving fragmented blast radius views. A knowledge graph answers <em>"what downstream callers and dependencies will fail"</em> in 1 deterministic hop.
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-cyan-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario postgresSlow', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">The 8 Mock SRE Tools:</span>
-              <p class="text-slate-400 text-[11px]"><code>get_metrics</code>, <code>query_logs</code>, <code>get_deploys</code>, <code>page_oncall</code>, <code>resolve_dns</code>, <code>inspect_conn_pool</code>, <code>fetch_trace_waterfall</code>, <code>get_pod_events</code>.</p>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario postgresSlow</code>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              <strong>Experiment:</strong> Toggle <code>inspect_topology</code> in <code>config.yaml: enabled_tools</code> to observe agent performance with vs without the topology tool.
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-purple-400">10 Min</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">1. Run 15 test alerts through the mock tool scoring harness</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">2. Grade: Right tool (40%), Valid args (30%), Parallel (30%)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">3. Flag unnecessary exploratory tool calls</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">4. Submit tool accuracy percentage to Room Scoreboard</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Tool Calling Trace Audit</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py --logs', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-purple-400 overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py --logs</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ================= MODULE 4 ================= -->
-      <section id="m4" class="bg-card border border-border-subtle hover:border-amber-500/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-950/80 text-amber-300 border border-amber-800">
-              Module 4 · 25 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">Precise Context Beats Big Context</h3>
-          </div>
-          <span class="text-xs font-mono text-slate-400 italic">"We dumped everything into context — and the agent hallucinated."</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-amber-400 font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>Dumping entire dashboards, raw stdout, and giant runbooks into context feels safe. In production, it increases token costs 10x, inflates latency by 4s, and causes models to lose the needle in the haystack. We contrast 3 context bundles against a planted ground truth.</p>
-            </div>
-
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">The 3 Context Bundles Tested:</span>
-              <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
-                <div class="p-2 rounded bg-rose-950/40 border border-rose-900/60"><span class="block text-rose-400 font-bold">80k Tokens</span>Raw stdout dump</div>
-                <div class="p-2 rounded bg-amber-950/40 border border-amber-900/60"><span class="block text-amber-400 font-bold">8k Tokens</span>Regex/filtered logs</div>
-                <div class="p-2 rounded bg-emerald-950/40 border border-emerald-900/60"><span class="block text-emerald-400 font-bold">2k Tokens</span>Structured JSON event</div>
-              </div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">Planted Ground Truth Trap:</span>
-              <p class="text-slate-400 text-[11px]">Bundle contains 1 decoy error from 3 days ago. Does the 80k raw context agent blame the old decoy instead of the active payments pool freeze?</p>
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">1. Run <code>postgresSlow</code>: store frontend p99 latency spikes past 6.5s, but pods remain Running 1/1 without 500 errors.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">2. Observe Turn 2: Agent queries <code>inspect_topology({"service_name": "product-catalog"})</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">3. Check 1-hop dependencies: instantly links product-catalog to backend <code>astronomy-db</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-300">4. Inspect logs: isolates injected <code>SELECT pg_sleep(...)</code> query delay.</span>
+              </label>
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-amber-400">12 Min</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-              <span class="text-slate-300">1. Run payments query against 80k Raw Context bundle</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-              <span class="text-slate-300">2. Check for planted decoy hallucination &amp; record latency</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-              <span class="text-slate-300">3. Run query against 2k Structured JSON bundle</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-              <span class="text-slate-300">4. Compare token cost ($0.40 vs $0.01) on Scoreboard</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Run Context Comparison</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-amber-400 overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py (Tweak config.yaml: context_mode)</code>
-              </div>
-            </div>
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>1-Hop Topology Result:</strong> Resolves upstream callers (<code>['frontend', 'checkout']</code>) and downstream (<code>['astronomy-db (PostgreSQL)']</code>) in 0.00s.</li>
+              <li><strong>Symptom Isolation:</strong> Identifies p99 latency cascade without relying on crash events.</li>
+              <li><strong>Root Cause:</strong> Injected query sleep (<code>pg_sleep</code>) holding database connection slots open.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> in 4 turns.</li>
+            </ul>
           </div>
-        </div>
-      </section>
 
-
-      <!-- ================= MODULE 5 ================= -->
-      <section id="m5" class="bg-card border border-border-subtle hover:border-accent/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-cyan-950/80 text-cyan-300 border border-cyan-800">
-              Module 5 · 25 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">Blast Radius via Knowledge Graphs</h3>
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m4')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M4)
+            </button>
+            <button onclick="showModule('m6')" class="px-4 py-2 rounded-xl bg-accent-rose text-white font-bold hover:opacity-90 transition">
+              Next: 50-Tool Ceiling (M6) &rarr;
+            </button>
           </div>
-          <span class="text-xs font-mono text-slate-400 italic">"A DB node just died — what else is on fire?"</span>
-        </div>
+        </article>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-cyan-400 font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>When an agent must discover topology at runtime, it executes 5 sequential tool queries (K8s services, AWS RDS, ingress, DNS), burning 30s and frequently giving incomplete blast radius assessments. A Knowledge Graph answers <em>"what downstream services will fail"</em> in 1 deterministic hop.</p>
+
+        <!-- ================= PANEL: MODULE 6 ================= -->
+        <article id="panel-m6" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-rose-950/80 text-rose-300 border border-rose-800">
+                Module 6 · 25 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-rose-400 font-semibold">Scenario: badDeploy1405</span>
             </div>
+            <span class="text-xs font-mono text-slate-400 italic">"At 5 tools the agent is sharp. Add a tool, change the answer."</span>
+          </div>
 
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">The Architectural Contrast:</span>
-              <div class="grid grid-cols-2 gap-2 text-center text-[11px]">
-                <div class="p-2 rounded bg-rose-950/40 border border-rose-900/60"><span class="block text-rose-400 font-bold">Lookup-on-the-Fly</span>5 tool calls · 18.4s · Fragile</div>
-                <div class="p-2 rounded bg-emerald-950/40 border border-emerald-900/60"><span class="block text-emerald-400 font-bold">Graph-Backed</span>1 query · 0.24s · Deterministic</div>
-              </div>
+          <h2 class="text-2xl font-display font-bold text-white">The 50-Tool Ceiling &amp; Adding Deployment Tools</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-rose-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              At 14:05 UTC, checkout latency spikes to 5.2s and storefront 5xx errors cascade. A team that only equips its agent with telemetry tools (Prometheus, logs) will spend 20 minutes analyzing network graphs. But adding <strong>one deployment history tool</strong> breaks the diagnostic ceiling, instantly isolating commit <code>a7f39b1</code>!
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-rose-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario badDeploy1405', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">Graph Dataset (25 Nodes):</span>
-              <p class="text-slate-400 text-[11px]">Services (<code>payments</code>, <code>checkout</code>, <code>cart</code>), Databases (<code>postgres-primary</code>), Queues (<code>kafka-orders</code>), SLOs, and team ownership mappings.</p>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-rose-300 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario badDeploy1405</code>
+            </div>
+            <div class="text-[11px] text-slate-400 space-y-1">
+              <div><strong>The 2-Phase Experiment in <code>config.yaml</code>:</strong></div>
+              <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
+                <li><strong>Run 1 (Tool-Deprived):</strong> Comment out <code>- get_deploy_history</code> under <code>enabled_tools</code>. Observe the agent flounder.</li>
+                <li><strong>Run 2 (Tool-Enabled):</strong> Uncomment <code>- get_deploy_history</code>. Observe instant breakthrough to the bad commit!</li>
+              </ul>
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-cyan-400">10 Min</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">1. Run blast-radius query on Lookup-on-the-fly agent</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">2. Run same query on Graph-backed agent (1-hop traversal)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">3. Add new service <code>loyalty-rewards</code> to graph YAML</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-              <span class="text-slate-300">4. Verify instant blast radius propagation without prompts</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Topology Traversal Test</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-cyan-400 overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py (Toggle 'inspect_topology' in config.yaml)</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ================= MODULE 6 ================= -->
-      <section id="m6" class="bg-card border border-border-subtle hover:border-rose-500/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-rose-950/80 text-rose-300 border border-rose-800">
-              Module 6 · 25 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">The 50-Tool Ceiling &amp; Routing Past It</h3>
-          </div>
-          <span class="text-xs font-mono text-slate-400 italic">"At 5 tools the agent is sharp. At 50 it picks the wrong one."</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-rose-400 font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>Every JSON tool schema injected into the system prompt costs tokens (~80–120 tokens per tool) and dilutes selection focus. At 60 tools, schemas consume 5,000+ tokens on every turn and accuracy drops from 95% down to 64%. We measure the threshold and wire a dynamic tool router.</p>
-            </div>
-
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">The Scaling Dropoff Curve:</span>
-              <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-emerald-400 font-bold">5 Tools</span>96% Accuracy · 420 Tok</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-amber-400 font-bold">20 Tools</span>88% Accuracy · 1,680 Tok</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-rose-400 font-bold">60 Tools</span>64% Accuracy · 5,040 Tok</div>
-              </div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">The Fix: 2-Stage Semantic Router:</span>
-              <p class="text-slate-400 text-[11px]">Embedding or category-based tool router filters the 60 tools down to the 4 most relevant before calling the primary LLM planner.</p>
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
+                <span class="text-slate-300">1. Run with <code>get_deploy_history</code> commented out: note agent's inability to identify the release trigger.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
+                <span class="text-slate-300">2. Enable <code>get_deploy_history</code> in <code>config.yaml</code> and re-run.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
+                <span class="text-slate-300">3. Observe Turn 3: <code>get_deploy_history({"service_name": "checkout"})</code> parses rollout history.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
+                <span class="text-slate-300">4. Observe Turn 4: Agent requests human approval to rollback to revision 2.</span>
+              </label>
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-rose-400">10 Min</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-              <span class="text-slate-300">1. Run 15 alerts against 5 tools &amp; record accuracy</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-              <span class="text-slate-300">2. Pad toolset to 60 tools &amp; record accuracy dropoff</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-              <span class="text-slate-300">3. Activate lightweight Tool Router (pre-filtering)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-              <span class="text-slate-300">4. Observe accuracy restore to 94%+ with 1/10th tokens</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Tool Scale Benchmark</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-rose-400 overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py (Deprive / Comment tools in config.yaml)</code>
-              </div>
-            </div>
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Bad Revision:</strong> Revision 3 deployed at 14:05 UTC by <code>payments@company.internal</code>.</li>
+              <li><strong>Commit Hash:</strong> <code>a7f39b1</code> (<em>"perf: tune client timeouts for downstream payment service"</em>).</li>
+              <li><strong>Configuration Diff:</strong>
+                <pre class="p-2 rounded bg-black/40 text-[10px] text-rose-300 mt-1">- payment_client_timeout: 500ms
++ payment_client_timeout: 5000ms</pre>
+              </li>
+              <li><strong>Remediation:</strong> <code>kubectl -n group-1 rollout undo deployment/checkout --to-revision=2</code>.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS (Root Cause Identified)</code>.</li>
+            </ul>
           </div>
-        </div>
-      </section>
 
-
-      <!-- ================= MODULE 7 ================= -->
-      <section id="m7" class="bg-card border border-border-subtle hover:border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-              Module 7 · 30 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">SRE Skills &amp; Description Engineering</h3>
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m5')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M5)
+            </button>
+            <button onclick="showModule('m7')" class="px-4 py-2 rounded-xl bg-emerald-500 text-black font-bold hover:opacity-90 transition">
+              Next: Guardrails &amp; Human Gate (M7) &rarr;
+            </button>
           </div>
-          <span class="text-xs font-mono text-slate-400 italic">"We wrote a Kafka skill and the agent never uses it."</span>
-        </div>
+        </article>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-emerald-400 font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>A skill packages reusable on-call expertise: instructions, triage scripts, and when-to-use conditions. If the description is vague, the agent never dispatches it; if ambiguous, it triggers at the wrong time. The description IS the routing layer. Pairs write a skill and test it against peers' agents.</p>
+
+        <!-- ================= PANEL: MODULE 7 ================= -->
+        <article id="panel-m7" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                Module 7 · 30 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-emerald-300 font-semibold">Security Confirmation Gate</span>
             </div>
+            <span class="text-xs font-mono text-slate-400 italic">"Autonomous does not mean unsupervised: gate mutating actions."</span>
+          </div>
 
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">Timing Breakdown (30 Min):</span>
-              <div class="grid grid-cols-4 gap-2 text-center text-[10px]">
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-accent font-bold">8 Min</span>Framing</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-emerald-400 font-bold">12 Min</span>Write Skill</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-purple-400 font-bold">7 Min</span>Swap &amp; Test</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-amber-400 font-bold">3 Min</span>Debrief</div>
-              </div>
+          <h2 class="text-2xl font-display font-bold text-white">SRE Guardrails &amp; Human-in-the-Loop</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              Giving an autonomous agent unrestricted write permissions (`kubectl delete pod`, `rollout restart`) risks cascading outages and data loss. Production systems enforce a strict read-only boundary during diagnosis, and mandate an interactive Human-in-the-Loop confirmation gate before any mutating state change.
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-emerald-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">Anatomy of a Production SRE Skill:</span>
-              <p class="text-slate-400 text-[11px]">YAML Frontmatter (name, trigger description, required tools) + Step-by-step triage sequence + Mitigation verification command.</p>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-300 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario postgresFailure</code>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              <strong>Guardrail Policies:</strong> Inspect <code>prompts.yaml</code> under <code>security_guardrails</code> and notice the <code>ask_human_approval</code> requirement.
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-emerald-400">19 Min Total</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">1. Select runbook you know (Kafka lag, cert expiry, disk full)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">2. Author <code>SKILL.md</code> using the structured template</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">3. Swap skills with neighboring pair (e.g. Pair 1 &harr; Pair 2)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-              <span class="text-slate-300">4. Run 3 ambiguous alerts: Did the agent trigger the skill?</span>
-            </label>
-
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Guardrail Safety &amp; Log Audit</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py --logs', this)" class="text-accent hover:underline lowercase font-mono">copy</button>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-emerald-400 overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py --logs</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ================= MODULE 8 ================= -->
-      <section id="m8" class="bg-card border border-border-subtle hover:border-purple-500/40 rounded-2xl p-6 shadow-xl space-y-5 transition">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-          <div class="flex items-center gap-3">
-            <span class="px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-800">
-              Module 8 · 35 Min
-            </span>
-            <h3 class="text-xl font-display font-bold text-white">Choosing the Right Memory Layer</h3>
-          </div>
-          <span class="text-xs font-mono text-slate-400 italic">"Working memory, session state, or vector store — and at what cost?"</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 space-y-4 text-xs font-mono leading-relaxed text-slate-300">
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-              <span class="text-purple-400 font-bold block text-[11px] uppercase">Why This Matters:</span>
-              <p>Working memory (context window), session memory (this active incident), long-term memory (past postmortems), and shared organizational memory each trade off cost, staleness, and retrieval quality. Pairs map the tiers to our running payments scenario and size the cost using the interactive calculator.</p>
-            </div>
-
-            <div class="space-y-2">
-              <span class="text-white font-bold block text-[11px] uppercase">The 3 Incident Agent Archetypes Sized:</span>
-              <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-accent font-bold">1. Quick Triage Bot</span>3-turn run · Ephemeral</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-amber-400 font-bold">2. Incident Lead</span>45-turn war-room state</div>
-                <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="block text-purple-400 font-bold">3. Postmortem Search</span>Org-wide RAG store</div>
-              </div>
-            </div>
-
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span class="text-slate-400 font-bold block text-[10px] uppercase">Key Takeaway for Leadership:</span>
-              <p class="text-slate-400 text-[11px]">Never use raw RAG for live operational state. Use fast session state stores (Redis) during the incident; serialize to vector embeddings only for post-incident search.</p>
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">1. Launch the agent on <code>postgresFailure</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">2. Observe Turn 4: The agent isolates pool starvation and formulates a rollout restart.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">3. Verify that instead of running kubectl directly, the agent invokes <code>ask_human_approval</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
+                <span class="text-slate-300">4. Inspect the safety gate audit trail in <code>logs/investigation_latest.log</code>.</span>
+              </label>
             </div>
           </div>
 
-          <!-- Action Checklist for Pairs -->
-          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-bold text-[10px] uppercase block">Pair Exercise Checklist:</span>
-              <span class="text-[10px] text-purple-400">15 Min</span>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">1. Run demo: Forgetful agent vs Session-Memory agent</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">2. Size Scenario Card 1 (Triage Bot): Estimate tokens &amp; cost</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">3. Size Scenario Card 2 (Long Incident Commander state)</span>
-            </label>
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-              <span class="text-slate-300">4. Submit final architectural cost estimate to Scoreboard</span>
-            </label>
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Security Gate Triggered:</strong>
+                <pre class="p-2 rounded bg-black/40 text-[10px] text-emerald-300 mt-1">🛡️ [SECURITY CONFIRMATION GATE TRIGGERED]
+├── Action       : Rollout restart product-catalog deployment
+├── Risk Level   : MEDIUM
+├── Command      : kubectl -n group-1 rollout restart deploy/product-catalog
+└── Blast Radius : Brief 5s transient latency; zero data loss.</pre>
+              </li>
+              <li><strong>Audit Compliance:</strong> Zero mutating commands executed without prior authorization.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> with validated remediation.</li>
+            </ul>
+          </div>
 
-            <div class="pt-3 border-t border-slate-800">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 uppercase font-semibold mb-1">
-                <span>Memory Sizing Tool</span>
-                <a href="./calculator.html" target="_blank" class="text-accent hover:underline font-mono">Open Calculator &rarr;</a>
-              </div>
-              <div class="p-2 rounded bg-black/60 border border-slate-800 font-mono text-[10px] text-purple-400">
-                Inputs: tokens/turn &times; turns &times; retention days &times; retrieval hits
-              </div>
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m6')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M6)
+            </button>
+            <button onclick="showModule('m8')" class="px-4 py-2 rounded-xl bg-purple-500 text-white font-bold hover:opacity-90 transition">
+              Next: Episodic Memory (M8) &rarr;
+            </button>
+          </div>
+        </article>
+
+
+        <!-- ================= PANEL: MODULE 8 ================= -->
+        <article id="panel-m8" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-800">
+                Module 8 · 35 Min
+              </span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-purple-300 font-semibold">Scenario: episodicRecurrence</span>
+            </div>
+            <span class="text-xs font-mono text-slate-400 italic">"Working memory, session state, or vector store — and at what cost?"</span>
+          </div>
+
+          <h2 class="text-2xl font-display font-bold text-white">Episodic Memory Tiers &amp; Incident Recall</h2>
+
+          <!-- Section 1: Overview -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-purple-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-300 leading-relaxed">
+              Incidents often repeat. Without persistent episodic memory, every on-call agent starts from zero, burning hundreds of thousands of tokens re-diagnosing known patterns. In this exercise, pairs run Turn 1 (investigate from first principles and write post-mortem) versus Turn 2 (enable episodic recall, cite past incident <code>INC-4092</code>, and evaluate whether the previous fix held).
+            </p>
+          </div>
+
+          <!-- Section 2: How to Invoke -->
+          <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+              <span class="text-purple-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario episodicRecurrence', this)" class="text-accent hover:underline lowercase">copy command</button>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-purple-300 font-mono text-xs overflow-x-auto">
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario episodicRecurrence</code>
+            </div>
+            <div class="text-[11px] text-slate-400 space-y-1">
+              <div><strong>The 2-Turn Experiment in <code>config.yaml</code>:</strong></div>
+              <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
+                <li><strong>Turn 1 (Memory OFF):</strong> Set <code>enable_memory: false</code>. Agent runs fresh and saves incident card to <code>memory/episodic_memory.md</code>.</li>
+                <li><strong>Turn 2 (Memory ON):</strong> Set <code>enable_memory: true</code>. Agent recalls past post-mortems via <code>search_incident_history</code>.</li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
 
+          <!-- Section 3: What to Do -->
+          <div class="space-y-3 font-mono text-xs">
+            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">1. Set <code>enable_memory: false</code> in <code>config.yaml</code> and run <code>episodicRecurrence</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">2. Open <code>memory/episodic_memory.md</code> to inspect the newly written post-mortem incident entry.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">3. Set <code>enable_memory: true</code> in <code>config.yaml</code> and re-run.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
+                <span class="text-slate-300">4. Observe agent query <code>search_incident_history</code>, match <code>INC-4092</code>, compare symptoms, and assess why the prior fix failed.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 4: What to Expect -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+              <li><strong>Historical Citation:</strong> Agent directly matches <strong>INC-4092</strong> from <strong>14 March</strong>.</li>
+              <li><strong>Symptom Comparison:</strong> Identical gRPC status 13 <code>INTERNAL</code> on product-catalog database queries.</li>
+              <li><strong>Why Prior Fix Failed:</strong> Prior fix increased PostgreSQL server <code>max_connections=300</code>, but client-side connection pooling (<code>max_idle_conns</code>) remained unbounded.</li>
+              <li><strong>Permanent Fix:</strong> Enforce client connection pool capping in product-catalog Helm values.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> with episodic incident citation.</li>
+            </ul>
+          </div>
+
+          <!-- Module Footer Nav -->
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m7')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+              &larr; Previous (M7)
+            </button>
+            <a href="./scoreboard.html" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition flex items-center gap-1">
+              Submit to Room Scoreboard 📊
+            </a>
+          </div>
+        </article>
+
+      </main>
     </div>
 
     <!-- Cross-Cutting Facilitator Preparation Strip -->
@@ -716,12 +947,75 @@
   </div>
 
   <!-- Footer -->
-  <footer class="max-w-6xl mx-auto w-full mt-6 pt-6 border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-3">
+  <footer class="max-w-7xl mx-auto w-full mt-6 pt-6 border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-3">
     <div>NudgeBee Executive SRE Masterclass Series · Building AI Agents for SRE &amp; AIOps</div>
     <div class="text-slate-400">8 Hands-On Modules · 1 Running Scenario · 1 Shared Scoreboard</div>
   </footer>
 
+  <!-- Interactive JavaScript Controller -->
   <script>
+    const MODULES = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'];
+    let currentModule = 'm1';
+
+    function showModule(id) {
+      if (!MODULES.includes(id)) id = 'm1';
+      currentModule = id;
+
+      // Update URL hash without jumping page
+      if (window.location.hash !== '#' + id) {
+        history.replaceState(null, null, '#' + id);
+      }
+
+      // Hide all panels, show active
+      MODULES.forEach(m => {
+        const panel = document.getElementById('panel-' + m);
+        const btn = document.getElementById('nav-btn-' + m);
+        if (panel) {
+          if (m === id) {
+            panel.classList.remove('hidden');
+          } else {
+            panel.classList.add('hidden');
+          }
+        }
+        if (btn) {
+          if (m === id) {
+            btn.className = "w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-900/90 border-accent/80 text-white shadow-lg shadow-cyan-950/30";
+          } else {
+            btn.className = "w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300";
+          }
+        }
+      });
+
+      // Smooth scroll main container into view if on mobile
+      if (window.innerWidth < 1024) {
+        const activePanel = document.getElementById('panel-' + id);
+        if (activePanel) {
+          activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+
+    function toggleComplete(id, event) {
+      event.stopPropagation();
+      const checked = event.target.checked;
+      localStorage.setItem('workshop_complete_' + id, checked ? 'true' : 'false');
+      updateProgressCounter();
+    }
+
+    function updateProgressCounter() {
+      let count = 0;
+      MODULES.forEach(m => {
+        const isDone = localStorage.getItem('workshop_complete_' + m) === 'true';
+        const el = document.getElementById('check-' + m);
+        if (el) el.checked = isDone;
+        if (isDone) count++;
+      });
+      const counter = document.getElementById('progress-counter');
+      if (counter) {
+        counter.innerText = count + ' / ' + MODULES.length + ' Complete';
+      }
+    }
+
     function copyCmd(text, btn) {
       navigator.clipboard.writeText(text).then(() => {
         const orig = btn.innerText;
@@ -733,6 +1027,28 @@
         }, 2000);
       });
     }
+
+    // Keyboard navigation (ArrowLeft = prev, ArrowRight = next)
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const idx = MODULES.indexOf(currentModule);
+      if (e.key === 'ArrowRight' && idx < MODULES.length - 1) {
+        showModule(MODULES[idx + 1]);
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        showModule(MODULES[idx - 1]);
+      }
+    });
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateProgressCounter();
+      const hash = window.location.hash.replace('#', '');
+      if (MODULES.includes(hash)) {
+        showModule(hash);
+      } else {
+        showModule('m1');
+      }
+    });
   </script>
 </body>
 </html>
