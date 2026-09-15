@@ -101,110 +101,110 @@
             </div>
 
             <!-- Clustering Ratio -->
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-800 space-y-2">
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-2">
               <div class="flex justify-between text-xs">
-                <span class="text-slate-300 font-medium">Alert Clustering & Dedup Ratio</span>
-                <span class="font-mono text-accent font-bold" id="dedupVal">10:1 Ratio</span>
+                <span class="text-slate-800 dark:text-slate-300 font-medium">Alert Clustering &amp; Dedup Ratio</span>
+                <span class="font-mono text-sky-700 dark:text-accent font-bold" id="dedupVal">10:1 Ratio</span>
               </div>
-              <input type="range" id="dedupRatio" min="1" max="25" step="1" value="10" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-              <p class="text-[11px] text-slate-300 font-mono">
-                = <span id="triagedEpisodesVal" class="text-accent font-bold">250 episodes/day</span> (<span id="monthlyEpisodesVal" class="text-slate-200 font-semibold">7,500 episodes/month</span>)
+              <input type="range" id="dedupRatio" min="1" max="25" step="1" value="10" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-sky-600 dark:accent-accent">
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">
+                = <span id="triagedEpisodesVal" class="text-sky-700 dark:text-accent font-bold">250 episodes/day</span> (<span id="monthlyEpisodesVal" class="text-slate-800 dark:text-slate-200 font-semibold">7,500 episodes/month</span>)
               </p>
             </div>
           </div>
 
           <!-- Step 2: Incident Conversion Rate (%) -->
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-800 space-y-2.5">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-2.5">
             <div class="flex justify-between text-xs">
-              <span class="text-slate-300 font-medium">2. Real Incident Conversion Rate</span>
-              <span class="font-mono text-purple-400 font-bold" id="incidentRateVal">1.0% of episodes</span>
+              <span class="text-slate-800 dark:text-slate-300 font-medium">2. Real Incident Conversion Rate</span>
+              <span class="font-mono text-purple-700 dark:text-purple-400 font-bold" id="incidentRateVal">1.0% of episodes</span>
             </div>
-            <input type="range" id="incidentRate" min="0.2" max="5.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <input type="range" id="incidentRate" min="0.2" max="5.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-purple-600 dark:accent-purple-400">
             
             <!-- Dual Numbers: Monthly & Daily -->
             <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
-              <div class="bg-purple-950/40 border border-purple-800/40 p-2 rounded">
-                <span class="text-purple-300 font-semibold block">⚡ Real Incidents</span>
-                <span id="totalIncidentsCount" class="text-white font-bold text-xs">75 / mo</span>
-                <span id="dailyIncidentsCount" class="text-purple-400 text-[10px] block">(2.5 / day)</span>
+              <div class="bg-purple-50 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-800/40 p-2 rounded">
+                <span class="text-purple-800 dark:text-purple-300 font-semibold block">⚡ Real Incidents</span>
+                <span id="totalIncidentsCount" class="text-purple-950 dark:text-white font-bold text-xs">75 / mo</span>
+                <span id="dailyIncidentsCount" class="text-purple-700 dark:text-purple-400 text-[10px] block">(2.5 / day)</span>
               </div>
-              <div class="bg-slate-900 border border-slate-800 p-2 rounded">
-                <span class="text-slate-400 font-semibold block">🛡️ Auto-Closed Noise</span>
-                <span id="closedEpisodesCount" class="text-slate-200 font-bold text-xs">7,425 / mo</span>
+              <div class="bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 p-2 rounded">
+                <span class="text-slate-700 dark:text-slate-400 font-semibold block">🛡️ Auto-Closed Noise</span>
+                <span id="closedEpisodesCount" class="text-slate-900 dark:text-slate-200 font-bold text-xs">7,425 / mo</span>
                 <span id="dailyClosedCount" class="text-slate-500 text-[10px] block">(247.5 / day · 99.0%)</span>
               </div>
             </div>
 
             <!-- Visual 100% Episode Distribution Bar -->
             <div class="pt-1">
-              <div class="flex justify-between text-[10px] text-slate-400 font-mono mb-1">
+              <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-mono mb-1">
                 <span>Episodes Allocation (100%)</span>
-                <span id="allocationPctLabel" class="text-purple-400">99.0% Auto-Closed · 1.0% Real</span>
+                <span id="allocationPctLabel" class="text-purple-700 dark:text-purple-400 font-semibold">99.0% Auto-Closed · 1.0% Real</span>
               </div>
-              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden flex">
-                <div id="barClosed" class="bg-slate-600 h-full transition-all duration-300" style="width: 99%"></div>
-                <div id="barNormal" class="bg-purple-500 h-full transition-all duration-300" style="width: 0.8%"></div>
-                <div id="barMajor" class="bg-rose-500 h-full transition-all duration-300" style="width: 0.2%"></div>
+              <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                <div id="barClosed" class="bg-slate-400 dark:bg-slate-600 h-full transition-all duration-300" style="width: 99%"></div>
+                <div id="barNormal" class="bg-purple-600 dark:bg-purple-500 h-full transition-all duration-300" style="width: 0.8%"></div>
+                <div id="barMajor" class="bg-rose-600 dark:bg-rose-500 h-full transition-all duration-300" style="width: 0.2%"></div>
               </div>
             </div>
           </div>
 
           <!-- Step 3: Major Incident Share (%) & Turn Depths -->
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-800 space-y-3">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-3">
             <div>
               <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300 font-medium">3. Incident Severity Distribution</span>
-                <span class="font-mono text-rose-400 font-bold" id="majorShareVal">20% Major · 80% Normal</span>
+                <span class="text-slate-800 dark:text-slate-300 font-medium">3. Incident Severity Distribution</span>
+                <span class="font-mono text-rose-700 dark:text-rose-400 font-bold" id="majorShareVal">20% Major · 80% Normal</span>
               </div>
-              <input type="range" id="majorShare" min="5" max="40" step="1" value="20" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+              <input type="range" id="majorShare" min="5" max="40" step="1" value="20" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-rose-600 dark:accent-rose-400">
               
-              <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800/80 font-mono text-[11px]">
-                <div class="bg-purple-950/30 border border-purple-900/40 p-2 rounded">
+              <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/80 font-mono text-[11px]">
+                <div class="bg-purple-50 border border-purple-200 dark:bg-purple-950/30 dark:border-purple-900/40 p-2 rounded">
                   <div class="flex justify-between items-start">
-                    <span class="text-purple-400 font-semibold block">Normal (P3)</span>
-                    <span class="text-[10px] text-purple-300 font-bold" id="normalShareBadge">80%</span>
+                    <span class="text-purple-800 dark:text-purple-400 font-semibold block">Normal (P3)</span>
+                    <span class="text-[10px] text-purple-700 dark:text-purple-300 font-bold" id="normalShareBadge">80%</span>
                   </div>
-                  <div class="text-white text-sm font-bold mt-1" id="normalIncVal">60 / mo</div>
-                  <span class="text-slate-400 text-[10px] block" id="dailyNormalVal">(2.0 / day)</span>
-                  <span class="text-purple-300 text-[10px] block mt-1" id="normalTurnsBadge">4-turn remediation</span>
+                  <div class="text-purple-950 dark:text-white text-sm font-bold mt-1" id="normalIncVal">60 / mo</div>
+                  <span class="text-slate-500 dark:text-slate-400 text-[10px] block" id="dailyNormalVal">(2.0 / day)</span>
+                  <span class="text-purple-700 dark:text-purple-300 text-[10px] block mt-1" id="normalTurnsBadge">4-turn remediation</span>
                 </div>
-                <div class="bg-rose-950/30 border border-rose-900/40 p-2 rounded">
+                <div class="bg-rose-50 border border-rose-200 dark:bg-rose-950/30 dark:border-rose-900/40 p-2 rounded">
                   <div class="flex justify-between items-start">
-                    <span class="text-rose-400 font-semibold block">Major Outages (P1)</span>
-                    <span class="text-[10px] text-rose-300 font-bold" id="majorShareBadge">20%</span>
+                    <span class="text-rose-800 dark:text-rose-400 font-semibold block">Major Outages (P1)</span>
+                    <span class="text-[10px] text-rose-700 dark:text-rose-300 font-bold" id="majorShareBadge">20%</span>
                   </div>
-                  <div class="text-white text-sm font-bold mt-1" id="majorIncVal">15 / mo</div>
-                  <span class="text-slate-400 text-[10px] block" id="dailyMajorVal">(0.5 / day)</span>
-                  <span class="text-rose-300 text-[10px] block mt-1" id="turnsBadge">10-turn RCA</span>
+                  <div class="text-rose-950 dark:text-white text-sm font-bold mt-1" id="majorIncVal">15 / mo</div>
+                  <span class="text-slate-500 dark:text-slate-400 text-[10px] block" id="dailyMajorVal">(0.5 / day)</span>
+                  <span class="text-rose-700 dark:text-rose-300 text-[10px] block mt-1" id="turnsBadge">10-turn RCA</span>
                 </div>
               </div>
             </div>
 
             <!-- Investigation Loop Depth: Dual Sliders -->
-            <div class="pt-2 border-t border-slate-800/80 space-y-3">
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80 space-y-3">
               <!-- Normal Incident (P3) Turns Slider -->
               <div>
                 <div class="flex justify-between text-xs mb-1">
-                  <span class="text-purple-300 font-medium flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> Normal (P3) Investigation Turns
+                  <span class="text-purple-800 dark:text-purple-300 font-medium flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Normal (P3) Investigation Turns
                   </span>
-                  <span class="font-mono text-purple-400 font-bold" id="normalTurnsVal">4 turns / incident</span>
+                  <span class="font-mono text-purple-700 dark:text-purple-400 font-bold" id="normalTurnsVal">4 turns / incident</span>
                 </div>
-                <input type="range" id="normalTurns" min="1" max="8" step="1" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-                <p class="text-[10px] text-slate-400 font-mono mt-0.5">Automated triage, restart, canary rollback, autoscaling.</p>
+                <input type="range" id="normalTurns" min="1" max="8" step="1" value="4" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-purple-600 dark:accent-purple-400">
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">Automated triage, restart, canary rollback, autoscaling.</p>
               </div>
 
               <!-- Major Outage (P1) Turns Slider -->
               <div>
                 <div class="flex justify-between text-xs mb-1">
-                  <span class="text-rose-300 font-medium flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Major (P1) Outage Loop Depth
+                  <span class="text-rose-800 dark:text-rose-300 font-medium flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Major (P1) Outage Loop Depth
                   </span>
-                  <span class="font-mono text-rose-400 font-bold" id="turnsVal">10 turns / incident</span>
+                  <span class="font-mono text-rose-700 dark:text-rose-400 font-bold" id="turnsVal">10 turns / incident</span>
                 </div>
-                <input type="range" id="incidentTurns" min="3" max="25" step="1" value="10" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-                <p class="text-[10px] text-slate-400 font-mono mt-0.5">
-                  Compounding context: <span id="estIncidentTokens" class="text-rose-400 font-semibold">~1.95M tokens</span> / incident in Naive.
+                <input type="range" id="incidentTurns" min="3" max="25" step="1" value="10" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-rose-600 dark:accent-rose-400">
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                  Compounding context: <span id="estIncidentTokens" class="text-rose-700 dark:text-rose-400 font-semibold">~1.95M tokens</span> / incident in Naive.
                 </p>
               </div>
             </div>
@@ -213,11 +213,11 @@
           <!-- Raw Log / Context Size -->
           <div>
             <div class="flex justify-between text-sm mb-1.5">
-              <label class="text-slate-300 font-medium">Avg. Raw Log/Context Payload</label>
-              <span class="font-mono text-accent font-semibold" id="contextVal">120 KB</span>
+              <label class="text-slate-800 dark:text-slate-300 font-medium">Avg. Raw Log/Context Payload</label>
+              <span class="font-mono text-sky-700 dark:text-accent font-semibold" id="contextVal">120 KB</span>
             </div>
-            <input type="range" id="context" min="10" max="500" step="10" value="120" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-            <p class="text-[11px] text-slate-400 mt-1">≈ <span id="tokensEst" class="font-mono text-slate-300 font-semibold">30,000</span> input tokens per service query</p>
+            <input type="range" id="context" min="10" max="500" step="10" value="120" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-sky-600 dark:accent-accent">
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">≈ <span id="tokensEst" class="font-mono text-slate-800 dark:text-slate-300 font-semibold">30,000</span> input tokens per service query</p>
           </div>
         </div>
 
@@ -234,8 +234,8 @@
           <!-- Frontier Model Selector -->
           <div class="space-y-2">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-              <span class="text-xs font-mono uppercase tracking-wider text-accent font-semibold">1. Frontier Model (Deep RCA & Complex Reasoning)</span>
-              <select id="frontierSelect" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 font-mono focus:border-accent">
+              <span class="text-xs font-mono uppercase tracking-wider text-sky-700 dark:text-accent font-semibold">1. Frontier Model (Deep RCA &amp; Complex Reasoning)</span>
+              <select id="frontierSelect" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-mono focus:border-sky-500 dark:focus:border-accent">
                 <option value="sonnet" selected>Claude 3.5 Sonnet</option>
                 <option value="gpt4o">GPT-4o</option>
                 <option value="gemini-pro">Gemini 1.5 Pro</option>
@@ -246,21 +246,21 @@
             </div>
             <div class="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <label class="text-[11px] text-slate-400 block mb-1">Input / 1M Tokens ($)</label>
-                <input type="number" id="frontierInPrice" step="0.10" value="3.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:border-accent focus:outline-none">
+                <label class="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Input / 1M Tokens ($)</label>
+                <input type="number" id="frontierInPrice" step="0.10" value="3.00" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-900 dark:text-white focus:border-sky-500 dark:focus:border-accent focus:outline-none">
               </div>
               <div>
-                <label class="text-[11px] text-slate-400 block mb-1">Output / 1M Tokens ($)</label>
-                <input type="number" id="frontierOutPrice" step="0.50" value="15.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:border-accent focus:outline-none">
+                <label class="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Output / 1M Tokens ($)</label>
+                <input type="number" id="frontierOutPrice" step="0.50" value="15.00" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-900 dark:text-white focus:border-sky-500 dark:focus:border-accent focus:outline-none">
               </div>
             </div>
           </div>
 
           <!-- Sub-Model Selector -->
-          <div class="space-y-2 pt-3 border-t border-border-subtle">
+          <div class="space-y-2 pt-3 border-t border-slate-200 dark:border-border-subtle">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-              <span class="text-xs font-mono uppercase tracking-wider text-amber-400 font-semibold">2. Triage / Sub-Model (Noise Filter & Classification)</span>
-              <select id="smallSelect" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 font-mono focus:border-amber-400">
+              <span class="text-xs font-mono uppercase tracking-wider text-amber-700 dark:text-amber-400 font-semibold">2. Triage / Sub-Model (Noise Filter &amp; Classification)</span>
+              <select id="smallSelect" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-mono focus:border-amber-500 dark:focus:border-amber-400">
                 <option value="haiku" selected>Claude 3.5 Haiku</option>
                 <option value="gpt4o-mini">GPT-4o-mini</option>
                 <option value="gemini-flash">Gemini 1.5 Flash</option>
@@ -270,52 +270,52 @@
             </div>
             <div class="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <label class="text-[11px] text-slate-400 block mb-1">Input / 1M Tokens ($)</label>
-                <input type="number" id="smallInPrice" step="0.01" value="0.25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:border-amber-400 focus:outline-none">
+                <label class="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Input / 1M Tokens ($)</label>
+                <input type="number" id="smallInPrice" step="0.01" value="0.25" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-900 dark:text-white focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none">
               </div>
               <div>
-                <label class="text-[11px] text-slate-400 block mb-1">Output / 1M Tokens ($)</label>
-                <input type="number" id="smallOutPrice" step="0.05" value="1.25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:border-amber-400 focus:outline-none">
+                <label class="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Output / 1M Tokens ($)</label>
+                <input type="number" id="smallOutPrice" step="0.05" value="1.25" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-900 dark:text-white focus:border-amber-500 dark:focus:border-amber-400 focus:outline-none">
               </div>
             </div>
           </div>
         </div>
 
         <!-- 3. Architecture Tuning Controls -->
-        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 shadow-xl space-y-4">
-          <h2 class="text-base font-display font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-border-subtle pb-3">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 space-y-4">
+          <h2 class="text-base font-display font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-border-subtle pb-3">
+            <svg class="w-4 h-4 text-sky-600 dark:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
             Production Architecture Levers
           </h2>
 
           <!-- Tiering Ratio -->
           <div>
             <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-300 font-medium">Routine Alerts Delegated to Sub-Model</span>
-              <span class="font-mono text-accent font-bold" id="tierSplitVal">85%</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Routine Alerts Delegated to Sub-Model</span>
+              <span class="font-mono text-sky-700 dark:text-accent font-bold" id="tierSplitVal">85%</span>
             </div>
-            <input type="range" id="tierSplit" min="50" max="98" step="1" value="85" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-            <p class="text-[11px] text-slate-500 font-mono mt-0.5">Remaining <span id="frontierEscalateVal">15%</span> escalate to Frontier Model.</p>
+            <input type="range" id="tierSplit" min="50" max="98" step="1" value="85" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-sky-600 dark:accent-accent">
+            <p class="text-[11px] text-slate-500 font-mono mt-0.5">Remaining <span id="frontierEscalateVal" class="font-bold text-slate-700 dark:text-slate-300">15%</span> escalate to Frontier Model.</p>
           </div>
 
           <!-- Prompt Caching % -->
-          <div class="pt-2 border-t border-slate-800">
+          <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
             <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-300 font-medium">Prompt Cache Hit Rate (Arch 3)</span>
-              <span class="font-mono text-accent-emerald font-bold" id="cacheHitVal">75%</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Prompt Cache Hit Rate (Arch 3)</span>
+              <span class="font-mono text-emerald-700 dark:text-accent-emerald font-bold" id="cacheHitVal">75%</span>
             </div>
-            <input type="range" id="cacheHit" min="0" max="95" step="5" value="75" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <input type="range" id="cacheHit" min="0" max="95" step="5" value="75" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-emerald-600 dark:accent-accent-emerald">
             <p class="text-[11px] text-slate-500 font-mono mt-0.5">Applies 90% read discount on system prompt, topology graph, and tool schemas.</p>
           </div>
 
           <!-- Pre-filtering Compression -->
-          <div class="pt-2 border-t border-slate-800">
+          <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
             <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-300 font-medium">Deterministic Log Pre-Filtering Reduction</span>
-              <span class="font-mono text-accent-emerald font-bold" id="prefilterVal">80% reduction</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Deterministic Log Pre-Filtering Reduction</span>
+              <span class="font-mono text-emerald-700 dark:text-accent-emerald font-bold" id="prefilterVal">80% reduction</span>
             </div>
-            <input type="range" id="prefilterRatio" min="50" max="95" step="1" value="80" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-            <p class="text-[11px] text-slate-500 font-mono mt-0.5">Realistic reduction retaining stack traces, key metrics & pod events.</p>
+            <input type="range" id="prefilterRatio" min="50" max="95" step="1" value="80" class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer accent-emerald-600 dark:accent-accent-emerald">
+            <p class="text-[11px] text-slate-500 font-mono mt-0.5">Realistic reduction retaining stack traces, key metrics &amp; pod events.</p>
           </div>
 
         </div>
@@ -329,108 +329,108 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           <!-- Arch 1: Naive -->
-          <div class="bg-card border border-rose-900/50 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+          <div class="bg-white dark:bg-card border border-rose-200 dark:border-rose-900/50 shadow-sm dark:shadow-xl rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold">Architecture 1</span>
-                <span class="text-[9px] font-mono bg-rose-950/80 text-rose-300 px-1.5 py-0.5 rounded border border-rose-900">Baseline</span>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-rose-600 dark:text-rose-400 font-bold">Architecture 1</span>
+                <span class="text-[9px] font-mono bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-900">Baseline</span>
               </div>
-              <h3 class="font-display font-bold text-white text-base">Naive Context</h3>
-              <p class="text-xs text-slate-400 mt-1">Raw logs stuffed into Frontier model (<span class="text-slate-200 font-mono" id="arch1FrontierName">Sonnet</span>). Multi-turn context snowballs un-bounded.</p>
+              <h3 class="font-display font-bold text-slate-900 dark:text-white text-base">Naive Context</h3>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Raw logs stuffed into Frontier model (<span class="text-slate-800 dark:text-slate-200 font-mono" id="arch1FrontierName">Sonnet</span>). Multi-turn context snowballs un-bounded.</p>
 
               <!-- Unit Economics Metrics -->
-              <div class="mt-3 pt-3 border-t border-slate-800/80 space-y-2">
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Major Incident (P1/P2 RCA)</span>
-                  <span class="text-sm font-mono font-bold text-rose-400" id="arch1PerMajorIncident">$6.03</span>
+              <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Major Incident (P1/P2 RCA)</span>
+                  <span class="text-sm font-mono font-bold text-rose-600 dark:text-rose-400" id="arch1PerMajorIncident">$6.03</span>
                 </div>
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Normal Incident (P3 Triage)</span>
-                  <span class="text-sm font-mono font-bold text-purple-400" id="arch1PerNormalIncident">$0.92</span>
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Normal Incident (P3 Triage)</span>
+                  <span class="text-sm font-mono font-bold text-purple-600 dark:text-purple-400" id="arch1PerNormalIncident">$0.92</span>
                 </div>
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Cost / 1,000 Alert Episodes</span>
-                  <span class="text-sm font-mono font-bold text-rose-300" id="arch1Per1kAlerts">$99.00</span>
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Cost / 1,000 Alert Episodes</span>
+                  <span class="text-sm font-mono font-bold text-rose-700 dark:text-rose-300" id="arch1Per1kAlerts">$99.00</span>
                 </div>
               </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-800">
-              <span class="text-3xl font-mono font-bold text-rose-400 block" id="costArch1">$0</span>
+            <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <span class="text-3xl font-mono font-bold text-rose-600 dark:text-rose-400 block" id="costArch1">$0</span>
               <span class="text-[11px] text-slate-500 font-mono">monthly bill</span>
-              <div class="text-[10px] text-slate-400 mt-1 font-mono">
+              <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 Alerts: <span id="arch1AlertCost">$0</span> · P3: <span id="arch1P3Cost">$0</span> · P1: <span id="arch1P1Cost">$0</span>
               </div>
             </div>
           </div>
 
           <!-- Arch 2: Tiered -->
-          <div class="bg-card border border-amber-900/50 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+          <div class="bg-white dark:bg-card border border-amber-200 dark:border-amber-900/50 shadow-sm dark:shadow-xl rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">Architecture 2</span>
-                <span class="text-[9px] font-mono bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-900">2-Tier Routing</span>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">Architecture 2</span>
+                <span class="text-[9px] font-mono bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900">2-Tier Routing</span>
               </div>
-              <h3 class="font-display font-bold text-white text-base">Tiered Routing</h3>
-              <p class="text-xs text-slate-400 mt-1"><span class="text-amber-300 font-mono" id="arch2SubModelName">Haiku</span> gathers data; <span class="text-accent font-mono" id="arch2FrontierName">Sonnet</span> executes final synthesis.</p>
+              <h3 class="font-display font-bold text-slate-900 dark:text-white text-base">Tiered Routing</h3>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1"><span class="text-amber-700 dark:text-amber-300 font-mono" id="arch2SubModelName">Haiku</span> gathers data; <span class="text-sky-700 dark:text-accent font-mono" id="arch2FrontierName">Sonnet</span> executes final synthesis.</p>
 
               <!-- Unit Economics Metrics -->
-              <div class="mt-3 pt-3 border-t border-slate-800/80 space-y-2">
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Major Incident (P1/P2 RCA)</span>
-                  <span class="text-sm font-mono font-bold text-amber-400" id="arch2PerMajorIncident">$1.86</span>
+              <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Major Incident (P1/P2 RCA)</span>
+                  <span class="text-sm font-mono font-bold text-amber-600 dark:text-amber-400" id="arch2PerMajorIncident">$1.86</span>
                 </div>
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Normal Incident (P3 Triage)</span>
-                  <span class="text-sm font-mono font-bold text-purple-300" id="arch2PerNormalIncident">$0.28</span>
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Normal Incident (P3 Triage)</span>
+                  <span class="text-sm font-mono font-bold text-purple-600 dark:text-purple-300" id="arch2PerNormalIncident">$0.28</span>
                 </div>
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Cost / 1,000 Alert Episodes</span>
-                  <span class="text-sm font-mono font-bold text-amber-300" id="arch2Per1kAlerts">$24.10</span>
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Cost / 1,000 Alert Episodes</span>
+                  <span class="text-sm font-mono font-bold text-amber-700 dark:text-amber-300" id="arch2Per1kAlerts">$24.10</span>
                 </div>
               </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-800">
-              <span class="text-3xl font-mono font-bold text-amber-400 block" id="costArch2">$0</span>
-              <span class="text-[11px] font-mono text-amber-400/90 font-semibold" id="savingsArch2">--</span>
-              <div class="text-[10px] text-slate-400 mt-1 font-mono">
+            <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <span class="text-3xl font-mono font-bold text-amber-600 dark:text-amber-400 block" id="costArch2">$0</span>
+              <span class="text-[11px] font-mono text-amber-600 dark:text-amber-400/90 font-semibold" id="savingsArch2">--</span>
+              <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 Alerts: <span id="arch2AlertCost">$0</span> · P3: <span id="arch2P3Cost">$0</span> · P1: <span id="arch2P1Cost">$0</span>
               </div>
             </div>
           </div>
 
           <!-- Arch 3: Production Grade -->
-          <div class="bg-card border border-accent-emerald/60 bg-accent-emerald/[0.04] rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-accent-emerald text-black text-[9px] font-mono font-bold px-2.5 py-0.5 uppercase tracking-wider rounded-bl">Enterprise Hardened</div>
+          <div class="bg-white dark:bg-card border border-emerald-300 dark:border-accent-emerald/60 shadow-sm dark:shadow-xl rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-emerald-600 dark:bg-accent-emerald text-white dark:text-black text-[9px] font-mono font-bold px-2.5 py-0.5 uppercase tracking-wider rounded-bl">Enterprise Hardened</div>
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-[10px] font-mono uppercase tracking-wider text-accent-emerald font-bold">Architecture 3</span>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-600 dark:text-accent-emerald font-bold">Architecture 3</span>
               </div>
-              <h3 class="font-display font-bold text-white text-base">Tiered + Cached + Filtered</h3>
-              <p class="text-xs text-slate-400 mt-1">Realistic 80% filtering + prompt caching on topology + tool schemas (<span class="text-accent-emerald font-mono" id="arch3ModelPair">Haiku + Sonnet</span>).</p>
+              <h3 class="font-display font-bold text-slate-900 dark:text-white text-base">Tiered + Cached + Filtered</h3>
+              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Realistic 80% filtering + prompt caching on topology + tool schemas (<span class="text-emerald-600 dark:text-accent-emerald font-mono" id="arch3ModelPair">Haiku + Sonnet</span>).</p>
 
               <!-- Unit Economics Metrics -->
-              <div class="mt-3 pt-3 border-t border-accent-emerald/20 space-y-2">
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Major Incident (P1/P2 RCA)</span>
-                  <span class="text-sm font-mono font-bold text-accent-emerald" id="arch3PerMajorIncident">$0.48</span>
+              <div class="mt-3 pt-3 border-t border-slate-200 dark:border-accent-emerald/20 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Major Incident (P1/P2 RCA)</span>
+                  <span class="text-sm font-mono font-bold text-emerald-600 dark:text-accent-emerald" id="arch3PerMajorIncident">$0.48</span>
                 </div>
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Normal Incident (P3 Triage)</span>
-                  <span class="text-sm font-mono font-bold text-purple-300" id="arch3PerNormalIncident">$0.08</span>
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Normal Incident (P3 Triage)</span>
+                  <span class="text-sm font-mono font-bold text-purple-600 dark:text-purple-300" id="arch3PerNormalIncident">$0.08</span>
                 </div>
-                <div class="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-400 block font-mono">Cost / 1,000 Alert Episodes</span>
-                  <span class="text-sm font-mono font-bold text-accent" id="arch3Per1kAlerts">$12.50</span>
+                <div class="bg-slate-50 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">Cost / 1,000 Alert Episodes</span>
+                  <span class="text-sm font-mono font-bold text-sky-600 dark:text-accent" id="arch3Per1kAlerts">$12.50</span>
                 </div>
               </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-accent-emerald/30">
-              <span class="text-3xl font-mono font-bold text-accent-emerald block" id="costArch3">$0</span>
-              <span class="text-[11px] text-accent-emerald font-mono font-semibold" id="savingsArch3">--</span>
-              <div class="text-[10px] text-slate-300 mt-1 font-mono">
+            <div class="mt-4 pt-3 border-t border-slate-200 dark:border-accent-emerald/30">
+              <span class="text-3xl font-mono font-bold text-emerald-600 dark:text-accent-emerald block" id="costArch3">$0</span>
+              <span class="text-[11px] text-emerald-600 dark:text-accent-emerald font-mono font-semibold" id="savingsArch3">--</span>
+              <div class="text-[10px] text-slate-500 dark:text-slate-300 mt-1 font-mono">
                 Alerts: <span id="arch3AlertCost">$0</span> · P3: <span id="arch3P3Cost">$0</span> · P1: <span id="arch3P1Cost">$0</span>
               </div>
             </div>
@@ -439,13 +439,13 @@
         </div>
 
         <!-- Visual Comparison Chart (3 Stacked Streams) -->
-        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 shadow-xl">
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6">
           <div class="flex justify-between items-center mb-4">
             <div>
-              <h3 class="font-display font-bold text-white text-base">Monthly Operational Spend Breakdown</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Alert Triage (P4) vs. Normal Incidents (P3) vs. Major Outages (P1/P2)</p>
+              <h3 class="font-display font-bold text-slate-900 dark:text-white text-base">Monthly Operational Spend Breakdown</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Alert Triage (P4) vs. Normal Incidents (P3) vs. Major Outages (P1/P2)</p>
             </div>
-            <span class="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">USD / Month</span>
+            <span class="text-xs font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-800">USD / Month</span>
           </div>
           <div class="h-64">
             <canvas id="costChart"></canvas>
@@ -453,22 +453,22 @@
         </div>
 
         <!-- Dynamic Architectural Takeaway & Unit Cost Summary -->
-        <div class="bg-card border border-accent/30 rounded-2xl p-6 shadow-xl space-y-3">
-          <div class="flex items-center gap-2 text-accent font-mono text-xs font-bold uppercase tracking-wider">
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-accent/30 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-3">
+          <div class="flex items-center gap-2 text-sky-700 dark:text-accent font-mono text-xs font-bold uppercase tracking-wider">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
             Leadership Takeaway: What to Tell Your Leadership Team
           </div>
-          <p class="text-sm text-slate-300 leading-relaxed" id="leverageSummary">
+          <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed" id="leverageSummary">
             Calculating...
           </p>
           <div class="grid grid-cols-2 gap-3 pt-2 text-xs font-mono">
-            <div class="p-2.5 rounded bg-slate-900 border border-slate-800">
-              <span class="text-slate-400 block text-[10px] uppercase">Dollar Impact of Pre-Filtering & Caching</span>
-              <span class="text-accent font-bold text-sm" id="prefilterDollarImpact">$0 / mo</span>
+            <div class="p-2.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span class="text-slate-500 dark:text-slate-400 block text-[10px] uppercase">Dollar Impact of Pre-Filtering &amp; Caching</span>
+              <span class="text-sky-700 dark:text-accent font-bold text-sm" id="prefilterDollarImpact">$0 / mo</span>
             </div>
-            <div class="p-2.5 rounded bg-slate-900 border border-slate-800">
-              <span class="text-slate-400 block text-[10px] uppercase">Dollar Impact of Model Tiering</span>
-              <span class="text-amber-400 font-bold text-sm" id="tieringDollarImpact">$0 / mo</span>
+            <div class="p-2.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span class="text-slate-500 dark:text-slate-400 block text-[10px] uppercase">Dollar Impact of Model Tiering</span>
+              <span class="text-amber-700 dark:text-amber-400 font-bold text-sm" id="tieringDollarImpact">$0 / mo</span>
             </div>
           </div>
         </div>
