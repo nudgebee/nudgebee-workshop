@@ -4,12 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enterprise Guardrails & Safety Simulator · Session 4</title>
+    <!-- Zero-FOUT Theme Engine: Defaults to Light, remembers Dark -->
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: "class",
       theme: {
         extend: {
           fontFamily: {
@@ -32,11 +41,11 @@
     }
   </script>
 </head>
-<body class="bg-canvas text-slate-100 font-sans min-h-screen p-6 lg:p-12 flex flex-col justify-between selection:bg-accent selection:text-black">
+<body class="bg-slate-50 dark:bg-canvas text-slate-800 dark:text-slate-100 font-sans min-h-screen p-6 lg:p-12 flex flex-col justify-between selection:bg-slate-200 dark:selection:bg-slate-800 selection:text-slate-900 dark:selection:text-white transition-colors duration-200">
 
   <div class="max-w-6xl mx-auto w-full">
     <!-- Header -->
-    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-6 mb-8 gap-4">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-border-subtle pb-6 mb-8 gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
           <a href="./index.html" class="text-xs font-mono text-slate-400 hover:text-white transition flex items-center gap-1">
@@ -47,12 +56,19 @@
             Session 4 · Enterprise Governance
           </span>
         </div>
-        <h1 class="text-3xl font-display font-bold text-white tracking-tight">Enterprise Guardrails &amp; Safety Simulator</h1>
-        <p class="text-sm text-slate-400 mt-1">Simulate real-time tool interceptors, destructive command mitigation, and enterprise compliance gates.</p>
+        <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Enterprise Guardrails &amp; Safety Simulator</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Simulate real-time tool interceptors, destructive command mitigation, and enterprise compliance gates.</p>
       </div>
-      <div class="text-right font-mono text-xs text-slate-400">
-        <span class="text-slate-300 block font-semibold">Zero-Trust Agent Architecture</span>
-        <span class="text-slate-400">Blast Radius Containment</span>
+      <div class="flex items-center gap-4">
+        <!-- 1-Click Theme Toggle -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm" title="Toggle Light / Dark Theme">
+          <span id="themeIcon">☀️</span>
+          <span id="themeLabel">Light</span>
+        </button>
+        <div class="text-right font-mono text-xs text-slate-500 dark:text-slate-400">
+          <span class="text-slate-800 dark:text-slate-300 block font-semibold">Zero-Trust Agent Architecture</span>
+          <span class="text-slate-600 dark:text-slate-400">Blast Radius Containment</span>
+        </div>
       </div>
     </header>
 
@@ -61,9 +77,9 @@
       <!-- Left Column: Red-Team Command Simulator (7 cols) -->
       <div class="lg:col-span-7 space-y-6">
 
-        <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 shadow-xl space-y-5">
           <div class="border-b border-border-subtle pb-3">
-            <h2 class="text-base font-display font-bold text-white flex items-center gap-2">
+            <h2 class="text-base font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               Live Red-Team Interceptor Sandbox
             </h2>
@@ -144,10 +160,10 @@
       <!-- Right Column: Enterprise Production Readiness Checklist (5 cols) -->
       <div class="lg:col-span-5 space-y-6">
 
-        <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-5 sticky top-8">
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 shadow-xl space-y-5 sticky top-8">
           <div class="flex items-center justify-between border-b border-border-subtle pb-3">
             <div>
-              <h2 class="text-base font-display font-bold text-white">Production Safety Scorecard</h2>
+              <h2 class="text-base font-display font-bold text-slate-900 dark:text-white">Production Safety Scorecard</h2>
               <p class="text-xs text-slate-400 mt-0.5">10 criteria for deploying autonomous agents safely.</p>
             </div>
             <div class="text-right font-mono">
@@ -384,5 +400,25 @@
     checkboxes.forEach(cb => cb.addEventListener('change', updateScore));
     updateScore();
   </script>
+
+  <!-- Theme Controller Script -->
+  <script>
+    function updateThemeUI() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const icon = document.getElementById("themeIcon");
+      const label = document.getElementById("themeLabel");
+      if (icon) icon.innerText = isDark ? "🌙" : "☀️";
+      if (label) label.innerText = isDark ? "Dark" : "Light";
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      updateThemeUI();
+    }
+
+    window.addEventListener("DOMContentLoaded", updateThemeUI);
+  </script>
+
 </body>
 </html>

@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buy vs Build Decision Scorecard</title>
+    <!-- Zero-FOUT Theme Engine: Defaults to Light, remembers Dark -->
+  <script>
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: "class",
       theme: {
         extend: {
           fontFamily: {
@@ -35,11 +44,11 @@
     }
   </style>
 </head>
-<body class="bg-canvas text-slate-200 font-sans min-h-screen p-4 sm:p-8">
+<body class="bg-slate-50 dark:bg-canvas text-slate-800 dark:text-slate-200 font-sans min-h-screen p-4 sm:p-8 transition-colors duration-200">
 
   <div class="max-w-4xl mx-auto">
     <!-- Header -->
-    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-6 mb-8 gap-4">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-border-subtle pb-6 mb-8 gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
           <a href="./index.html" class="text-xs font-mono text-slate-400 hover:text-white transition flex items-center gap-1">
@@ -48,12 +57,19 @@
           <span class="text-slate-600">/</span>
           <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-800 text-slate-300 border border-slate-700">Session 1 · Buy vs Build</span>
         </div>
-        <h1 class="text-3xl font-display font-bold text-white tracking-tight">Score Your Own Path</h1>
-        <p class="text-sm text-slate-400 mt-1">Score your own organization across six operational axes. Leave with an objective verdict.</p>
+        <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Score Your Own Path</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Score your own organization across six operational axes. Leave with an objective verdict.</p>
       </div>
-      <div class="sm:text-right">
-        <span class="text-xs font-mono text-slate-400 block">Exercise 1A (8 min)</span>
-        <span class="text-xs font-mono text-slate-300">Build the seam, buy the rest.</span>
+      <div class="flex items-center gap-4">
+        <!-- 1-Click Theme Toggle -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm" title="Toggle Light / Dark Theme">
+          <span id="themeIcon">☀️</span>
+          <span id="themeLabel">Light</span>
+        </button>
+        <div class="sm:text-right">
+          <span class="text-xs font-mono text-slate-500 dark:text-slate-400 block">Exercise 1A (8 min)</span>
+          <span class="text-xs font-mono text-slate-700 dark:text-slate-300">Build the seam, buy the rest.</span>
+        </div>
       </div>
     </header>
 
@@ -61,12 +77,12 @@
 
       <!-- Form (7 cols) -->
       <div class="lg:col-span-7 space-y-6">
-        <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-6" id="axesContainer">
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 shadow-xl space-y-6" id="axesContainer">
 
           <!-- View Mode Toggle & Instructions -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-subtle pb-4">
             <div>
-              <h2 class="text-base font-display font-bold text-white">6 Evaluation Axes</h2>
+              <h2 class="text-base font-display font-bold text-slate-900 dark:text-white">6 Evaluation Axes</h2>
               <p class="text-xs text-slate-400 mt-0.5">Click any maturity level below or drag the slider.</p>
             </div>
             <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs font-mono self-start sm:self-auto">
@@ -187,7 +203,7 @@
       <!-- Verdict Column (5 cols) -->
       <div class="lg:col-span-5 space-y-6">
 
-        <div class="bg-card border border-border-subtle rounded-2xl p-6 shadow-xl space-y-5 sticky top-8">
+        <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 shadow-xl space-y-5 sticky top-8">
           <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold block">Your Organization Verdict</span>
 
           <!-- Badge -->
@@ -473,5 +489,25 @@
       setTimeout(() => msg.classList.add('hidden'), 4000);
     });
   </script>
+
+  <!-- Theme Controller Script -->
+  <script>
+    function updateThemeUI() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const icon = document.getElementById("themeIcon");
+      const label = document.getElementById("themeLabel");
+      if (icon) icon.innerText = isDark ? "🌙" : "☀️";
+      if (label) label.innerText = isDark ? "Dark" : "Light";
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      updateThemeUI();
+    }
+
+    window.addEventListener("DOMContentLoaded", updateThemeUI);
+  </script>
+
 </body>
 </html>
