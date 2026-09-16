@@ -236,7 +236,8 @@ def assemble_system_prompt(config: Dict[str, Any], scenario: str) -> str:
         parts.append(f"=== SCENARIO DOMAIN KNOWLEDGE ===\n{guidance}")
 
     # Episodic memory injection when active
-    if config.get("enable_memory", False):
+    is_recall_active = config.get("enable_memory_recall", config.get("enable_memory", False))
+    if is_recall_active:
         parts.append(
             "=== EPISODIC MEMORY DIRECTIVE (MEMORY ACTIVE) ===\n"
             "Episodic memory recall is ENABLED. You have access to persistent past incident post-mortems "

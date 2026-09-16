@@ -54,7 +54,6 @@ scenario: "badDeploy1405"
 # ------------------------------------------------------------------------------
 enable_memory_recall: false
 persist_verified_resolution: true
-enable_memory: false
 
 # ------------------------------------------------------------------------------
 # 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)

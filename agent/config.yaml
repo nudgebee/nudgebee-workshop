@@ -59,9 +59,6 @@ enable_memory_recall: false
 # to memory/episodic_memory.json and episodic_memory.md so Turn 2 can recall them.
 persist_verified_resolution: true
 
-# Legacy alias (for backward compatibility)
-enable_memory: false
-
 # ------------------------------------------------------------------------------
 # 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)
 # ------------------------------------------------------------------------------

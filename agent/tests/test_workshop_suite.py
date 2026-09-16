@@ -32,6 +32,7 @@ from tools import (
 )
 from mock_planner import MockAgentPlanner
 from mini_agent import evaluate_ground_truth, run_investigation, CONFIG
+from config_loader import assemble_system_prompt
 
 
 class TestKubernetesInputValidation(unittest.TestCase):
@@ -255,5 +256,27 @@ class TestMockAgentPlannerScenarios(unittest.TestCase):
             self.assertTrue(concluded, f"Scenario {sc} did not conclude within 10 turns.")
 
 
+class TestPromptAssembly(unittest.TestCase):
+    """Verifies system prompt directive synthesis and memory flag behaviors."""
+
+    def test_memory_recall_flag_injects_prompt_directive(self):
+        # Case 1: enable_memory_recall=True, enable_memory=False -> memory directive present
+        cfg1 = {"enable_memory_recall": True, "enable_memory": False}
+        prompt1 = assemble_system_prompt(cfg1, "episodicRecurrence")
+        self.assertIn("EPISODIC MEMORY DIRECTIVE (MEMORY ACTIVE)", prompt1)
+        self.assertIn("Episodic memory recall is ENABLED", prompt1)
+
+        # Case 2: enable_memory_recall=False, enable_memory=False -> directive absent
+        cfg2 = {"enable_memory_recall": False, "enable_memory": False}
+        prompt2 = assemble_system_prompt(cfg2, "episodicRecurrence")
+        self.assertNotIn("EPISODIC MEMORY DIRECTIVE", prompt2)
+
+        # Case 3: legacy enable_memory=True fallback -> directive present
+        cfg3 = {"enable_memory": True}
+        prompt3 = assemble_system_prompt(cfg3, "episodicRecurrence")
+        self.assertIn("EPISODIC MEMORY DIRECTIVE (MEMORY ACTIVE)", prompt3)
+
+
 if __name__ == "__main__":
     unittest.main()
+
