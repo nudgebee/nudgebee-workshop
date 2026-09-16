@@ -554,6 +554,23 @@ TOOL_DISPATCH: Dict[str, Any] = {
 }
 
 
+def is_tool_success(output: str) -> bool:
+    """Evaluates whether a tool execution output represents a successful operation."""
+    if not output:
+        return False
+    error_prefixes = (
+        "error:",
+        "kubernetes api error",
+        "prometheus query failed",
+        "tool input validation error",
+        "command timed out",
+        "executable '",
+        "execution error:",
+    )
+    lower = output.strip().lower()
+    return not any(lower.startswith(prefix) for prefix in error_prefixes)
+
+
 def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     """Runs a live health check on all tools against the cluster."""
     results = []
@@ -561,7 +578,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 1. Test get_k8s_events
     try:
         res = get_k8s_events(namespace)
-        passed = bool(res and not res.startswith("Error:") and not res.startswith("Tool Input Validation Error"))
+        passed = is_tool_success(res)
         results.append(("get_k8s_events", passed, res[:120]))
     except Exception as e:
         results.append(("get_k8s_events", False, str(e)))
@@ -569,7 +586,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 2. Test query_prometheus
     try:
         res = query_prometheus("up")
-        passed = bool(res and not res.startswith("Prometheus query failed") and not res.startswith("Error:"))
+        passed = is_tool_success(res)
         results.append(("query_prometheus", passed, res[:120]))
     except Exception as e:
         results.append(("query_prometheus", False, str(e)))
@@ -577,7 +594,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 3. Test query_pod_logs
     try:
         res = query_pod_logs("product-catalog", namespace, tail=10)
-        passed = bool(res and not res.startswith("Error:") and not res.startswith("Tool Input Validation Error"))
+        passed = is_tool_success(res)
         results.append(("query_pod_logs", passed, res[:120]))
     except Exception as e:
         results.append(("query_pod_logs", False, str(e)))
@@ -585,7 +602,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 4. Test inspect_topology
     try:
         res = inspect_topology("product-catalog")
-        passed = bool(res and not res.startswith("Error:") and ("Dependencies" in res or "astronomy-db" in res))
+        passed = is_tool_success(res) and ("Dependencies" in res or "astronomy-db" in res)
         results.append(("inspect_topology", passed, res[:120]))
     except Exception as e:
         results.append(("inspect_topology", False, str(e)))
@@ -601,7 +618,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 6. Test get_deploy_history
     try:
         res = get_deploy_history("checkout", namespace, is_mock=False)
-        passed = bool(res and not res.startswith("Error:") and not res.startswith("Tool Input Validation Error"))
+        passed = is_tool_success(res) and "Rollout History" in res
         results.append(("get_deploy_history", passed, res.splitlines()[0]))
     except Exception as e:
         results.append(("get_deploy_history", False, str(e)))
@@ -609,7 +626,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 7. Test search_incident_history
     try:
         res = search_incident_history("connection pool", "product-catalog", enable_memory=True)
-        passed = "INC-4092" in res
+        passed = is_tool_success(res) and "INC-4092" in res
         results.append(("search_incident_history", passed, "Episodic memory matched INC-4092"))
     except Exception as e:
         results.append(("search_incident_history", False, str(e)))

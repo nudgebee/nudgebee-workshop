@@ -52,6 +52,8 @@ scenario: "badDeploy1405"
 # ------------------------------------------------------------------------------
 # 4. EPISODIC MEMORY (Session 2A: Memory ON vs Memory OFF)
 # ------------------------------------------------------------------------------
+enable_memory_recall: false
+persist_verified_resolution: true
 enable_memory: false
 
 # ------------------------------------------------------------------------------

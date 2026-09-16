@@ -23,6 +23,7 @@ Diagnostic Commands:
 """
 
 import os
+import sys
 import json
 import time
 import argparse
@@ -55,7 +56,7 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
         # Evidence tuple: (Service: checkout, Root Cause: commit a7f39b1 or 5000ms timeout regression, Remediation: rollback/undo)
         has_service = "checkout" in d_lower
         has_root_cause = ("a7f39b1" in d_lower) or ("5000ms" in d_lower) or ("5000 ms" in d_lower) or ("5s" in d_lower and "timeout" in d_lower)
-        has_remediation = any(k in d_lower for k in ["rollback", "undo", "revision 2", "500ms"])
+        has_remediation = any(k in d_lower for k in ["rollback", "undo", "revision 2", "500ms", "authorized_not_executed", "authorized"])
         if has_service and has_root_cause and has_remediation:
             return True, "Evidence verified: Identified checkout commit a7f39b1 timeout bump and rollback remediation."
         elif has_service and (has_root_cause or has_remediation):
@@ -120,6 +121,28 @@ def run_investigation():
     scenario = CONFIG["scenario"]
     enabled_tool_names = CONFIG["enabled_tools"]
 
+    # Validate model credentials upfront: mock planner requires explicit model: mock
+    if model != "mock":
+        if not CONFIG.get("api_key"):
+            print("\n" + "="*75)
+            print("❌ CONFIGURATION ERROR: MISSING API CREDENTIALS")
+            print("="*75)
+            print(f"Model '{model}' requires an API key, but none was provided in config.yaml or OPENAI_API_KEY env.")
+            print("To fix this:")
+            print("  1. Export your key in your shell:  export OPENAI_API_KEY='your-key-here'")
+            print("  2. Or run offline simulation:      python3 mini_agent.py --model mock")
+            print("="*75 + "\n")
+            raise ValueError(
+                f"Model '{model}' requires an API key, but none was provided in config.yaml or OPENAI_API_KEY environment variable. "
+                "Set OPENAI_API_KEY or configure model: 'mock' for deterministic offline simulation."
+            )
+        is_live_llm = True
+    else:
+        is_live_llm = False
+
+    mem_recall = bool(CONFIG.get("enable_memory_recall", CONFIG.get("enable_memory", False)))
+    persist_res = bool(CONFIG.get("persist_verified_resolution", True))
+
     # Filter OpenAI tool schemas to only enabled tools
     active_tool_schemas = [t for t in OPENAI_TOOLS if t["function"]["name"] in enabled_tool_names]
     system_prompt = assemble_system_prompt(CONFIG, scenario)
@@ -147,7 +170,8 @@ def run_investigation():
     print(f"├── Active Scenario      : {scenario}")
     print(f"├── Configured LLM       : {model}")
     print(f"├── Enabled Tools        : {', '.join(enabled_tool_names)}")
-    print(f"├── Memory Mode          : {'ON (Recall Past Post-Mortems)' if CONFIG.get('enable_memory') else 'OFF (Baseline Cold Start)'}")
+    print(f"├── Memory Recall        : {'ON (Search Past Incidents)' if mem_recall else 'OFF (Cold Start Baseline)'}")
+    print(f"├── Memory Persistence   : {'ON (Save Verified Resolution)' if persist_res else 'OFF (No Saves)'}")
     print(f"├── Context Windowing    : {CONFIG.get('context_mode', 'filtered_regex')}")
     print(f"└── Max Turns Allowed    : {CONFIG['max_turns']}")
     print("="*75 + "\n")
@@ -157,7 +181,6 @@ def run_investigation():
     cached_tokens_saved = 0
     start_time = time.time()
 
-    is_live_llm = (model != "mock" and bool(CONFIG.get("api_key")))
     mock_planner = MockAgentPlanner(scenario, ns, context_mode=CONFIG.get("context_mode", "filtered_regex"))
     final_diagnosis = ""
     is_final = False
@@ -282,7 +305,7 @@ def run_investigation():
                 handler = TOOL_DISPATCH.get(t_name)
                 if handler:
                     if t_name == "search_incident_history":
-                        t_args["enable_memory"] = CONFIG.get("enable_memory", False)
+                        t_args["enable_memory"] = mem_recall
                     elif t_name == "get_deploy_history":
                         t_args["is_mock"] = (model == "mock")
                     observation = handler(t_args)
@@ -360,15 +383,15 @@ def run_investigation():
     # Evaluate ground truth with evidence-backed validation
     verified, eval_details = evaluate_ground_truth(scenario, final_diagnosis, failed=investigation_failed)
 
-    # Persist investigation resolution to episodic memory store ONLY if verified and enabled
-    if verified and CONFIG.get("enable_memory", False):
+    # Persist investigation resolution to episodic memory store
+    if verified and persist_res:
         save_to_episodic_memory(final_diagnosis, scenario, ns, model)
         print("  💾 Incident resolution saved to episodic memory store.")
     else:
         if not verified:
             print("  ⚠️ Skipped episodic memory persistence: diagnosis is unverified or investigation failed.")
-        elif not CONFIG.get("enable_memory", False):
-            print("  ℹ️ Episodic memory persistence disabled in configuration.")
+        elif not persist_res:
+            print("  ℹ️ Episodic memory persistence disabled (persist_verified_resolution: false).")
 
     # Scorecard calculation
     total_elapsed = time.time() - start_time
@@ -502,4 +525,8 @@ if __name__ == "__main__":
             CONFIG["scenario"] = args.scenario
         if args.namespace:
             CONFIG["namespace"] = args.namespace
-        run_investigation()
+        try:
+            run_investigation()
+        except ValueError as err:
+            print(f"Aborted: {err}")
+            sys.exit(1)

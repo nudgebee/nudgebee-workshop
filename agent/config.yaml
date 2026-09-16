@@ -51,9 +51,16 @@ scenario: "episodicRecurrence"
 # ------------------------------------------------------------------------------
 # 4. EPISODIC MEMORY (Session 2A: Memory ON vs Memory OFF)
 # ------------------------------------------------------------------------------
-# Turn 1: false -> Agent investigates from scratch and appends post-mortem to memory/
-# Turn 2: true  -> Agent recalls saved post-mortems from memory/ and references prior fixes!
-enable_memory: true
+# enable_memory_recall: When false, strictly disables historical incident search.
+# Set to false in Turn 1 (Cold Start Baseline), then true in Turn 2 (Warm Repeat).
+enable_memory_recall: false
+
+# persist_verified_resolution: When true, verified incident resolutions are saved
+# to memory/episodic_memory.json and episodic_memory.md so Turn 2 can recall them.
+persist_verified_resolution: true
+
+# Legacy alias (for backward compatibility)
+enable_memory: false
 
 # ------------------------------------------------------------------------------
 # 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)

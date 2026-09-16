@@ -156,6 +156,8 @@ def load_config() -> Dict[str, Any]:
         "enable_prompt_caching": cfg_data.get("enable_prompt_caching", True),
 
         # 5. EPISODIC MEMORY
+        "enable_memory_recall": cfg_data.get("enable_memory_recall", cfg_data.get("enable_memory", False)),
+        "persist_verified_resolution": cfg_data.get("persist_verified_resolution", True),
         "enable_memory": cfg_data.get("enable_memory", False),
 
         # 6. PERSONA & SYSTEM PROMPT

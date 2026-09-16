@@ -28,9 +28,10 @@ from tools import (
     get_deploy_history,
     search_incident_history,
     ask_human_approval,
+    test_all_tools,
 )
 from mock_planner import MockAgentPlanner
-from mini_agent import evaluate_ground_truth
+from mini_agent import evaluate_ground_truth, run_investigation, CONFIG
 
 
 class TestKubernetesInputValidation(unittest.TestCase):
@@ -68,6 +69,25 @@ class TestKubernetesInputValidation(unittest.TestCase):
 
         res_deploy = get_deploy_history(malicious, "default")
         self.assertIn("Tool Input Validation Error", res_deploy)
+
+    @patch("tools.run_cmd", return_value=(1, "", "Unable to connect to the server: connection refused"))
+    @patch.dict(os.environ, {"AUTO_APPROVE_HUMAN_GATE": "true"})
+    def test_tools_health_check_rejects_k8s_failures(self, mock_cmd):
+        """Verifies --test-tools rejects live cluster errors and does not falsely report passed=True."""
+        results = test_all_tools("group-1")
+        res_dict = {name: (passed, output) for name, passed, output in results}
+
+        self.assertIn("get_k8s_events", res_dict)
+        self.assertFalse(res_dict["get_k8s_events"][0], "get_k8s_events must fail on non-zero exit")
+        self.assertIn("Kubernetes API error", res_dict["get_k8s_events"][1])
+
+        self.assertIn("query_pod_logs", res_dict)
+        self.assertFalse(res_dict["query_pod_logs"][0], "query_pod_logs must fail on non-zero exit")
+        self.assertIn("Kubernetes API error", res_dict["query_pod_logs"][1])
+
+        self.assertIn("get_deploy_history", res_dict)
+        self.assertFalse(res_dict["get_deploy_history"][0], "get_deploy_history must fail on non-zero exit")
+        self.assertIn("Kubernetes API error", res_dict["get_deploy_history"][1])
 
 
 class TestHumanApprovalGate(unittest.TestCase):
@@ -125,15 +145,25 @@ class TestEpisodicMemoryBoundary(unittest.TestCase):
         self.assertIn("INC-4092", res)
 
 
+class TestCredentialValidation(unittest.TestCase):
+    """Verifies fast-fail check preventing live models from masquerading as mock runs without API keys."""
+
+    def test_missing_credential_raises_error(self):
+        with patch.dict(CONFIG, {"model": "gemini-3.8-flash", "api_key": ""}):
+            with self.assertRaises(ValueError) as ctx:
+                run_investigation()
+            self.assertIn("requires an API key", str(ctx.exception))
+
+
 class TestGroundTruthEvaluation(unittest.TestCase):
     """Verifies evidence-backed tuple evaluation for all scenarios."""
 
     def test_bad_deploy_ground_truth(self):
-        # Valid full evidence
+        # Valid full evidence with AUTHORIZED_NOT_EXECUTED
         good_diag = (
             "ROOT CAUSE: Bad configuration deploy on checkout service (Commit a7f39b1).\n"
             "Bumped payment timeout to 5000ms causing worker pool lockup.\n"
-            "Remediation: rollback to revision 2."
+            "Remediation: AUTHORIZED_NOT_EXECUTED rollback to revision 2."
         )
         verified, details = evaluate_ground_truth("badDeploy1405", good_diag)
         self.assertTrue(verified, details)
@@ -174,26 +204,38 @@ class TestMockAgentPlannerScenarios(unittest.TestCase):
         planner = MockAgentPlanner("badDeploy1405", "group-1")
         tools = ["query_prometheus", "inspect_topology", "get_deploy_history", "ask_human_approval"]
 
-        # Turn 1: query_prometheus
         step1 = planner.plan_next_action(tools)
         self.assertEqual(step1["tool_call"]["name"], "query_prometheus")
 
-        # Turn 2: inspect_topology
         step2 = planner.plan_next_action(tools, last_observation="Prometheus latency high")
         self.assertEqual(step2["tool_call"]["name"], "inspect_topology")
 
-        # Turn 3: get_deploy_history
         step3 = planner.plan_next_action(tools, last_observation="Topology: checkout -> payment")
         self.assertEqual(step3["tool_call"]["name"], "get_deploy_history")
 
-        # Turn 4: ask_human_approval
         step4 = planner.plan_next_action(tools, last_observation="Revision 3 Commit a7f39b1 bumped timeout to 5000ms")
         self.assertEqual(step4["tool_call"]["name"], "ask_human_approval")
 
         # Turn 5: operator DENIED approval
         step5 = planner.plan_next_action(tools, last_observation="REMEDIATION ACTION DENIED BY OPERATOR")
         self.assertTrue(step5["is_final"])
-        self.assertIn("REJECTED by human operator", step5["diagnosis"])
+        self.assertIn("REJECTED_BY_OPERATOR", step5["diagnosis"])
+
+    def test_bad_deploy_approval_authorized_not_executed_flow(self):
+        planner = MockAgentPlanner("badDeploy1405", "group-1")
+        tools = ["query_prometheus", "inspect_topology", "get_deploy_history", "ask_human_approval"]
+
+        planner.plan_next_action(tools)
+        planner.plan_next_action(tools, last_observation="Prometheus latency high")
+        planner.plan_next_action(tools, last_observation="Topology: checkout -> payment")
+        planner.plan_next_action(tools, last_observation="Revision 3 Commit a7f39b1 bumped timeout to 5000ms")
+
+        # Turn 5: operator APPROVED approval -> produces AUTHORIZED_NOT_EXECUTED
+        step5 = planner.plan_next_action(tools, last_observation="OPERATOR DECISION: [APPROVED] - Explicitly authorized")
+        self.assertTrue(step5["is_final"])
+        self.assertIn("AUTHORIZED_NOT_EXECUTED", step5["diagnosis"])
+        self.assertNotIn("latency recovered", step5["diagnosis"].lower())
+        self.assertNotIn("rollback validated", step5["diagnosis"].lower())
 
     def test_all_scenarios_reach_final_diagnosis(self):
         scenarios = ["badDeploy1405", "episodicRecurrence", "postgresFailure", "emailMemoryLeak", "postgresSlow", "poisonedEntity"]

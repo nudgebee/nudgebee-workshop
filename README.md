@@ -16,8 +16,8 @@ Welcome to the **NudgeBee SRE & AIOps Agent Workshop** repository! This reposito
 ├── scoreboard.html      # Live Room Scoreboard & Leaderboard
 ├── calculator.html      # Token ROI, Latency & LLM Cost Modeler
 ├── guardrails.html      # Human-in-the-Loop Security Gate Visualizer
-├── scorecard.html       # Individual Investigation Scorecard Formatter
-├── projector.html       # Big-Screen High-Contrast Presenter View
+├── scorecard.html       # Buy vs Build Matrix & Participant Decision Scorecard
+├── projector.html       # Big-Screen Buy vs Build 4-Quadrant Room Scatter
 ├── agent/               # Autonomous SRE Investigation Agent
 │   ├── config.yaml      # Declarative student levers (models, tools, scenarios)
 │   ├── prompts.yaml     # Agent personas, security policies, reasoning modes
@@ -45,8 +45,8 @@ All web tools are zero-build, dependency-free static pages that can be opened di
 | **[scoreboard.html](scoreboard.html)** | **Room Scoreboard** · Aggregates token burn, latency, cost, and ground-truth accuracy across pairs. | Room Display |
 | **[calculator.html](calculator.html)** | **ROI & Cost Modeler** · Interactive token math, caching savings, and model price comparisons. | Attendees |
 | **[guardrails.html](guardrails.html)** | **Security Guardrails** · Visualizes read-only enforcement and human confirmation gates. | Attendees |
-| **[scorecard.html](scorecard.html)** | **Scorecard Formatter** · Formats investigation outputs into shareable scorecards. | Attendees |
-| **[projector.html](projector.html)** | **Presenter Display** · High-contrast timer, agenda, and module progression view. | Facilitators |
+| **[scorecard.html](scorecard.html)** | **Buy vs Build Scorecard** · Participant decision matrix submitting AI capacity vs build tolerance. | Attendees |
+| **[projector.html](projector.html)** | **Room Scatter Display** · Big-screen 4-quadrant room projection visualizer for Buy vs Build. | Facilitators |
 
 ### Running the Web Suite Locally
 ```bash

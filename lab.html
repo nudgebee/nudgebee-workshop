@@ -876,8 +876,8 @@
             <div class="text-[11px] text-slate-400 space-y-1">
               <div><strong>The 2-Turn Experiment in <code>config.yaml</code>:</strong></div>
               <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
-                <li><strong>Turn 1 (Memory OFF):</strong> Set <code>enable_memory: false</code>. Agent runs fresh and saves incident card to <code>memory/episodic_memory.md</code>.</li>
-                <li><strong>Turn 2 (Memory ON):</strong> Set <code>enable_memory: true</code>. Agent recalls past post-mortems via <code>search_incident_history</code>.</li>
+                <li><strong>Turn 1 (Recall OFF):</strong> Set <code>enable_memory_recall: false</code> (and <code>persist_verified_resolution: true</code>). Agent runs from scratch without historical recall, verifies root cause, and saves incident baseline to <code>memory/episodic_memory.md</code>.</li>
+                <li><strong>Turn 2 (Recall ON):</strong> Set <code>enable_memory_recall: true</code>. Agent immediately recalls the saved post-mortem via <code>search_incident_history</code> and accelerates resolution.</li>
               </ul>
             </div>
           </div>
@@ -888,7 +888,7 @@
             <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">1. Set <code>enable_memory: false</code> in <code>config.yaml</code> and run <code>episodicRecurrence</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Set <code>enable_memory_recall: false</code> in <code>config.yaml</code> and run <code>episodicRecurrence</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
@@ -896,7 +896,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Set <code>enable_memory: true</code> in <code>config.yaml</code> and re-run.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Set <code>enable_memory_recall: true</code> in <code>config.yaml</code> and re-run to observe accelerated diagnosis.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">

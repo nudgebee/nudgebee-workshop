@@ -74,24 +74,26 @@ class MockAgentPlanner:
             if self.approval_status == "DENIED":
                 thought = "Human operator REJECTED the proposed remediation command. Halting mutating execution and logging refusal."
                 remediation_section = (
-                    f"  - Action Status: REJECTED by human operator ('kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2').\n"
-                    "  - Guardrail Enforced: No mutating commands executed without operator consent."
+                    f"  - Remediation Command: 'kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2'\n"
+                    "  - Approval Gate Status: REJECTED_BY_OPERATOR (Explicitly denied by human operator in terminal).\n"
+                    "  - Guardrail Enforced: Zero mutating commands executed without operator consent."
                 )
             elif self.approval_status == "APPROVED":
-                thought = "Rollout rollback validated and approved by operator. Concluding incident investigation."
+                thought = "Human operator granted authorization for remediation command. Recording authorized status (investigation agent does not execute mutations)."
                 remediation_section = (
-                    f"  - Action Approved via Security Gate: 'kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2'\n"
-                    "  - Status: Restored baseline 500ms timeout; checkout latency recovered."
+                    f"  - Remediation Command: 'kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2'\n"
+                    "  - Approval Gate Status: AUTHORIZED_NOT_EXECUTED (Explicitly approved by human operator in terminal).\n"
+                    "  - Operational Scope: Mutating execution and post-change telemetry verification omitted by read-only triage agent; pending operator execution."
                 )
             elif not self.approval_attempted:
                 thought = "Root cause identified. Security approval gate tool unavailable in current capability set; remediation omitted."
                 remediation_section = (
-                    "  - Action Status: Remediation proposal omitted because 'ask_human_approval' capability is disabled.\n"
-                    "  - Recommended Action: Operator must manually execute 'kubectl rollout undo deployment/checkout --to-revision=2'."
+                    "  - Approval Gate Status: NOT_REQUESTED_CAPABILITY_DISABLED ('ask_human_approval' capability is disabled).\n"
+                    "  - Recommended Action: Operator must manually review and execute 'kubectl rollout undo deployment/checkout --to-revision=2'."
                 )
             else:
                 thought = "Operator response inconclusive. Halting mutating execution."
-                remediation_section = "  - Action Status: No mutation executed due to lack of explicit authorization."
+                remediation_section = "  - Approval Gate Status: INCONCLUSIVE (No mutation executed due to lack of explicit authorization)."
 
             return {
                 "thought": thought,
@@ -184,25 +186,28 @@ class MockAgentPlanner:
             if self.approval_status == "DENIED":
                 thought = "Human operator REJECTED the proposed rollout restart. Halting mutating execution."
                 remediation_section = (
-                    f"  - Action Status: REJECTED by human operator ('kubectl -n {self.namespace} rollout restart deploy/product-catalog').\n"
-                    "  - Guardrail Enforced: No mutating commands executed without operator consent.\n"
+                    f"  - Remediation Command: 'kubectl -n {self.namespace} rollout restart deploy/product-catalog'\n"
+                    "  - Approval Gate Status: REJECTED_BY_OPERATOR (Explicitly denied by human operator in terminal).\n"
+                    "  - Guardrail Enforced: Zero mutating commands executed without operator consent.\n"
                     "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
                 )
             elif self.approval_status == "APPROVED":
-                thought = "Human operator authorization granted. Concluding incident investigation with validated remediation."
+                thought = "Human operator authorization granted for rollout restart. Recording authorized status (investigation agent does not execute mutations)."
                 remediation_section = (
-                    f"  - Action Approved via Security Gate: 'kubectl -n {self.namespace} rollout restart deploy/product-catalog'\n"
+                    f"  - Remediation Command: 'kubectl -n {self.namespace} rollout restart deploy/product-catalog'\n"
+                    "  - Approval Gate Status: AUTHORIZED_NOT_EXECUTED (Explicitly approved by human operator in terminal).\n"
+                    "  - Operational Scope: Mutating execution and post-change telemetry verification omitted by read-only triage agent; pending operator execution.\n"
                     "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
                 )
             elif not self.approval_attempted:
                 thought = "Root cause diagnosed. Remediation omitted because 'ask_human_approval' capability is disabled."
                 remediation_section = (
-                    "  - Action Status: Remediation restart omitted because 'ask_human_approval' capability is disabled.\n"
+                    "  - Approval Gate Status: NOT_REQUESTED_CAPABILITY_DISABLED ('ask_human_approval' capability is disabled).\n"
                     "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
                 )
             else:
                 thought = "Operator response inconclusive. Halting mutating execution."
-                remediation_section = "  - Action Status: No mutation executed due to lack of explicit authorization."
+                remediation_section = "  - Approval Gate Status: INCONCLUSIVE (No mutation executed due to lack of explicit authorization)."
 
             return {
                 "thought": thought,
