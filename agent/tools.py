@@ -244,7 +244,7 @@ def search_incident_history(query: str, service_name: str = "", enable_memory: b
     When enable_memory is False, strictly denies retrieval to enable clean A/B comparison.
     """
     if not enable_memory:
-        return "Episodic memory is DISABLED (enable_memory: false). Historical context cannot be retrieved."
+        return "Episodic memory is DISABLED (enable_memory_recall: false). Historical context cannot be retrieved."
 
     mem_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory", "episodic_memory.json")
     incident_db = []

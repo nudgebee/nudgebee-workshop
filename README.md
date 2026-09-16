@@ -102,7 +102,7 @@ For full details on configuring models, toggling tools, and running scenarios, r
 7. **Module 7: Guardrails & Human-in-the-Loop**  
    Enforce strict read-only diagnostic boundaries. Require interactive operator authorization (`ask_human_approval`) before mutating commands (`kubectl rollout undo`).
 8. **Module 8: Memory Tiers & Episodic Recall**  
-   Test Turn 1 (`enable_memory: false`) first-principles investigation versus Turn 2 (`enable_memory: true`) episodic memory recall (`INC-4092`), assessing whether past remediations held.
+   Test Turn 1 (`enable_memory_recall: false`, `persist_verified_resolution: true`) first-principles investigation baseline versus Turn 2 (`enable_memory_recall: true`) episodic memory recall (`INC-4092`), assessing whether past remediations held.
 
 ---
 
