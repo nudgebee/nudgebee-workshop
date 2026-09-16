@@ -7,6 +7,15 @@ crawler/data
 */__pycache__
 *.pyc
 
+# Local workshop overrides & credentials
+.env
+.env.*
+*.local.yaml
+agent/config.local.yaml
+agent/logs/*.log
+agent/logs/*.json
+agent/group-*/
+
 # App specific
 app/build
 

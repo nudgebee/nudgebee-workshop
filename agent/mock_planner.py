@@ -19,9 +19,18 @@ class MockAgentPlanner:
         self.namespace = namespace
         self.context_mode = context_mode
         self.turn = 0
+        self.approval_status: Optional[str] = None
+        self.approval_attempted: bool = False
 
-    def plan_next_action(self, available_tools: List[str]) -> Dict[str, Any]:
+    def plan_next_action(self, available_tools: List[str], last_observation: Optional[str] = None) -> Dict[str, Any]:
         self.turn += 1
+
+        if last_observation:
+            obs_upper = last_observation.upper()
+            if "DENIED" in obs_upper or "REJECTED" in obs_upper or "DECLINED" in obs_upper or "ABORTED" in obs_upper:
+                self.approval_status = "DENIED"
+            elif "APPROVED" in obs_upper or "AUTHORIZED" in obs_upper:
+                self.approval_status = "APPROVED"
 
         # Scenario 1: badDeploy1405 (Session 1 & Exercise 2C: Add a tool, change the answer)
         if self.scenario == "badDeploy1405":
@@ -47,6 +56,7 @@ class MockAgentPlanner:
                     "is_final": False,
                 }
             elif self.turn == 4 and "ask_human_approval" in available_tools:
+                self.approval_attempted = True
                 return {
                     "thought": "Confirmed revision 3 (Commit a7f39b1) increased downstream payment timeout from 500ms to 5000ms. Rollback requires operator authorization.",
                     "tool_call": {
@@ -60,8 +70,31 @@ class MockAgentPlanner:
                     },
                     "is_final": False,
                 }
+
+            if self.approval_status == "DENIED":
+                thought = "Human operator REJECTED the proposed remediation command. Halting mutating execution and logging refusal."
+                remediation_section = (
+                    f"  - Action Status: REJECTED by human operator ('kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2').\n"
+                    "  - Guardrail Enforced: No mutating commands executed without operator consent."
+                )
+            elif self.approval_status == "APPROVED":
+                thought = "Rollout rollback validated and approved by operator. Concluding incident investigation."
+                remediation_section = (
+                    f"  - Action Approved via Security Gate: 'kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2'\n"
+                    "  - Status: Restored baseline 500ms timeout; checkout latency recovered."
+                )
+            elif not self.approval_attempted:
+                thought = "Root cause identified. Security approval gate tool unavailable in current capability set; remediation omitted."
+                remediation_section = (
+                    "  - Action Status: Remediation proposal omitted because 'ask_human_approval' capability is disabled.\n"
+                    "  - Recommended Action: Operator must manually execute 'kubectl rollout undo deployment/checkout --to-revision=2'."
+                )
+            else:
+                thought = "Operator response inconclusive. Halting mutating execution."
+                remediation_section = "  - Action Status: No mutation executed due to lack of explicit authorization."
+
             return {
-                "thought": "Rollout rollback validated and approved. Concluding incident investigation.",
+                "thought": thought,
                 "tool_call": None,
                 "is_final": True,
                 "diagnosis": (
@@ -69,9 +102,8 @@ class MockAgentPlanner:
                     "Evidence:\n"
                     "  1. Commit a7f39b1 (@ 14:05 UTC by payments team) bumped payment_client_timeout from 500ms to 5000ms.\n"
                     "  2. Synchronous worker threads were held open for 5s under load, cascading 5xx to storefront.\n"
-                    "Remediation:\n"
-                    f"  - Action Approved via Security Gate: 'kubectl -n {self.namespace} rollout undo deployment/checkout --to-revision=2'\n"
-                    "  - Status: Restored baseline 500ms timeout; checkout latency recovered."
+                    "Remediation & Guardrails:\n"
+                    f"{remediation_section}"
                 )
             }
 
@@ -134,6 +166,7 @@ class MockAgentPlanner:
                     "is_final": False,
                 }
             elif self.turn == 4 and "ask_human_approval" in available_tools:
+                self.approval_attempted = True
                 return {
                     "thought": "Database pool exhaustion confirmed on product-catalog. Before proposing a rollout restart to cycle connections, security policy mandates explicit human authorization.",
                     "tool_call": {
@@ -147,8 +180,32 @@ class MockAgentPlanner:
                     },
                     "is_final": False,
                 }
+
+            if self.approval_status == "DENIED":
+                thought = "Human operator REJECTED the proposed rollout restart. Halting mutating execution."
+                remediation_section = (
+                    f"  - Action Status: REJECTED by human operator ('kubectl -n {self.namespace} rollout restart deploy/product-catalog').\n"
+                    "  - Guardrail Enforced: No mutating commands executed without operator consent.\n"
+                    "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
+                )
+            elif self.approval_status == "APPROVED":
+                thought = "Human operator authorization granted. Concluding incident investigation with validated remediation."
+                remediation_section = (
+                    f"  - Action Approved via Security Gate: 'kubectl -n {self.namespace} rollout restart deploy/product-catalog'\n"
+                    "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
+                )
+            elif not self.approval_attempted:
+                thought = "Root cause diagnosed. Remediation omitted because 'ask_human_approval' capability is disabled."
+                remediation_section = (
+                    "  - Action Status: Remediation restart omitted because 'ask_human_approval' capability is disabled.\n"
+                    "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
+                )
+            else:
+                thought = "Operator response inconclusive. Halting mutating execution."
+                remediation_section = "  - Action Status: No mutation executed due to lack of explicit authorization."
+
             return {
-                "thought": "Human operator authorization granted. Concluding incident investigation with validated remediation.",
+                "thought": thought,
                 "tool_call": None,
                 "is_final": True,
                 "diagnosis": (
@@ -158,8 +215,7 @@ class MockAgentPlanner:
                     "  2. Logs confirm dial timeout / connection exhaustion to postgresql:5432.\n"
                     "  3. Downstream checkout service cascaded failures 29s later.\n"
                     "Remediation & Guardrails:\n"
-                    f"  - Action Approved via Security Gate: 'kubectl -n {self.namespace} rollout restart deploy/product-catalog'\n"
-                    "  - Permanent Fix: Increase DB max_open_conns in product-catalog Helm values."
+                    f"{remediation_section}"
                 )
             }
 

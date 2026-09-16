@@ -373,8 +373,37 @@
     function onMessageArrived(message) {
       try {
         const payload = JSON.parse(message.payloadString);
-        if (payload && payload.pair) {
-          pairsData[payload.pair] = payload;
+        if (payload && typeof payload === 'object' && payload.pair) {
+          // Validate pair identifier format (Pair 01 to Pair 10)
+          const validPairs = Array.from({length: 10}, (_, i) => 'Pair ' + (i < 9 ? '0' + (i + 1) : (i + 1)));
+          if (!validPairs.includes(payload.pair)) return;
+
+          // Validate and sanitize module
+          const validModules = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
+          const mod = validModules.includes(payload.module) ? payload.module : 'M1';
+
+          // Sanitize model string (max 50 chars, no HTML tags)
+          const modelStr = String(payload.model || 'Unknown').substring(0, 50).replace(/[<>]/g, '');
+
+          // Numeric validation & clamping
+          const tokens = Math.max(0, Math.min(1000000, parseInt(payload.tokens) || 0));
+          const latency = Math.max(0, Math.min(300, parseFloat(payload.latency) || 0));
+          const accuracy = Math.max(0, Math.min(100, parseInt(payload.accuracy) || 0));
+          const cost = Math.max(0, Math.min(100, parseFloat(payload.cost) || 0));
+
+          // Sanitize notes (max 150 chars, no HTML tags)
+          const notes = String(payload.notes || '').substring(0, 150).replace(/[<>]/g, '');
+
+          pairsData[payload.pair] = {
+            pair: payload.pair,
+            module: mod,
+            model: modelStr,
+            tokens,
+            latency,
+            accuracy,
+            cost,
+            notes
+          };
           renderAll();
         }
       } catch (e) {
@@ -551,23 +580,64 @@
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-900/60 transition';
-        tr.innerHTML = `
-          <td class="py-3 px-3 font-bold text-white flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full ${p.tokens > 0 ? 'bg-accent-emerald' : 'bg-slate-600'}"></span>
-            ${p.pair}
-          </td>
-          <td class="py-3 px-3">
-            <span class="px-2 py-0.5 rounded text-[10px] bg-purple-950/70 text-purple-300 border border-purple-800/60 font-semibold">${p.module}</span>
-          </td>
-          <td class="py-3 px-3 text-slate-300">${p.model}</td>
-          <td class="py-3 px-3 text-accent font-mono">${p.tokens.toLocaleString()}</td>
-          <td class="py-3 px-3 text-amber-300 font-mono">${p.latency > 0 ? p.latency.toFixed(1) + 's' : '--'}</td>
-          <td class="py-3 px-3">
-            <span class="font-bold ${p.accuracy >= 90 ? 'text-emerald-400' : p.accuracy >= 75 ? 'text-amber-400' : 'text-slate-400'}">${p.accuracy > 0 ? p.accuracy + '%' : '--'}</span>
-          </td>
-          <td class="py-3 px-3 text-emerald-400 font-mono">$${p.cost.toFixed(3)}</td>
-          <td class="py-3 px-3 text-slate-400 text-[11px] max-w-xs truncate">${p.notes}</td>
-        `;
+
+        // Pair Cell
+        const tdPair = document.createElement('td');
+        tdPair.className = 'py-3 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-1.5';
+        const dot = document.createElement('span');
+        dot.className = `w-1.5 h-1.5 rounded-full ${p.tokens > 0 ? 'bg-accent-emerald' : 'bg-slate-600'}`;
+        tdPair.appendChild(dot);
+        tdPair.appendChild(document.createTextNode(p.pair));
+        tr.appendChild(tdPair);
+
+        // Module Cell
+        const tdMod = document.createElement('td');
+        tdMod.className = 'py-3 px-3';
+        const modBadge = document.createElement('span');
+        modBadge.className = 'px-2 py-0.5 rounded text-[10px] bg-purple-950/70 text-purple-300 border border-purple-800/60 font-semibold';
+        modBadge.textContent = p.module;
+        tdMod.appendChild(modBadge);
+        tr.appendChild(tdMod);
+
+        // Model Cell
+        const tdModel = document.createElement('td');
+        tdModel.className = 'py-3 px-3 text-slate-700 dark:text-slate-300';
+        tdModel.textContent = p.model;
+        tr.appendChild(tdModel);
+
+        // Tokens Cell
+        const tdTokens = document.createElement('td');
+        tdTokens.className = 'py-3 px-3 text-accent font-mono';
+        tdTokens.textContent = Number(p.tokens).toLocaleString();
+        tr.appendChild(tdTokens);
+
+        // Latency Cell
+        const tdLat = document.createElement('td');
+        tdLat.className = 'py-3 px-3 text-amber-500 dark:text-amber-300 font-mono';
+        tdLat.textContent = p.latency > 0 ? Number(p.latency).toFixed(1) + 's' : '--';
+        tr.appendChild(tdLat);
+
+        // Accuracy Cell
+        const tdAcc = document.createElement('td');
+        tdAcc.className = 'py-3 px-3';
+        const accBadge = document.createElement('span');
+        accBadge.className = `font-bold ${p.accuracy >= 90 ? 'text-emerald-500 dark:text-emerald-400' : p.accuracy >= 75 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400'}`;
+        accBadge.textContent = p.accuracy > 0 ? p.accuracy + '%' : '--';
+        tdAcc.appendChild(accBadge);
+        tr.appendChild(tdAcc);
+
+        // Cost Cell
+        const tdCost = document.createElement('td');
+        tdCost.className = 'py-3 px-3 text-emerald-500 dark:text-emerald-400 font-mono';
+        tdCost.textContent = '$' + Number(p.cost).toFixed(3);
+        tr.appendChild(tdCost);
+
+        // Notes Cell
+        const tdNotes = document.createElement('td');
+        tdNotes.className = 'py-3 px-3 text-slate-500 dark:text-slate-400 text-[11px] max-w-xs truncate';
+        tdNotes.textContent = p.notes;
+        tr.appendChild(tdNotes);
+
         tbody.appendChild(tr);
       });
 

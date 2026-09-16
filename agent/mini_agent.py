@@ -26,7 +26,7 @@ import os
 import json
 import time
 import argparse
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 
 from config_loader import load_config, assemble_system_prompt, MODEL_RATES
 from memory import save_to_episodic_memory
@@ -36,6 +36,79 @@ from mock_planner import MockAgentPlanner
 from tools import OPENAI_TOOLS, TOOL_DISPATCH, test_all_tools
 
 CONFIG = load_config()
+
+
+def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -> Tuple[bool, str]:
+    """
+    Evaluates agent diagnosis against scenario-specific ground truth using
+    evidence-backed tuple verification rather than simple keyword presence.
+    Returns (verified: bool, details: str).
+    """
+    if failed or not diagnosis:
+        return False, "Investigation failed or produced no diagnosis."
+
+    d_lower = diagnosis.lower()
+    if d_lower.startswith("investigation failed") or "api_error" in d_lower:
+        return False, "Investigation failed due to provider or execution error."
+
+    if scenario == "badDeploy1405":
+        # Evidence tuple: (Service: checkout, Root Cause: commit a7f39b1 or 5000ms timeout regression, Remediation: rollback/undo)
+        has_service = "checkout" in d_lower
+        has_root_cause = ("a7f39b1" in d_lower) or ("5000ms" in d_lower) or ("5000 ms" in d_lower) or ("5s" in d_lower and "timeout" in d_lower)
+        has_remediation = any(k in d_lower for k in ["rollback", "undo", "revision 2", "500ms"])
+        if has_service and has_root_cause and has_remediation:
+            return True, "Evidence verified: Identified checkout commit a7f39b1 timeout bump and rollback remediation."
+        elif has_service and (has_root_cause or has_remediation):
+            return False, "Partial match: Identified checkout service but missing definitive commit or remediation evidence."
+        return False, "Unverified: Failed to identify checkout deployment timeout regression."
+
+    elif scenario == "episodicRecurrence":
+        # Evidence tuple: (Service: product-catalog / postgres, Cause: connection pool starvation, Historical Match: INC-4092)
+        has_pool = "connection" in d_lower and any(k in d_lower for k in ["pool", "starvation", "exhaustion", "conns"])
+        has_memory = "inc-4092" in d_lower or "14 march" in d_lower
+        if has_pool and has_memory:
+            return True, "Evidence verified: Correlated connection pool starvation with historical post-mortem INC-4092."
+        elif has_pool:
+            return False, "Partial match: Identified connection pool issue but missed episodic recall link (INC-4092)."
+        return False, "Unverified: Missed connection pool starvation and episodic memory correlation."
+
+    elif scenario == "emailMemoryLeak":
+        # Evidence tuple: (Service: email, Mechanism: memory leak / OOM Exit Code 137, SRE insight: heap buffer)
+        has_service = "email" in d_lower
+        has_oom = any(k in d_lower for k in ["137", "oom", "out of memory", "oomkill"])
+        has_leak = any(k in d_lower for k in ["leak", "slope", "deriv", "heap", "buffer", "growth"])
+        if has_service and has_oom and has_leak:
+            return True, "Evidence verified: Identified email service memory leak with progressive heap growth and Exit Code 137."
+        elif has_service and (has_oom or has_leak):
+            return False, "Partial match: Identified email pod failure but lacked proof of progressive heap leak vs spike."
+        return False, "Unverified: Failed to identify email service progressive memory leak."
+
+    elif scenario == "postgresSlow":
+        # Evidence tuple: (Service: astronomy-db / postgres, Mechanism: pg_sleep / query latency injection)
+        has_db = any(k in d_lower for k in ["postgres", "astronomy-db", "database"])
+        has_delay = any(k in d_lower for k in ["pg_sleep", "sleep", "latency injection", "6.8s", "artificial latency", "slow query"])
+        if has_db and has_delay:
+            return True, "Evidence verified: Isolated PostgreSQL query execution latency caused by injected pg_sleep delay."
+        elif has_db and "latency" in d_lower:
+            return False, "Partial match: Noted database latency but missed specific query execution sleep delay."
+        return False, "Unverified: Failed to identify PostgreSQL artificial query sleep delay."
+
+    elif scenario == "poisonedEntity":
+        # Evidence tuple: (Entity: billing-worker, Guardrail: Abstain / Entity does not exist)
+        has_abstain = any(k in d_lower for k in ["abstain", "does not exist", "not exist", "zero active pods", "not found", "hallucinat"])
+        if has_abstain:
+            return True, "Evidence verified: Correctly verified entity non-existence and enforced grounding abstention policy."
+        return False, "Unverified / Hallucination: Failed to abstain on non-existent cluster entity."
+
+    elif scenario == "postgresFailure":
+        # Evidence tuple: (Service: product-catalog & astronomy-db, Cause: connection pool starvation / max_connections)
+        has_db = any(k in d_lower for k in ["postgres", "astronomy-db", "product-catalog"])
+        has_starvation = any(k in d_lower for k in ["starvation", "exhaustion", "connection", "dial timeout", "pool"])
+        if has_db and has_starvation:
+            return True, "Evidence verified: Isolated database connection pool starvation across microservices."
+        return False, "Unverified: Failed to isolate database connection pool exhaustion."
+
+    return False, "Unverified scenario"
 
 
 # ==============================================================================
@@ -49,31 +122,35 @@ def run_investigation():
 
     # Filter OpenAI tool schemas to only enabled tools
     active_tool_schemas = [t for t in OPENAI_TOOLS if t["function"]["name"] in enabled_tool_names]
-    sys_prompt = assemble_system_prompt(CONFIG, scenario)
-    user_prompt = CONFIG.get("initial_user_prompt", "Investigate incident").format(namespace=ns, scenario=scenario)
+    system_prompt = assemble_system_prompt(CONFIG, scenario)
 
     logger = AuditLogger(
         log_dir=CONFIG["log_dir"],
         namespace=ns,
-        system_prompt=sys_prompt,
+        system_prompt=system_prompt,
         tool_schemas=active_tool_schemas,
         max_turns=CONFIG["max_turns"],
         config_snapshot=CONFIG
     )
 
-    print("\n" + "="*75)
-    print(f"🚨 SRE MINI AGENT LAUNCHED · NAMESPACE: '{ns}'")
-    print(f"🎯 Scenario Target: {scenario} | Model: {model}")
-    print(f"🛠️  Active Tools ({len(active_tool_schemas)}): {', '.join(enabled_tool_names)}")
-    print(f"🧠 Caching: {CONFIG['enable_prompt_caching']} | Context Mode: {CONFIG['context_mode']}")
-    print(f"💾 Episodic Memory: {'ENABLED' if CONFIG['enable_memory'] else 'DISABLED'}")
-    print(f"📝 Full Audit Log: {logger.log_filename}")
-    print("="*75 + "\n")
+    initial_prompt = CONFIG["initial_user_prompt"].format(namespace=ns, scenario=scenario)
 
-    messages: List[Dict[str, Any]] = [
-        {"role": "system", "content": sys_prompt},
-        {"role": "user", "content": user_prompt}
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": initial_prompt}
     ]
+
+    print("\n" + "="*75)
+    print("🚀 SRE AUTONOMOUS INVESTIGATION AGENT INITIALIZED")
+    print("="*75)
+    print(f"├── Target Namespace     : {ns}")
+    print(f"├── Active Scenario      : {scenario}")
+    print(f"├── Configured LLM       : {model}")
+    print(f"├── Enabled Tools        : {', '.join(enabled_tool_names)}")
+    print(f"├── Memory Mode          : {'ON (Recall Past Post-Mortems)' if CONFIG.get('enable_memory') else 'OFF (Baseline Cold Start)'}")
+    print(f"├── Context Windowing    : {CONFIG.get('context_mode', 'filtered_regex')}")
+    print(f"└── Max Turns Allowed    : {CONFIG['max_turns']}")
+    print("="*75 + "\n")
 
     total_prompt_tokens = 0
     total_completion_tokens = 0
@@ -84,6 +161,8 @@ def run_investigation():
     mock_planner = MockAgentPlanner(scenario, ns, context_mode=CONFIG.get("context_mode", "filtered_regex"))
     final_diagnosis = ""
     is_final = False
+    last_observation: Optional[str] = None
+    investigation_failed = False
 
     for turn in range(1, CONFIG["max_turns"] + 1):
         turn_start = time.time()
@@ -124,11 +203,14 @@ def run_investigation():
                     final_diagnosis = thought
 
             except Exception as e:
-                print(f"  ⚠️ Live LLM invocation error: {e}. Falling back to deterministic planner.")
-                is_live_llm = False
+                print(f"  ❌ Live LLM invocation failed: {e}. Investigation aborted.")
+                thought = f"LLM invocation error: {e}"
+                final_diagnosis = f"Investigation FAILED (API_ERROR): Live LLM provider error: {e}"
+                is_final = True
+                investigation_failed = True
 
-        if not is_live_llm:
-            step = mock_planner.plan_next_action(enabled_tool_names)
+        if not is_live_llm and not investigation_failed:
+            step = mock_planner.plan_next_action(enabled_tool_names, last_observation=last_observation)
             thought = step.get("thought", "")
             print(f"  💭 Reasoning: {thought}")
             tool_call = step.get("tool_call")
@@ -152,6 +234,20 @@ def run_investigation():
                 cached_tokens = 0
                 active_prompt_tokens = base_prompt_tokens
             completion_tok = 60 + len(thought.split())
+
+        if investigation_failed:
+            turn_metrics = {
+                "duration_s": time.time() - turn_start,
+                "active_prompt_tokens": 0,
+                "cached_tokens_saved": 0,
+                "completion_tokens": 0,
+            }
+            logger.log_turn(turn, messages, thought, None, None, turn_metrics)
+            print("\n" + "="*75)
+            print("❌ INVESTIGATION ABORTED DUE TO PROVIDER ERROR")
+            print("="*75)
+            print(f"\n{final_diagnosis}\n")
+            break
 
         total_prompt_tokens += active_prompt_tokens
         total_completion_tokens += completion_tok
@@ -180,14 +276,20 @@ def run_investigation():
             t_args = tool_call.get("args", {})
             print(f"  ⚡ Tool Dispatch: {t_name}({json.dumps(t_args)})")
 
-            handler = TOOL_DISPATCH.get(t_name)
-            if handler:
-                if t_name == "search_incident_history":
-                    t_args["enable_memory"] = CONFIG.get("enable_memory", False)
-                observation = handler(t_args)
+            if t_name not in enabled_tool_names:
+                observation = f"Error: Tool '{t_name}' is disabled in the active capability configuration and cannot be executed."
             else:
-                observation = f"Error: Tool '{t_name}' is not registered."
+                handler = TOOL_DISPATCH.get(t_name)
+                if handler:
+                    if t_name == "search_incident_history":
+                        t_args["enable_memory"] = CONFIG.get("enable_memory", False)
+                    elif t_name == "get_deploy_history":
+                        t_args["is_mock"] = (model == "mock")
+                    observation = handler(t_args)
+                else:
+                    observation = f"Error: Tool '{t_name}' is not registered."
 
+            last_observation = observation
             display_obs = observation.replace("\n", " ")
             if len(display_obs) > 160:
                 display_obs = display_obs[:160] + "..."
@@ -221,7 +323,7 @@ def run_investigation():
         logger.log_turn(turn, messages, thought, tool_call, observation, turn_metrics)
 
     # Final synthesis turn if max_turns was reached without explicit stop
-    if not is_final:
+    if not is_final and not investigation_failed:
         print("\n▶ [Final Synthesis] Maximum turns reached. Formulating definitive root cause...")
         synth_messages = list(messages) + [
             {"role": "user", "content": "Based on all the telemetry, logs, and deployment data you have inspected, declare the definitive ROOT CAUSE IDENTIFIED, key evidence, and remediation actions."}
@@ -255,29 +357,24 @@ def run_investigation():
         print("="*75)
         print(f"\n{final_diagnosis}\n")
 
-    # Persist investigation resolution to episodic memory store
-    save_to_episodic_memory(final_diagnosis, scenario, ns, model)
+    # Evaluate ground truth with evidence-backed validation
+    verified, eval_details = evaluate_ground_truth(scenario, final_diagnosis, failed=investigation_failed)
+
+    # Persist investigation resolution to episodic memory store ONLY if verified and enabled
+    if verified and CONFIG.get("enable_memory", False):
+        save_to_episodic_memory(final_diagnosis, scenario, ns, model)
+        print("  💾 Incident resolution saved to episodic memory store.")
+    else:
+        if not verified:
+            print("  ⚠️ Skipped episodic memory persistence: diagnosis is unverified or investigation failed.")
+        elif not CONFIG.get("enable_memory", False):
+            print("  ℹ️ Episodic memory persistence disabled in configuration.")
 
     # Scorecard calculation
     total_elapsed = time.time() - start_time
     rate = MODEL_RATES.get(model, 0.0003)
     est_cost = ((total_prompt_tokens + total_completion_tokens) / 1000.0) * rate
     cached_savings_dollars = (cached_tokens_saved / 1000.0) * (rate * 0.75)
-
-    # Ground-truth accuracy check per scenario
-    d_lower = final_diagnosis.lower()
-    if scenario == "badDeploy1405":
-        verified = "checkout" in d_lower and any(k in d_lower for k in ["a7f39b1", "deploy", "timeout", "5000ms", "rollback"])
-    elif scenario == "episodicRecurrence":
-        verified = any(k in d_lower for k in ["inc-4092", "14 march", "connection", "starvation", "pgbouncer"])
-    elif scenario == "emailMemoryLeak":
-        verified = "email" in d_lower and any(k in d_lower for k in ["memory", "leak", "oom", "137"])
-    elif scenario == "postgresSlow":
-        verified = any(k in d_lower for k in ["postgres", "database", "latency", "pg_sleep", "delay", "slow"])
-    elif scenario == "poisonedEntity":
-        verified = any(k in d_lower for k in ["abstain", "does not exist", "not exist", "unresolv", "not found"])
-    else:  # postgresFailure
-        verified = any(k in d_lower for k in ["postgres", "astronomy-db", "starvation", "connection", "pool"])
 
     scorecard = {
         "namespace": ns,
@@ -291,11 +388,12 @@ def run_investigation():
         "estimated_api_cost": round(est_cost, 5),
         "cached_savings_dollars": round(cached_savings_dollars, 5),
         "accuracy_verified": verified,
+        "evaluation_details": eval_details,
     }
 
     logger.finalize(final_diagnosis, scorecard)
 
-    result_badge = "✅ SUCCESS (Root Cause Identified)" if verified else "⚠️ PARTIAL (Needs Further Evidence)"
+    result_badge = f"✅ SUCCESS ({eval_details})" if verified else f"⚠️ UNVERIFIED / PARTIAL ({eval_details})"
 
     print("="*75)
     print("📊 RUN SCORECARD (Logged to file and ready for room scoreboard)")

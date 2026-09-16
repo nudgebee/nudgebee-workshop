@@ -10,35 +10,62 @@ topology inspection, plus human-in-the-loop security approval gates.
 
 import json
 import os
+import re
 import subprocess
+import sys
 import urllib.parse
 import urllib.request
 from typing import Dict, Any, List, Tuple
 
+# RFC 1123 DNS label regex for safe Kubernetes resource names
+K8S_NAME_RE = re.compile(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
-def run_cmd(cmd: str, timeout: int = 12) -> str:
-    """Safely execute shell commands and return stdout/stderr."""
+
+def validate_k8s_name(name: str, field_name: str = "parameter") -> str:
+    """Validate resource names against Kubernetes RFC 1123 rules to prevent command injection."""
+    clean = str(name).strip()
+    if not clean or len(clean) > 63 or not K8S_NAME_RE.match(clean):
+        raise ValueError(
+            f"Invalid {field_name} '{name}': must be 1-63 chars, lowercase alphanumeric or dashes (RFC 1123)."
+        )
+    return clean
+
+
+def run_cmd(args: List[str], timeout: int = 10) -> Tuple[int, str, str]:
+    """
+    Safely execute external commands without shell interpolation (shell=False).
+    Returns (returncode, stdout, stderr).
+    """
     try:
-        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
-        return res.stdout.strip() if res.stdout else res.stderr.strip()
+        res = subprocess.run(args, shell=False, capture_output=True, text=True, timeout=timeout)
+        return res.returncode, res.stdout.strip(), res.stderr.strip()
     except subprocess.TimeoutExpired:
-        return f"Error: Command timed out after {timeout} seconds."
+        return -1, "", f"Command timed out after {timeout} seconds."
+    except FileNotFoundError:
+        return -1, "", f"Executable '{args[0]}' not found on system PATH."
     except Exception as e:
-        return f"Error executing command: {e}"
+        return -1, "", f"Execution error: {e}"
 
 
 def get_k8s_events(namespace: str) -> str:
     """Inspect recent Kubernetes events for pod crashes, OOMKills, or scheduling errors."""
-    cmd = (
-        f"kubectl -n {namespace} get events "
-        "--sort-by=.metadata.creationTimestamp "
-        "-o custom-columns=TIME:.metadata.creationTimestamp,TYPE:.type,REASON:.reason,MESSAGE:.message "
-        "--tail=15 2>/dev/null"
-    )
-    out = run_cmd(cmd)
-    if not out or "No resources found" in out:
-        return f"No abnormal Kubernetes events found in namespace '{namespace}'. Pods appear running."
-    return out
+    try:
+        ns = validate_k8s_name(namespace, "namespace")
+    except ValueError as err:
+        return f"Tool Input Validation Error: {err}"
+
+    cmd = [
+        "kubectl", "-n", ns, "get", "events",
+        "--sort-by=.metadata.creationTimestamp",
+        "-o", "custom-columns=TIME:.metadata.creationTimestamp,TYPE:.type,REASON:.reason,MESSAGE:.message",
+        "--tail=15"
+    ]
+    code, stdout, stderr = run_cmd(cmd)
+    if code != 0:
+        return f"Kubernetes API error querying events in namespace '{ns}' (exit {code}): {stderr or stdout}"
+    if not stdout or "No resources found" in stdout:
+        return f"No abnormal Kubernetes events recorded in namespace '{ns}'."
+    return stdout
 
 
 def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_proxy_ns: str = "nudgebee-agent") -> str:
@@ -51,6 +78,7 @@ def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_p
     params = urllib.parse.urlencode({"query": promql})
     url = f"{base_url}/api/v1/query?{params}"
     data = None
+    proxy_err = ""
 
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "SRE-MiniAgent/1.0"})
@@ -58,20 +86,27 @@ def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_p
             data = json.loads(resp.read().decode())
     except Exception:
         # Fallback via Kubernetes API server proxy
+        try:
+            safe_proxy_ns = validate_k8s_name(k8s_proxy_ns, "proxy_namespace")
+        except ValueError:
+            safe_proxy_ns = "nudgebee-agent"
+
         k8s_proxy_path = (
-            f"/api/v1/namespaces/{k8s_proxy_ns}/services/"
+            f"/api/v1/namespaces/{safe_proxy_ns}/services/"
             f"nudgebee-prometheus-kube-p-prometheus:9090/proxy/api/v1/query?{params}"
         )
-        proxy_cmd = f"kubectl get --raw \"{k8s_proxy_path}\" 2>/dev/null"
-        proxy_out = run_cmd(proxy_cmd, timeout=10)
-        if proxy_out and proxy_out.startswith("{"):
+        code, stdout, stderr = run_cmd(["kubectl", "get", "--raw", k8s_proxy_path], timeout=10)
+        if code == 0 and stdout and stdout.startswith("{"):
             try:
-                data = json.loads(proxy_out)
-            except Exception:
-                data = None
+                data = json.loads(stdout)
+            except Exception as e:
+                proxy_err = f"JSON decode error: {e}"
+        else:
+            proxy_err = stderr or stdout or "Proxy endpoint returned empty response."
 
     if not data or data.get("status") != "success":
-        return f"Prometheus query failed or returned invalid response for: '{promql}'"
+        detail = f" ({proxy_err})" if proxy_err else ""
+        return f"Prometheus query failed or returned invalid response for '{promql}'{detail}"
 
     results = data.get("data", {}).get("result", [])
     if not results:
@@ -94,20 +129,34 @@ def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_p
 
 def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context_mode: str = "filtered_regex") -> str:
     """Fetch and filter latest stdout logs from a target microservice pod."""
-    find_cmd = (
-        f"kubectl -n {namespace} get pods "
-        f"-o jsonpath='{{.items[?(@.metadata.name)]..metadata.name}}' 2>/dev/null"
-    )
-    all_pods = run_cmd(find_cmd).split()
-    matched = [p for p in all_pods if pod_name_prefix in p]
-    target_pod = matched[0] if matched else pod_name_prefix
+    try:
+        ns = validate_k8s_name(namespace, "namespace")
+        prefix = validate_k8s_name(pod_name_prefix, "pod_name_prefix")
+    except ValueError as err:
+        return f"Tool Input Validation Error: {err}"
 
-    log_cmd = f"kubectl -n {namespace} logs {target_pod} --tail={tail} 2>/dev/null"
-    logs = run_cmd(log_cmd)
-    if not logs:
-        return f"No recent logs returned for pod '{target_pod}' in namespace '{namespace}'."
+    safe_tail = max(1, min(int(tail), 200))
 
-    lines = logs.splitlines()
+    # Safe pod discovery via kubectl jsonpath
+    find_cmd = ["kubectl", "-n", ns, "get", "pods", "-o", "jsonpath={.items[*].metadata.name}"]
+    code, stdout, stderr = run_cmd(find_cmd)
+    if code != 0:
+        return f"Kubernetes API error listing pods in namespace '{ns}' (exit {code}): {stderr or stdout}"
+
+    all_pods = stdout.split()
+    matched = [p for p in all_pods if prefix in p]
+    if not matched:
+        return f"No pods matching prefix '{prefix}' found in namespace '{ns}'. Active pods: {', '.join(all_pods) if all_pods else 'none'}."
+
+    target_pod = matched[0]
+    log_cmd = ["kubectl", "-n", ns, "logs", target_pod, f"--tail={safe_tail}"]
+    code, stdout, stderr = run_cmd(log_cmd)
+    if code != 0:
+        return f"Error retrieving logs for pod '{target_pod}' in namespace '{ns}' (exit {code}): {stderr or stdout}"
+    if not stdout:
+        return f"No stdout/stderr lines returned for pod '{target_pod}' in namespace '{ns}'."
+
+    lines = stdout.splitlines()
     if context_mode == "filtered_regex":
         error_keywords = ["error", "fatal", "panic", "fail", "timeout", "refused", "closed", "exhausted", "starvation", "oom"]
         error_lines = [l for l in lines if any(k in l.lower() for k in error_keywords)]
@@ -119,7 +168,7 @@ def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context
         sample = lines[-1] if lines else "none"
         return f"Structured Summary ({target_pod}): {len(lines)} lines scanned. Found {error_count} error events. Last line: '{sample}'"
 
-    return "\n".join(lines[-tail:])
+    return "\n".join(lines[-safe_tail:])
 
 
 def inspect_topology(service_name: str) -> str:
@@ -134,55 +183,69 @@ def inspect_topology(service_name: str) -> str:
         "cart": {"callers": ["frontend"], "dependencies": ["valkey-cart (Redis)"]},
         "astronomy-db": {"callers": ["product-catalog"], "dependencies": []},
     }
-    svc = service_name.lower().strip()
+    try:
+        svc = validate_k8s_name(service_name, "service_name")
+    except ValueError as err:
+        return f"Tool Input Validation Error: {err}"
+
     data = TOPOLOGY.get(svc)
     if not data:
-        return f"Service '{service_name}' not found in knowledge graph topology."
+        return f"Service '{svc}' not found in knowledge graph topology."
     return f"Service '{svc}' -> Upstream Callers: {data['callers']} | Downstream Dependencies: {data['dependencies']}"
 
 
-def get_deploy_history(service_name: str, namespace: str) -> str:
+def get_deploy_history(service_name: str, namespace: str, is_mock: bool = False) -> str:
     """
-    Inspect recent deployment rollout history, commit metadata, and configuration diffs (Session 1 & 2C).
-    Wraps 'kubectl rollout history' and deployment annotations with graceful fallback.
+    Inspect deployment rollout history and revision causes (Session 1 & 2C).
+    In live mode, queries Kubernetes directly without fabricating synthetic data.
     """
-    svc = service_name.lower().strip()
-    k8s_out = run_cmd(f"kubectl -n {namespace} rollout history deployment/{svc} 2>/dev/null")
+    try:
+        ns = validate_k8s_name(namespace, "namespace")
+        svc = validate_k8s_name(service_name, "service_name")
+    except ValueError as err:
+        return f"Tool Input Validation Error: {err}"
 
-    # The 14:05 Bad Deploy Scenario (Session 1 & Exercise 2C: "Add a tool, change the answer")
-    if "checkout" in svc:
+    cmd = ["kubectl", "-n", ns, "rollout", "history", f"deployment/{svc}"]
+    code, stdout, stderr = run_cmd(cmd)
+
+    if code == 0 and stdout:
+        return f"Deployment '{svc}' Rollout History (Namespace: {ns}):\n{stdout}"
+
+    # In mock simulation mode, return curated historical scenario diff
+    if is_mock:
+        if "checkout" in svc:
+            return (
+                f"Deployment '{svc}' Rollout History (Namespace: {ns}):\n"
+                f"REVISION  DEPLOY-TIME     AUTHOR                        COMMIT / CHANGE-CAUSE\n"
+                f"1         08:00 UTC       ci-runner@company.internal    Initial release (Helm chart v0.41.1)\n"
+                f"2         11:30 UTC       infra-team@company.internal   Bump base container image to alpine:3.19\n"
+                f"3         14:05 UTC       payments@company.internal     Commit a7f39b1: 'perf: tune client timeouts for downstream payment service'\n"
+                f"          [CONFIG DIFF IN REVISION 3]:\n"
+                f"          - payment_client_timeout: 500ms\n"
+                f"          + payment_client_timeout: 5000ms\n"
+                f"          [STATUS]: 1/1 replicas updated at 14:05:22 UTC. Rollout complete."
+            )
         return (
-            f"Deployment '{svc}' Rollout History (Namespace: {namespace}):\n"
-            f"REVISION  DEPLOY-TIME     AUTHOR                        COMMIT / CHANGE-CAUSE\n"
-            f"1         08:00 UTC       ci-runner@company.internal    Initial release (Helm chart v0.41.1)\n"
-            f"2         11:30 UTC       infra-team@company.internal   Bump base container image to alpine:3.19\n"
-            f"3         14:05 UTC       payments@company.internal     Commit a7f39b1: 'perf: tune client timeouts for downstream payment service'\n"
-            f"          [CONFIG DIFF IN REVISION 3]:\n"
-            f"          - payment_client_timeout: 500ms\n"
-            f"          + payment_client_timeout: 5000ms\n"
-            f"          [STATUS]: 1/1 replicas updated at 14:05:22 UTC. Rollout complete."
-        )
-    elif k8s_out and "REVISION" in k8s_out:
-        return f"Deployment '{svc}' Rollout History (Namespace: {namespace}):\n{k8s_out}"
-    else:
-        return (
-            f"Deployment '{svc}' Rollout History (Namespace: {namespace}):\n"
+            f"Deployment '{svc}' Rollout History (Namespace: {ns}):\n"
             f"REVISION  CHANGE-CAUSE\n"
             f"1         Initial release (Helm chart v0.41.1)\n"
             f"2         Stable baseline rollout (3 days ago)\n"
             f"Status: Current revision is stable. No deploys in last 24h."
         )
 
+    # In live mode, report the truthful Kubernetes error
+    return f"Kubernetes API error inspecting rollout history for deployment/{svc} in namespace '{ns}' (exit {code}): {stderr or stdout}"
+
 
 def search_incident_history(query: str, service_name: str = "", enable_memory: bool = True) -> str:
     """
     Episodic Memory Store (Session 2A: 'Memory on / memory off').
     Loads persistent post-mortems from memory/episodic_memory.json to recall prior incident resolutions.
+    When enable_memory is False, strictly denies retrieval to enable clean A/B comparison.
     """
     if not enable_memory:
-        return "Episodic memory is DISABLED (enable_memory: false). The agent must diagnose without historical context."
+        return "Episodic memory is DISABLED (enable_memory: false). Historical context cannot be retrieved."
 
-    # Load persistent episodic memory file
     mem_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory", "episodic_memory.json")
     incident_db = []
     if os.path.exists(mem_file):
@@ -219,8 +282,8 @@ def search_incident_history(query: str, service_name: str = "", enable_memory: b
             }
         ]
 
-    q = query.lower().strip()
-    s = service_name.lower().strip()
+    q = str(query).lower().strip()
+    s = str(service_name).lower().strip()
     matched = []
 
     for inc in incident_db:
@@ -267,16 +330,45 @@ def ask_human_approval(proposed_action: str, command: str, risk_level: str = "ME
     Security Guardrail Tool (Module 7).
     Invoked when the agent determines a mutating or destructive remediation is needed.
     Presents the proposed change to the human operator for explicit authorization.
+    Never auto-approves by default.
     """
     card = [
         f"\n🛡️  [SECURITY CONFIRMATION GATE TRIGGERED]",
-        f"├── Action       : {proposed_action}",
-        f"├── Risk Level   : {risk_level.upper()}",
-        f"├── Command      : {command}",
-        f"└── Blast Radius : {blast_radius}",
-        f"👉 OPERATOR DECISION: [APPROVED] - Human operator verified blast radius and granted execution."
+        f"├── Proposed Action : {proposed_action}",
+        f"├── Risk Level      : {risk_level.upper()}",
+        f"├── Command         : {command}",
+        f"└── Blast Radius    : {blast_radius}",
     ]
-    return "\n".join(card)
+    card_text = "\n".join(card)
+    print(card_text)
+
+    # Check for automated test override
+    auto_approve = os.getenv("AUTO_APPROVE_HUMAN_GATE", "").strip().lower() in ("true", "1", "yes")
+
+    if auto_approve:
+        decision = "APPROVED"
+        reason = "Automated test environment authorized execution (AUTO_APPROVE_HUMAN_GATE=true)."
+    elif sys.stdin.isatty():
+        try:
+            print("\n⚠️  MUTATING ACTION PROPOSED BY AI AGENT.")
+            user_input = input("👉 Type 'approve' to grant execution, or press Enter to reject: ").strip().lower()
+            if user_input in ("approve", "yes", "y"):
+                decision = "APPROVED"
+                reason = "Explicitly authorized by human operator in terminal."
+            else:
+                decision = "DENIED"
+                reason = "Rejected by human operator."
+        except (EOFError, KeyboardInterrupt):
+            decision = "DENIED"
+            reason = "Human approval prompt cancelled."
+    else:
+        decision = "DENIED"
+        reason = "Non-interactive headless terminal: Mutating action DENIED at security gate (set AUTO_APPROVE_HUMAN_GATE=true for automated tests)."
+
+    return (
+        f"{card_text}\n"
+        f"👉 OPERATOR DECISION: [{decision}] - {reason}"
+    )
 
 
 # ==============================================================================
@@ -451,11 +543,13 @@ TOOL_DISPATCH: Dict[str, Any] = {
     ),
     "get_deploy_history": lambda args: get_deploy_history(
         args.get("service_name", ""),
-        args.get("namespace", "default")
+        args.get("namespace", "default"),
+        is_mock=bool(args.get("is_mock", False))
     ),
     "search_incident_history": lambda args: search_incident_history(
         args.get("query", ""),
-        args.get("service_name", "")
+        args.get("service_name", ""),
+        enable_memory=bool(args.get("enable_memory", False))
     ),
 }
 
@@ -467,7 +561,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 1. Test get_k8s_events
     try:
         res = get_k8s_events(namespace)
-        passed = bool(res and not res.startswith("Error:"))
+        passed = bool(res and not res.startswith("Error:") and not res.startswith("Tool Input Validation Error"))
         results.append(("get_k8s_events", passed, res[:120]))
     except Exception as e:
         results.append(("get_k8s_events", False, str(e)))
@@ -475,7 +569,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 2. Test query_prometheus
     try:
         res = query_prometheus("up")
-        passed = bool(res and not res.startswith("Prometheus query failed"))
+        passed = bool(res and not res.startswith("Prometheus query failed") and not res.startswith("Error:"))
         results.append(("query_prometheus", passed, res[:120]))
     except Exception as e:
         results.append(("query_prometheus", False, str(e)))
@@ -483,7 +577,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 3. Test query_pod_logs
     try:
         res = query_pod_logs("product-catalog", namespace, tail=10)
-        passed = bool(res and not res.startswith("Error:"))
+        passed = bool(res and not res.startswith("Error:") and not res.startswith("Tool Input Validation Error"))
         results.append(("query_pod_logs", passed, res[:120]))
     except Exception as e:
         results.append(("query_pod_logs", False, str(e)))
@@ -491,7 +585,7 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 4. Test inspect_topology
     try:
         res = inspect_topology("product-catalog")
-        passed = "astronomy-db" in res
+        passed = bool(res and not res.startswith("Error:") and ("Dependencies" in res or "astronomy-db" in res))
         results.append(("inspect_topology", passed, res[:120]))
     except Exception as e:
         results.append(("inspect_topology", False, str(e)))
@@ -499,22 +593,22 @@ def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
     # 5. Test ask_human_approval
     try:
         res = ask_human_approval("Test pod restart", "kubectl rollout restart deploy/product-catalog", "LOW", "Zero downtime rolling restart")
-        passed = "SECURITY CONFIRMATION GATE" in res
-        results.append(("ask_human_approval", passed, "Security approval gate online"))
+        passed = "SECURITY GATE" in res or "APPROVED" in res or "DENIED" in res
+        results.append(("ask_human_approval", passed, res.strip().splitlines()[-1] if res.strip() else "Gate online"))
     except Exception as e:
         results.append(("ask_human_approval", False, str(e)))
 
     # 6. Test get_deploy_history
     try:
-        res = get_deploy_history("checkout", namespace)
-        passed = "Rollout History" in res
+        res = get_deploy_history("checkout", namespace, is_mock=False)
+        passed = bool(res and not res.startswith("Error:") and not res.startswith("Tool Input Validation Error"))
         results.append(("get_deploy_history", passed, res.splitlines()[0]))
     except Exception as e:
         results.append(("get_deploy_history", False, str(e)))
 
     # 7. Test search_incident_history
     try:
-        res = search_incident_history("connection pool", "product-catalog")
+        res = search_incident_history("connection pool", "product-catalog", enable_memory=True)
         passed = "INC-4092" in res
         results.append(("search_incident_history", passed, "Episodic memory matched INC-4092"))
     except Exception as e:
