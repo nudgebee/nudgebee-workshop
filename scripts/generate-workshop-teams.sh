@@ -135,7 +135,16 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     T_NS=$(echo "$line" | awk '{print $2}')
     T_KEY=$(echo "$line" | awk '{print $3}')
   fi
-  [[ -z "$T_NS" ]] && T_NS="${T_ID}"
+  # Auto-sanitize namespace if empty or contains invalid characters (@, ., uppercase, _)
+  if [[ -z "$T_NS" || "$T_NS" == *"@"* || "$T_NS" == *"."* || "$T_NS" =~ [A-Z_] ]]; then
+    SOURCE_NAME="${T_NS:-$T_ID}"
+    T_CLEAN=$(echo "${SOURCE_NAME%%@*}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-|-$//g')
+    if [[ ! "$T_CLEAN" =~ ^(group|team)- ]]; then
+      T_NS="group-${T_CLEAN}"
+    else
+      T_NS="${T_CLEAN}"
+    fi
+  fi
   [[ -z "$T_KEY" ]] && T_KEY="${API_KEY}"
 
   TEAM_IDS+=("$T_ID")
@@ -284,8 +293,10 @@ for idx in "${!TEAM_IDS[@]}"; do
   TEAM_NS="${NAMESPACES[$idx]}"
   ASSIGNED_KEY="${KEYS[$idx]}"
   SA_NAME="sa-${TEAM_NS}"
+  TEAM_SLUG=$(echo "${TEAM_ID%%@*}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-|-$//g')
+  [[ -z "$TEAM_SLUG" ]] && TEAM_SLUG="$TEAM_ID"
   KUBECONFIG_OUT="${OUTPUT_DIR}/kubeconfig-${TEAM_NS}.yaml"
-  BUNDLE_OUT="${OUTPUT_DIR}/${TEAM_ID}.enc"
+  BUNDLE_OUT="${OUTPUT_DIR}/${TEAM_SLUG}.enc"
 
   echo ""
   echo "▶ [Team ${i}/${NUM_TEAMS}] Provisioning team '${TEAM_ID}' (Namespace: '${TEAM_NS}')..."
@@ -466,17 +477,24 @@ with open(sys.argv[5], 'w') as f:
       -pass pass:"${PASSPHRASE}"
     rm -f "${OUTPUT_DIR}/.tmp_${TEAM_ID}.json"
 
-    chmod 644 "${BUNDLE_OUT}"
+    # If TEAM_ID differs from TEAM_SLUG (e.g. full email or dotted username),
+    # create alias copy so either filename can be fetched from storage or locally.
+    if [[ "${TEAM_ID}" != "${TEAM_SLUG}" ]]; then
+      cp -f "${BUNDLE_OUT}" "${OUTPUT_DIR}/${TEAM_ID}.enc"
+      chmod 644 "${OUTPUT_DIR}/${TEAM_ID}.enc" 2>/dev/null || true
+    fi
+
+    chmod 644 "${BUNDLE_OUT}" 2>/dev/null || true
     echo "  🔒 Encrypted bundle created: ${BUNDLE_OUT}"
-    echo "Team: ${TEAM_ID} | Namespace: ${TEAM_NS} | Encrypted Bundle: ${BUNDLE_OUT}" >> "${SUMMARY_FILE}"
+    echo "Team: ${TEAM_ID} (Slug: ${TEAM_SLUG}) | Namespace: ${TEAM_NS} | Encrypted Bundle: ${BUNDLE_OUT}" >> "${SUMMARY_FILE}"
     if [[ -n "${STORAGE_BASE_URL}" ]]; then
-      echo "       Download: ${STORAGE_BASE_URL}/${TEAM_ID}.enc" >> "${SUMMARY_FILE}"
-      echo "       Command : ./scripts/bootstrap-team.sh --team ${TEAM_ID} --pass \"${PASSPHRASE}\" --url \"${STORAGE_BASE_URL}\"" >> "${SUMMARY_FILE}"
+      echo "       Download: ${STORAGE_BASE_URL}/${TEAM_SLUG}.enc" >> "${SUMMARY_FILE}"
+      echo "       Command : ./scripts/bootstrap-team.sh --team ${TEAM_SLUG} --pass \"${PASSPHRASE}\" --url \"${STORAGE_BASE_URL}\"" >> "${SUMMARY_FILE}"
     else
-      echo "       Command : ./scripts/bootstrap-team.sh --team ${TEAM_ID} --pass \"${PASSPHRASE}\" --url \"<STORAGE_URL>\"" >> "${SUMMARY_FILE}"
+      echo "       Command : ./scripts/bootstrap-team.sh --team ${TEAM_SLUG} --pass \"${PASSPHRASE}\" --url \"<STORAGE_URL>\"" >> "${SUMMARY_FILE}"
     fi
   else
-    echo "Team: ${TEAM_ID} | Namespace: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT}" >> "${SUMMARY_FILE}"
+    echo "Team: ${TEAM_ID} (Slug: ${TEAM_SLUG}) | Namespace: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT}" >> "${SUMMARY_FILE}"
   fi
 done
 

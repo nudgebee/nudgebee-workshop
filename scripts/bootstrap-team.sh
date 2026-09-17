@@ -95,9 +95,51 @@ if [[ -z "$KUBECONFIG_SOURCE" && -z "$PASSPHRASE" ]]; then
   echo ""
 fi
 
-TARGET_NS="${TEAM}"
-if [[ ! "$TEAM" =~ ^(group|team)- ]]; then
-  TARGET_NS="group-${TEAM}"
+# ------------------------------------------------------------------------------
+# Normalize Team ID & Build Candidate Bundle List
+# Supports full emails (pavan@gmail.com), usernames (pavan), dotted IDs (charan.p.408),
+# slugs (charan-p-408), and legacy numbers (1, team-1, group-1).
+# ------------------------------------------------------------------------------
+RAW_TEAM="${TEAM}"
+LOWER_TEAM=$(echo "$RAW_TEAM" | tr '[:upper:]' '[:lower:]' | xargs)
+USER_PART="${LOWER_TEAM%%@*}"
+SLUG=$(echo "$USER_PART" | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-|-$//g')
+[[ -z "$SLUG" ]] && SLUG="$LOWER_TEAM"
+
+TARGET_NS="${SLUG}"
+if [[ ! "$TARGET_NS" =~ ^(group|team)- ]]; then
+  TARGET_NS="group-${SLUG}"
+fi
+
+# Build list of candidate bundle filenames to search (without duplicates)
+CANDIDATE_BUNDLES=()
+add_candidate() {
+  local b="$1"
+  [[ -z "$b" ]] && return
+  [[ ! "$b" =~ \.enc$ ]] && b="${b}.enc"
+  if [[ ${#CANDIDATE_BUNDLES[@]} -gt 0 ]]; then
+    for existing in "${CANDIDATE_BUNDLES[@]}"; do
+      [[ "$existing" == "$b" ]] && return
+    done
+  fi
+  CANDIDATE_BUNDLES+=("$b")
+}
+
+# 1. Sanitized slug (e.g. charan-p-408.enc, pavan2017aravindh.enc)
+add_candidate "${SLUG}.enc"
+# 2. Lowercase user part before @ (e.g. charan.p.408.enc)
+add_candidate "${USER_PART}.enc"
+# 3. Lowercase full string (e.g. charan.p.408@gmail.com.enc)
+add_candidate "${LOWER_TEAM}.enc"
+# 4. Exact raw string
+add_candidate "${RAW_TEAM}.enc"
+# 5. Prefixed variants
+add_candidate "group-${SLUG}.enc"
+add_candidate "team-${SLUG}.enc"
+
+# 6. Legacy prefix stripping (e.g. group-1 or team-1 -> 1.enc)
+if [[ "$SLUG" =~ ^(team|group)-(.+)$ ]]; then
+  add_candidate "${BASH_REMATCH[2]}.enc"
 fi
 
 DEST_KUBECONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
@@ -107,7 +149,7 @@ trap 'rm -rf "${TMP_DIR}"' EXIT
 
 echo ""
 echo "=========================================================================="
-echo "🐝 CONFIGURING ENVIRONMENT FOR TEAM: ${TEAM}"
+echo "🐝 CONFIGURING ENVIRONMENT FOR TEAM: ${RAW_TEAM}"
 echo "=========================================================================="
 
 # ------------------------------------------------------------------------------
@@ -115,54 +157,47 @@ echo "==========================================================================
 # ------------------------------------------------------------------------------
 if [[ -n "$PASSPHRASE" ]]; then
   ENC_FILE=""
-  BUNDLE_NAME="${TEAM}.enc"
+  RESOLVED_NAME=""
 
   # Case A: Download from Storage URL if provided
   if [[ -n "$STORAGE_URL" ]]; then
-    REMOTE_URL="${STORAGE_URL}/${BUNDLE_NAME}"
-    echo "▶ Downloading encrypted bundle from ${REMOTE_URL}..."
-    if curl -f -sSL "${REMOTE_URL}" -o "${TMP_DIR}/${BUNDLE_NAME}" 2>/dev/null; then
-      ENC_FILE="${TMP_DIR}/${BUNDLE_NAME}"
-    else
-      # If TEAM has a prefix like team-1 or group-1, also check numeric ID (e.g. 1.enc)
-      ALT_NAME=""
-      if [[ "$TEAM" =~ ^(team|group)-([0-9]+)$ ]]; then
-        ALT_NAME="${BASH_REMATCH[2]}.enc"
-      elif [[ "$TEAM" =~ ^[0-9]+$ ]]; then
-        ALT_NAME="team-${TEAM}.enc"
+    for CANDIDATE in "${CANDIDATE_BUNDLES[@]}"; do
+      REMOTE_URL="${STORAGE_URL}/${CANDIDATE}"
+      echo "▶ Checking remote bundle: ${REMOTE_URL}..."
+      if curl -f -sSL "${REMOTE_URL}" -o "${TMP_DIR}/${CANDIDATE}" 2>/dev/null; then
+        ENC_FILE="${TMP_DIR}/${CANDIDATE}"
+        RESOLVED_NAME="${CANDIDATE}"
+        echo "✅ Downloaded bundle: ${CANDIDATE}"
+        break
       fi
-      if [[ -n "$ALT_NAME" ]] && curl -f -sSL "${STORAGE_URL}/${ALT_NAME}" -o "${TMP_DIR}/${ALT_NAME}" 2>/dev/null; then
-        ENC_FILE="${TMP_DIR}/${ALT_NAME}"
-        echo "✅ Downloaded bundle using alternative ID: ${ALT_NAME}"
-      else
-        echo "⚠️ Could not download from ${REMOTE_URL}. Checking local directory..."
-      fi
-    fi
+    done
   fi
 
-  # Case B: Local workshop-credentials directory or root
+  # Case B: Local workshop-credentials directory or repository root
   if [[ -z "$ENC_FILE" ]]; then
-    if [[ -f "${REPO_ROOT}/workshop-credentials/${BUNDLE_NAME}" ]]; then
-      echo "▶ Using local encrypted bundle: ${REPO_ROOT}/workshop-credentials/${BUNDLE_NAME}..."
-      ENC_FILE="${REPO_ROOT}/workshop-credentials/${BUNDLE_NAME}"
-    elif [[ -f "./workshop-credentials/${BUNDLE_NAME}" ]]; then
-      echo "▶ Using local encrypted bundle: ./workshop-credentials/${BUNDLE_NAME}..."
-      ENC_FILE="./workshop-credentials/${BUNDLE_NAME}"
-    elif [[ -f "${REPO_ROOT}/${BUNDLE_NAME}" ]]; then
-      echo "▶ Using local encrypted bundle: ${REPO_ROOT}/${BUNDLE_NAME}..."
-      ENC_FILE="${REPO_ROOT}/${BUNDLE_NAME}"
-    elif [[ -f "./${BUNDLE_NAME}" ]]; then
-      echo "▶ Using local encrypted bundle: ./${BUNDLE_NAME}..."
-      ENC_FILE="./${BUNDLE_NAME}"
-    fi
+    for CANDIDATE in "${CANDIDATE_BUNDLES[@]}"; do
+      for SEARCH_DIR in "${REPO_ROOT}/workshop-credentials" "./workshop-credentials" "${REPO_ROOT}" "."; do
+        if [[ -f "${SEARCH_DIR}/${CANDIDATE}" ]]; then
+          echo "▶ Using local encrypted bundle: ${SEARCH_DIR}/${CANDIDATE}..."
+          ENC_FILE="${SEARCH_DIR}/${CANDIDATE}"
+          RESOLVED_NAME="${CANDIDATE}"
+          break 2
+        fi
+      done
+    done
   fi
 
   if [[ -z "$ENC_FILE" ]]; then
-    echo "❌ Error: Could not find bundle '${BUNDLE_NAME}' at ${STORAGE_URL:-'(no storage URL provided)'} or locally." >&2
+    echo "❌ Error: Could not find encrypted bundle for '${RAW_TEAM}'." >&2
+    echo "   Searched at: ${STORAGE_URL:-'(no storage URL provided)'} and locally" >&2
+    echo "   Tried candidate bundle names:" >&2
+    for CANDIDATE in "${CANDIDATE_BUNDLES[@]}"; do
+      echo "     - ${CANDIDATE}" >&2
+    done
     exit 1
   fi
 
-  echo "▶ Decrypting team bundle with room passphrase..."
+  echo "▶ Decrypting team bundle (${RESOLVED_NAME}) with room passphrase..."
   if ! openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "${ENC_FILE}" -out "${TMP_DIR}/payload.json" -pass pass:"${PASSPHRASE}" 2>/dev/null; then
     echo "❌ Decryption failed! Check the room passphrase." >&2
     exit 1
@@ -170,13 +205,15 @@ if [[ -n "$PASSPHRASE" ]]; then
 
   # Extract kubeconfig, api_key, and namespace from JSON
   python3 -c "
-import json, sys, os
+import json, sys, os, shutil
 
 with open(sys.argv[1], 'r') as f:
     data = json.load(f)
 
-# Write kubeconfig
+# Write kubeconfig (with safety backup)
 kube_path = sys.argv[2]
+if os.path.exists(kube_path) and not os.path.exists(kube_path + '.bak'):
+    shutil.copy2(kube_path, kube_path + '.bak')
 with open(kube_path, 'w') as kf:
     kf.write(data.get('kubeconfig', ''))
 
