@@ -52,12 +52,27 @@ while [[ $# -gt 0 ]]; do
       sed -n '2,18p' "$0" | cut -c 3-
       exit 0
       ;;
-    *)
+    -*)
       echo "Unknown option: $1" >&2
       exit 1
       ;;
+    *)
+      if [[ -z "$TEAM" ]]; then
+        TEAM="$1"
+        shift
+      else
+        echo "Unexpected argument: $1" >&2
+        exit 1
+      fi
+      ;;
   esac
 done
+
+# Default workshop storage bucket if not explicitly overridden
+DEFAULT_STORAGE_URL="https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18"
+if [[ -z "$STORAGE_URL" ]]; then
+  STORAGE_URL="${DEFAULT_STORAGE_URL}"
+fi
 
 # ------------------------------------------------------------------------------
 # Interactive Mode if arguments are omitted
@@ -66,19 +81,16 @@ if [[ -z "$TEAM" && -z "$KUBECONFIG_SOURCE" ]]; then
   echo "=========================================================================="
   echo "🐝 NUDGEBEE SRE & AIOPS WORKSHOP · TEAM SETUP"
   echo "=========================================================================="
-  read -r -p "? Enter your assigned Team ID (e.g. team-1): " TEAM
+  read -r -p "? Enter your assigned Team ID (e.g. 1 or team-1): " TEAM
   if [[ -z "$TEAM" ]]; then
     echo "❌ Team ID is required." >&2
     exit 1
   fi
+fi
 
+if [[ -z "$KUBECONFIG_SOURCE" && -z "$PASSPHRASE" ]]; then
   read -r -s -p "? Enter Room Passphrase (or press Enter if using local unencrypted file): " PASSPHRASE
   echo ""
-
-  if [[ -n "$PASSPHRASE" && -z "$STORAGE_URL" ]]; then
-    read -r -p "? Cloud Storage Base URL (press Enter to check local directory): " STORAGE_URL
-    STORAGE_URL="${STORAGE_URL%/}"
-  fi
 fi
 
 TARGET_NS="${TEAM}"
@@ -110,7 +122,19 @@ if [[ -n "$PASSPHRASE" ]]; then
     if curl -f -sSL "${REMOTE_URL}" -o "${TMP_DIR}/${BUNDLE_NAME}" 2>/dev/null; then
       ENC_FILE="${TMP_DIR}/${BUNDLE_NAME}"
     else
-      echo "⚠️ Could not download from ${REMOTE_URL}. Checking local directory..."
+      # If TEAM has a prefix like team-1 or group-1, also check numeric ID (e.g. 1.enc)
+      ALT_NAME=""
+      if [[ "$TEAM" =~ ^(team|group)-([0-9]+)$ ]]; then
+        ALT_NAME="${BASH_REMATCH[2]}.enc"
+      elif [[ "$TEAM" =~ ^[0-9]+$ ]]; then
+        ALT_NAME="team-${TEAM}.enc"
+      fi
+      if [[ -n "$ALT_NAME" ]] && curl -f -sSL "${STORAGE_URL}/${ALT_NAME}" -o "${TMP_DIR}/${ALT_NAME}" 2>/dev/null; then
+        ENC_FILE="${TMP_DIR}/${ALT_NAME}"
+        echo "✅ Downloaded bundle using alternative ID: ${ALT_NAME}"
+      else
+        echo "⚠️ Could not download from ${REMOTE_URL}. Checking local directory..."
+      fi
     fi
   fi
 

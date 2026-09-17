@@ -286,14 +286,16 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
-              <button onclick="copyCmd('./scripts/bootstrap-team.sh', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url &quot;https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18&quot; --pass &quot;&lt;PASSPHRASE&gt;&quot;', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
-              <code>./scripts/bootstrap-team.sh &lt;team-id&gt;</code>
+              <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "&lt;PASSPHRASE&gt;"</code>
             </div>
-            <div class="text-[11px] text-slate-400 space-y-1">
-              <div><strong>Example:</strong> For Team 3, run <code>./scripts/bootstrap-team.sh 3</code> (or omit the argument to be prompted interactively).</div>
-              <div><strong>Passphrase:</strong> The instructor will share the room decryption passphrase during the kickoff.</div>
+            <div class="text-[11px] text-slate-400 space-y-1.5">
+              <div><strong>Example:</strong> For Team 3, run: <code class="text-slate-200">./scripts/bootstrap-team.sh --team 3 --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "..."</code></div>
+              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh 3</code> and enter the room passphrase when prompted.</div>
+              <div><strong>Bundle Storage URL:</strong> <code>https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18</code></div>
+              <div><strong>Encryption Key:</strong> Room decryption passphrase announced on-screen during kickoff.</div>
             </div>
           </div>
 
@@ -303,15 +305,15 @@
             <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">1. Agree on your assigned Team ID (1–10) with your pair partner.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Note your assigned Team ID (1–10) and room decryption passphrase from the facilitator screen.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Open your terminal and execute <code>./scripts/bootstrap-team.sh &lt;team-id&gt;</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Execute <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "&lt;PASSPHRASE&gt;"</code> in your terminal.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Enter the room decryption passphrase when prompted by the script.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Confirm the script downloads <code>&lt;team-id&gt;.enc</code>, decrypts your team kubeconfig, and sets your namespace in <code>agent/config.yaml</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
