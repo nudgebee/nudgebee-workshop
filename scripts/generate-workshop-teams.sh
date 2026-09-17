@@ -20,6 +20,8 @@
 #   --context <NAME>          Kubernetes context to target (default: active context)
 #   --server-url <URL>        Override cluster server URL embedded in generated kubeconfigs
 #   --clean                   Teardown workshop team namespaces & RBAC defined in teams file
+#   --rbac-only               Re-apply namespace/SA/Role/RoleBinding only; leave tokens
+#                             and encrypted bundles untouched (safe for live teams)
 #   -h, --help                Show this help message
 # ==============================================================================
 
@@ -30,6 +32,7 @@ DURATION="48h"
 PROXY_NS="nudgebee-agent"
 PROM_SVC="nudgebee-prometheus-kube-p-prometheus"
 CLEAN_MODE=false
+RBAC_ONLY=false
 PASSPHRASE=""
 API_KEY=""
 TEAMS_FILE=""
@@ -81,6 +84,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --clean)
       CLEAN_MODE=true
+      shift
+      ;;
+    --rbac-only)
+      RBAC_ONLY=true
       shift
       ;;
     -h|--help)
@@ -305,11 +312,18 @@ metadata:
 rules:
 # Diagnostic read permissions for Agent
 - apiGroups: [""]
-  resources: ["pods", "pods/log", "events", "services", "endpoints", "configmaps"]
+  resources: ["pods", "pods/log", "events", "services", "endpoints"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["apps"]
   resources: ["deployments", "replicasets", "statefulsets"]
   verbs: ["get", "list", "watch"]
+# Scenario fault injection: mini_agent.py --scenario patches the team's own
+# flagd-config ConfigMap to enable the fault, then restarts flagd. Without
+# "patch" the agent would investigate a healthy cluster and be graded as failing.
+# Role is namespace-scoped, so a team can only ever break its own stack.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "patch", "update"]
 # Remediating permissions (for human-authorized rollout undo / patch)
 - apiGroups: ["apps"]
   resources: ["deployments", "deployments/rollback", "deployments/scale"]
@@ -350,6 +364,13 @@ roleRef:
   name: workshop-prom-proxy
   apiGroup: rbac.authorization.k8s.io
 EOF
+  fi
+
+  # Re-applying RBAC to existing teams must not mint new tokens or rebuild
+  # bundles - that would invalidate credentials already handed to attendees.
+  if [[ "${RBAC_ONLY}" == "true" ]]; then
+    echo "  RBAC applied for ${TEAM_NS} (token, kubeconfig and bundle left untouched)."
+    continue
   fi
 
   # 6. Generate ServiceAccount Bearer Token

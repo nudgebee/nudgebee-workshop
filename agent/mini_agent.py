@@ -25,6 +25,7 @@ Diagnostic Commands:
 """
 
 import os
+import re
 import sys
 import json
 import time
@@ -36,6 +37,13 @@ from memory import save_to_episodic_memory
 from llm_client import call_openai_chat_completions
 from logger import AuditLogger
 from mock_planner import MockAgentPlanner
+from fault_injection import (
+    InjectionError,
+    SCENARIO_FAULTS,
+    active_faults,
+    clear_faults,
+    inject_scenario,
+)
 from tools import OPENAI_TOOLS, TOOL_DISPATCH, debug_enabled, test_all_tools
 
 CONFIG = load_config()
@@ -98,7 +106,15 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
     elif scenario == "episodicRecurrence":
         # Evidence tuple: (Service: product-catalog / postgres, Cause: connection pool starvation, Historical Match: INC-4092)
         has_pool = "connection" in d_lower and any(k in d_lower for k in ["pool", "starvation", "exhaustion", "conns"])
-        has_memory = "inc-4092" in d_lower or "14 march" in d_lower
+        # Accept any genuine episodic correlation, not just the legacy INC-4092 label.
+        # The seeded ledger stores IDs as INC-<YYYYMMDD>-<HHMMSS>, and a relevance search
+        # may legitimately return any of several matching post-mortems. With recall OFF the
+        # tool returns "memory is DISABLED", so no real ID can appear - the baseline still fails.
+        has_memory = (
+            "inc-4092" in d_lower
+            or "14 march" in d_lower
+            or re.search(r"inc-\d{8}-\d{6}", d_lower) is not None
+        )
         if has_pool and has_memory:
             return True, "Evidence verified: Correlated connection pool starvation with historical post-mortem INC-4092."
         elif has_pool:
@@ -113,7 +129,11 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
         if has_service and has_oom and has_leak:
             return True, "Evidence verified: Identified email service memory leak with progressive heap growth and Exit Code 137."
         elif has_service and (has_oom or has_leak):
-            return False, "Partial match: Identified email pod failure but lacked proof of progressive heap leak vs spike."
+            # Name the half that is actually missing - reporting "no leak proof" when the
+            # agent proved the leak but missed the OOMKill sends attendees down the wrong path.
+            missing = "the OOMKill / Exit Code 137 restart evidence" if has_leak else \
+                      "proof of progressive heap growth (dM/dt) vs a one-off spike"
+            return False, f"Partial match: Identified the email service fault but did not cite {missing}."
         return False, "Unverified: Failed to identify email service progressive memory leak."
 
     elif scenario == "postgresSlow":
@@ -136,9 +156,15 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
         return False, "Unverified / Hallucination: Failed to abstain on non-existent cluster entity."
 
     elif scenario == "postgresFailure":
-        # Evidence tuple: (Service: product-catalog & astronomy-db, Cause: connection pool starvation / max_connections)
+        # Evidence tuple: (Service: product-catalog & astronomy-db, Cause: the DB dependency is down)
+        # The injected flag makes the PostgreSQL dependency UNAVAILABLE so every query
+        # fails fast with gRPC 13 INTERNAL - it is not pool starvation. Both framings are
+        # accepted so a correct diagnosis of the real fault is not marked wrong.
         has_db = any(k in d_lower for k in ["postgres", "astronomy-db", "product-catalog"])
-        has_starvation = any(k in d_lower for k in ["starvation", "exhaustion", "connection", "dial timeout", "pool"])
+        has_starvation = any(k in d_lower for k in [
+            "starvation", "exhaustion", "connection", "dial timeout", "pool",
+            "unavailable", "13 internal", "status 13", "failed to load products", "outage",
+        ])
         if has_db and has_starvation:
             return True, "Evidence verified: Isolated database connection pool starvation across microservices."
         return False, "Unverified: Failed to isolate database connection pool exhaustion."
@@ -637,12 +663,37 @@ if __name__ == "__main__":
              "Raise it for complex multi-hop incidents, lower it to cap token spend."
     )
     parser.add_argument("--debug", action="store_true", help="Print full uncapped tool output (same as AGENT_DEBUG=1)")
+    parser.add_argument("--no-inject", action="store_true",
+                        help="Do not inject the scenario's fault (use when it has already been staged for you)")
+    parser.add_argument("--keep-fault", action="store_true",
+                        help="Leave the injected fault active after the run instead of clearing it")
+    parser.add_argument("--warmup", type=int, default=45, metavar="SECONDS",
+                        help="Seconds to wait after injecting so traffic can produce symptoms (default: 45)")
+    parser.add_argument("--clear-faults", action="store_true",
+                        help="Clear all injected faults in the namespace and exit")
+    parser.add_argument("--fault-status", action="store_true",
+                        help="Show which faults are currently active in the namespace and exit")
     args = parser.parse_args()
 
     if args.debug:
         os.environ["AGENT_DEBUG"] = "1"
 
-    if args.test_tools:
+    if args.fault_status:
+        ns = args.namespace or CONFIG["namespace"]
+        try:
+            active = active_faults(ns)
+        except InjectionError as err:
+            print(f"Could not read fault state: {err}")
+            sys.exit(1)
+        print(f"\nActive faults in namespace '{ns}': "
+              f"{', '.join(f'{k}={v}' for k, v in active.items()) if active else 'none - cluster is healthy'}\n")
+    elif args.clear_faults:
+        try:
+            clear_faults(args.namespace or CONFIG["namespace"])
+        except InjectionError as err:
+            print(f"Could not clear faults: {err}")
+            sys.exit(1)
+    elif args.test_tools:
         cli_test_tools(args.namespace or CONFIG["namespace"], debug=args.debug)
     elif args.prompt:
         cli_view_prompt()
@@ -659,8 +710,31 @@ if __name__ == "__main__":
             CONFIG["namespace"] = args.namespace
         if args.max_turns:
             CONFIG["max_turns"] = args.max_turns
+
+        ns = CONFIG["namespace"]
+        scenario = CONFIG["scenario"]
+        injected = None
+        if not args.no_inject and CONFIG.get("model") != "mock":
+            print("\n🧪 SCENARIO SETUP")
+            try:
+                injected = inject_scenario(ns, scenario, warmup_s=max(0, args.warmup))
+            except InjectionError as err:
+                # Injecting is the difference between diagnosing a real fault and
+                # grading the agent on a healthy cluster, so this must not pass silently.
+                print(f"\n❌ SCENARIO SETUP FAILED\n   {err}\n")
+                print("   Without the fault the agent will investigate a healthy cluster and be")
+                print("   graded as failing. Fix the above, or pass --no-inject to proceed anyway.")
+                sys.exit(1)
+
         try:
             run_investigation()
         except ValueError as err:
             print(f"Aborted: {err}")
             sys.exit(1)
+        finally:
+            if injected and not args.keep_fault:
+                try:
+                    clear_faults(ns)
+                except InjectionError as err:
+                    print(f"  ⚠️ Could not clear the injected fault: {err}")
+                    print(f"     Run: python3 mini_agent.py --clear-faults --namespace {ns}")
