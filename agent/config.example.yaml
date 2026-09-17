@@ -64,4 +64,8 @@ enable_prompt_caching: true
 # ------------------------------------------------------------------------------
 # 6. INVESTIGATION LIMITS
 # ------------------------------------------------------------------------------
+# Max agent reasoning steps before a forced final synthesis turn.
+# Override per-run without editing this file:
+#   python3 mini_agent.py --max-turns 15     # complex multi-hop incident
+#   python3 mini_agent.py --max-turns 4      # cheap smoke run
 max_turns: 10

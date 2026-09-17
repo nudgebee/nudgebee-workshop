@@ -283,6 +283,8 @@ fi
 if [[ -n "$API_KEY" ]]; then
   export OPENAI_API_KEY="$API_KEY"
   for RC in "${HOME}/.bashrc" "${HOME}/.zshrc" "${HOME}/.bash_profile" "${HOME}/.profile"; do
+    # Create the primary rc files when absent - a fresh Codespace may have neither.
+    case "$RC" in *.bashrc|*.zshrc) touch "$RC" 2>/dev/null || true ;; esac
     if [[ -f "$RC" ]]; then
       if ! grep -q "OPENAI_API_KEY=" "$RC"; then
         echo "export OPENAI_API_KEY=\"${API_KEY}\"" >> "$RC"
@@ -292,6 +294,9 @@ if [[ -n "$API_KEY" ]]; then
     fi
   done
   echo "✅ LLM Gateway API key configured in persistent shell profile(s)."
+else
+  echo "⚠️  No API key found in the team bundle. Live models will not run."
+  echo "   Pass one explicitly with --api-key <KEY>, or use --model mock offline."
 fi
 
 # ------------------------------------------------------------------------------
@@ -384,4 +389,8 @@ echo "Next Steps:"
 echo "  1. Verify your diagnostic tools: python3 agent/mini_agent.py --test-tools"
 echo "  2. Run your first simulation:    python3 agent/mini_agent.py --scenario badDeploy1405 --model mock"
 echo "  3. Run live with frontier model: python3 agent/mini_agent.py --scenario badDeploy1405"
+if [[ -n "${API_KEY}" ]]; then
+  echo ""
+  echo "The API key is read from ./.env automatically - no need to restart your shell."
+fi
 echo "=========================================================================="

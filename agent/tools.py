@@ -54,18 +54,24 @@ def get_k8s_events(namespace: str) -> str:
     except ValueError as err:
         return f"Tool Input Validation Error: {err}"
 
+    # NOTE: `kubectl get` has no --tail flag (that belongs to `kubectl logs`),
+    # so we fetch the sorted event list and keep the newest rows in Python.
     cmd = [
         "kubectl", "-n", ns, "get", "events",
         "--sort-by=.metadata.creationTimestamp",
         "-o", "custom-columns=TIME:.metadata.creationTimestamp,TYPE:.type,REASON:.reason,MESSAGE:.message",
-        "--tail=15"
     ]
     code, stdout, stderr = run_cmd(cmd)
     if code != 0:
         return f"Kubernetes API error querying events in namespace '{ns}' (exit {code}): {stderr or stdout}"
     if not stdout or "No resources found" in stdout:
         return f"No abnormal Kubernetes events recorded in namespace '{ns}'."
-    return stdout
+
+    lines = stdout.splitlines()
+    header, rows = lines[0], lines[1:]
+    if not rows:
+        return f"No abnormal Kubernetes events recorded in namespace '{ns}'."
+    return "\n".join([header] + rows[-15:])
 
 
 def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_proxy_ns: str = "nudgebee-agent") -> str:
@@ -554,6 +560,21 @@ TOOL_DISPATCH: Dict[str, Any] = {
 }
 
 
+def debug_enabled(explicit: bool = False) -> bool:
+    """Debug mode: set AGENT_DEBUG=1 (or pass --debug) to disable all output capping."""
+    return explicit or os.getenv("AGENT_DEBUG", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _summarize(output: str, passed: bool, limit: int = 120, debug: bool = False) -> str:
+    """Keep successful output short, but never truncate a failure's error detail.
+
+    In debug mode nothing is capped at all - the raw tool output is returned verbatim.
+    """
+    if debug_enabled(debug) or not passed:
+        return output
+    return output if len(output) <= limit else output[:limit] + "..."
+
+
 def is_tool_success(output: str) -> bool:
     """Evaluates whether a tool execution output represents a successful operation."""
     if not output:
@@ -571,64 +592,69 @@ def is_tool_success(output: str) -> bool:
     return not any(lower.startswith(prefix) for prefix in error_prefixes)
 
 
-def test_all_tools(namespace: str = "group-1") -> List[Tuple[str, bool, str]]:
-    """Runs a live health check on all tools against the cluster."""
+def test_all_tools(namespace: str = "group-1", debug: bool = False) -> List[Tuple[str, bool, str]]:
+    """Runs a live health check on all tools against the cluster.
+
+    With debug=True (or AGENT_DEBUG=1) every tool's raw output is returned uncapped.
+    """
+    debug = debug_enabled(debug)
     results = []
     
     # 1. Test get_k8s_events
     try:
         res = get_k8s_events(namespace)
         passed = is_tool_success(res)
-        results.append(("get_k8s_events", passed, res[:120]))
+        results.append(("get_k8s_events", passed, _summarize(res, passed, debug=debug)))
     except Exception as e:
-        results.append(("get_k8s_events", False, str(e)))
+        results.append(("get_k8s_events", False, f"{type(e).__name__}: {e}"))
 
     # 2. Test query_prometheus
     try:
         res = query_prometheus("up")
         passed = is_tool_success(res)
-        results.append(("query_prometheus", passed, res[:120]))
+        results.append(("query_prometheus", passed, _summarize(res, passed, debug=debug)))
     except Exception as e:
-        results.append(("query_prometheus", False, str(e)))
+        results.append(("query_prometheus", False, f"{type(e).__name__}: {e}"))
 
     # 3. Test query_pod_logs
     try:
         res = query_pod_logs("product-catalog", namespace, tail=10)
         passed = is_tool_success(res)
-        results.append(("query_pod_logs", passed, res[:120]))
+        results.append(("query_pod_logs", passed, _summarize(res, passed, debug=debug)))
     except Exception as e:
-        results.append(("query_pod_logs", False, str(e)))
+        results.append(("query_pod_logs", False, f"{type(e).__name__}: {e}"))
 
     # 4. Test inspect_topology
     try:
         res = inspect_topology("product-catalog")
         passed = is_tool_success(res) and ("Dependencies" in res or "astronomy-db" in res)
-        results.append(("inspect_topology", passed, res[:120]))
+        results.append(("inspect_topology", passed, _summarize(res, passed, debug=debug)))
     except Exception as e:
-        results.append(("inspect_topology", False, str(e)))
+        results.append(("inspect_topology", False, f"{type(e).__name__}: {e}"))
 
     # 5. Test ask_human_approval
     try:
         res = ask_human_approval("Test pod restart", "kubectl rollout restart deploy/product-catalog", "LOW", "Zero downtime rolling restart")
         passed = "SECURITY GATE" in res or "APPROVED" in res or "DENIED" in res
-        results.append(("ask_human_approval", passed, res.strip().splitlines()[-1] if res.strip() else "Gate online"))
+        gate_line = res.strip().splitlines()[-1] if res.strip() else "Gate online"
+        results.append(("ask_human_approval", passed, res if (not passed or debug) else _summarize(gate_line, passed)))
     except Exception as e:
-        results.append(("ask_human_approval", False, str(e)))
+        results.append(("ask_human_approval", False, f"{type(e).__name__}: {e}"))
 
     # 6. Test get_deploy_history
     try:
         res = get_deploy_history("checkout", namespace, is_mock=False)
         passed = is_tool_success(res) and "Rollout History" in res
-        results.append(("get_deploy_history", passed, res.splitlines()[0]))
+        results.append(("get_deploy_history", passed, res if (not passed or debug) else res.splitlines()[0]))
     except Exception as e:
-        results.append(("get_deploy_history", False, str(e)))
+        results.append(("get_deploy_history", False, f"{type(e).__name__}: {e}"))
 
     # 7. Test search_incident_history
     try:
         res = search_incident_history("connection pool", "product-catalog", enable_memory=True)
         passed = is_tool_success(res) and "INC-4092" in res
-        results.append(("search_incident_history", passed, "Episodic memory matched INC-4092"))
+        results.append(("search_incident_history", passed, res if (not passed or debug) else "Episodic memory matched INC-4092"))
     except Exception as e:
-        results.append(("search_incident_history", False, str(e)))
+        results.append(("search_incident_history", False, f"{type(e).__name__}: {e}"))
 
     return results

@@ -12,8 +12,38 @@ import os
 from typing import Dict, List, Any, Optional
 
 AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(AGENT_DIR)
 CONFIG_FILE = os.path.join(AGENT_DIR, "config.yaml")
 PROMPTS_FILE = os.path.join(AGENT_DIR, "prompts.yaml")
+ENV_FILES = (os.path.join(REPO_DIR, ".env"), os.path.join(AGENT_DIR, ".env"))
+
+
+def load_dotenv() -> None:
+    """Load .env into os.environ so bootstrap credentials work in any shell.
+
+    bootstrap-team.sh writes the team's key to a gitignored .env at the repo root.
+    A plain `./scripts/bootstrap-team.sh` runs in a child process, so its `export`
+    cannot reach the attendee's shell - reading .env here removes the need to open
+    a new terminal or re-source a profile. Real environment variables always win.
+    """
+    for env_path in ENV_FILES:
+        if not os.path.exists(env_path):
+            continue
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    if line.startswith("export "):
+                        line = line[len("export "):].lstrip()
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip("\"'")
+                    if key and value and not os.getenv(key):
+                        os.environ[key] = value
+        except OSError:
+            continue
 
 
 def load_yaml_file(file_path: str) -> Dict[str, Any]:
@@ -196,6 +226,7 @@ def load_config() -> Dict[str, Any]:
         "security_guardrails": prompt_data.get("security_guardrails", ""),
         "reasoning_templates": prompt_data.get("reasoning_templates", {}),
         "scenario_guidance": prompt_data.get("scenario_guidance", {}),
+        "scenario_alerts": prompt_data.get("scenario_alerts", {}),
 
         # 8. INITIAL USER PROMPT
         "initial_user_prompt": prompt_data.get("initial_user_prompt", (
