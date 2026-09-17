@@ -9,16 +9,17 @@
 #   ./scripts/generate-workshop-teams.sh [OPTIONS]
 #
 # Options:
-#   --num-teams <N>           Number of teams to provision (default: 10)
+#   --teams-file <FILE>       Path to CSV/text file with: <team_id>,<namespace>,<api_key>
+#   --num-teams <N>           Number of teams to provision if no file given (default: 10)
 #   --prefix <NAME>           Namespace prefix (default: group) -> group-1..group-N
 #   --output-dir <DIR>        Output directory for kubeconfig files (default: ./workshop-credentials)
 #   --duration <DUR>          Token validity duration (default: 48h)
 #   --proxy-ns <NS>           Namespace where Prometheus service lives (default: nudgebee-agent)
 #   --prom-svc <SVC>          Prometheus service name (default: nudgebee-prometheus-kube-p-prometheus)
-#   --pass <PASS>             Room passphrase for AES-256 encrypted bundles (team-N.enc)
-#   --api-key <KEY>           LLM Gateway / OpenAI API key to bundle into team payloads
+#   --pass <PASS>             Room passphrase for AES-256 encrypted bundles
+#   --api-key <KEY>           Fallback LLM Gateway API key to bundle into team payloads
 #   --api-keys-file <FILE>    Path to file containing 1 API key per line for each team
-#   --storage-url <URL>       Public Cloud Storage base URL for team downloads
+#   --storage-url <URL>       Public Cloud Storage base URL (e.g. https://storage.googleapis.com/<YOUR_BUCKET>)
 #   --clean                   Teardown all created workshop team namespaces & RBAC
 #   -h, --help                Show this help message
 # ==============================================================================
@@ -35,10 +36,15 @@ CLEAN_MODE=false
 PASSPHRASE=""
 API_KEY=""
 API_KEYS_FILE=""
+TEAMS_FILE=""
 STORAGE_BASE_URL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --teams-file)
+      TEAMS_FILE="$2"
+      shift 2
+      ;;
     --num-teams)
       NUM_TEAMS="$2"
       shift 2
@@ -84,7 +90,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      sed -n '2,20p' "$0" | cut -c 3-
+      sed -n '2,25p' "$0" | cut -c 3-
       exit 0
       ;;
     *)
@@ -116,12 +122,52 @@ CA_DATA=$(kubectl config view --raw -o jsonpath="{.clusters[?(@.name == \"${CLUS
 INSECURE_SKIP=$(kubectl config view -o jsonpath="{.clusters[?(@.name == \"${CLUSTER_NAME}\")].cluster.insecure-skip-tls-verify}" || echo "")
 
 # ------------------------------------------------------------------------------
+# Resolve Teams, Namespaces, and API Keys
+# ------------------------------------------------------------------------------
+TEAM_IDS=()
+NAMESPACES=()
+KEYS=()
+
+if [[ -n "${TEAMS_FILE}" && -f "${TEAMS_FILE}" ]]; then
+  echo "▶ Loading teams from file: ${TEAMS_FILE}"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line=$(echo "$line" | sed 's/#.*//' | xargs)
+    [[ -z "$line" ]] && continue
+    if [[ "$line" == *","* ]]; then
+      T_ID=$(echo "$line" | awk -F',' '{print $1}' | xargs)
+      T_NS=$(echo "$line" | awk -F',' '{print $2}' | xargs)
+      T_KEY=$(echo "$line" | awk -F',' '{print $3}' | xargs)
+    else
+      T_ID=$(echo "$line" | awk '{print $1}')
+      T_NS=$(echo "$line" | awk '{print $2}')
+      T_KEY=$(echo "$line" | awk '{print $3}')
+    fi
+    [[ -z "$T_NS" ]] && T_NS="${T_ID}"
+    [[ -z "$T_KEY" ]] && T_KEY="${API_KEY}"
+
+    TEAM_IDS+=("$T_ID")
+    NAMESPACES+=("$T_NS")
+    KEYS+=("$T_KEY")
+  done < "${TEAMS_FILE}"
+  NUM_TEAMS=${#TEAM_IDS[@]}
+else
+  for i in $(seq 1 "$NUM_TEAMS"); do
+    TEAM_IDS+=("team-${i}")
+    NAMESPACES+=("${PREFIX}-${i}")
+    ASSIGNED_KEY="${API_KEY}"
+    if [[ -n "${API_KEYS_FILE}" && -f "${API_KEYS_FILE}" ]]; then
+      ASSIGNED_KEY=$(sed -n "${i}p" "${API_KEYS_FILE}" || echo "")
+    fi
+    KEYS+=("${ASSIGNED_KEY}")
+  done
+fi
+
+# ------------------------------------------------------------------------------
 # Teardown Mode
 # ------------------------------------------------------------------------------
 if [[ "$CLEAN_MODE" == "true" ]]; then
   echo "⚠️  [TEARDOWN] Deleting ${NUM_TEAMS} workshop namespaces and RBAC..."
-  for i in $(seq 1 "$NUM_TEAMS"); do
-    NS="${PREFIX}-${i}"
+  for NS in "${NAMESPACES[@]}"; do
     echo "  - Deleting namespace: ${NS}"
     kubectl delete namespace "${NS}" --ignore-not-found=true --wait=false || true
     kubectl delete rolebinding "workshop-prom-proxy-${NS}" -n "${PROXY_NS}" --ignore-not-found=true || true
@@ -141,7 +187,12 @@ echo "  ├── Kubernetes Server : ${SERVER_URL}"
 echo "  ├── Current Context   : ${CURRENT_CONTEXT}"
 echo "  ├── Output Directory  : ${OUTPUT_DIR}"
 echo "  ├── Token Duration    : ${DURATION}"
-echo "  └── Proxy Namespace   : ${PROXY_NS}"
+echo "  ├── Proxy Namespace   : ${PROXY_NS}"
+if [[ -n "${STORAGE_BASE_URL}" ]]; then
+  echo "  └── Storage Base URL  : ${STORAGE_BASE_URL}"
+else
+  echo "  └── Storage Base URL  : (none specified)"
+fi
 echo "=========================================================================="
 
 mkdir -p "${OUTPUT_DIR}"
@@ -168,18 +219,25 @@ SUMMARY_FILE="${OUTPUT_DIR}/credentials-summary.txt"
 echo "# NudgeBee SRE Workshop Team Credentials" > "${SUMMARY_FILE}"
 echo "# Generated at: $(date -u '+%Y-%m-%d %H:%M:%SZ')" >> "${SUMMARY_FILE}"
 echo "# Cluster Endpoint: ${SERVER_URL}" >> "${SUMMARY_FILE}"
+if [[ -n "${STORAGE_BASE_URL}" ]]; then
+  echo "# Storage Base URL: ${STORAGE_BASE_URL}" >> "${SUMMARY_FILE}"
+fi
 echo "------------------------------------------------------------------------" >> "${SUMMARY_FILE}"
 
 # ------------------------------------------------------------------------------
 # Team Namespace & ServiceAccount Loop
 # ------------------------------------------------------------------------------
-for i in $(seq 1 "$NUM_TEAMS"); do
-  TEAM_NS="${PREFIX}-${i}"
+for idx in "${!TEAM_IDS[@]}"; do
+  i=$((idx + 1))
+  TEAM_ID="${TEAM_IDS[$idx]}"
+  TEAM_NS="${NAMESPACES[$idx]}"
+  ASSIGNED_KEY="${KEYS[$idx]}"
   SA_NAME="sa-${TEAM_NS}"
   KUBECONFIG_OUT="${OUTPUT_DIR}/kubeconfig-${TEAM_NS}.yaml"
+  BUNDLE_OUT="${OUTPUT_DIR}/${TEAM_ID}.enc"
 
   echo ""
-  echo "▶ [Team ${i}/${NUM_TEAMS}] Provisioning namespace '${TEAM_NS}'..."
+  echo "▶ [Team ${i}/${NUM_TEAMS}] Provisioning team '${TEAM_ID}' (Namespace: '${TEAM_NS}')..."
 
   # 1. Create Namespace
   kubectl create namespace "${TEAM_NS}" --dry-run=client -o yaml | kubectl apply -f -
@@ -321,15 +379,8 @@ EOF
   chmod 600 "${KUBECONFIG_OUT}"
   echo "  ✅ Kubeconfig generated: ${KUBECONFIG_OUT}"
 
-  # 8. Resolve API Key for this Team
-  ASSIGNED_KEY="${API_KEY}"
-  if [[ -n "${API_KEYS_FILE}" && -f "${API_KEYS_FILE}" ]]; then
-    ASSIGNED_KEY=$(sed -n "${i}p" "${API_KEYS_FILE}" || echo "")
-  fi
-
-  # 9. Optionally Generate AES-256 Encrypted Bundle
+  # 8. Optionally Generate AES-256 Encrypted Bundle
   if [[ -n "${PASSPHRASE}" ]]; then
-    BUNDLE_OUT="${OUTPUT_DIR}/team-${i}.enc"
     KUBECONFIG_CONTENT=$(cat "${KUBECONFIG_OUT}")
 
     python3 -c "
@@ -342,23 +393,25 @@ data = {
 }
 with open(sys.argv[5], 'w') as f:
     json.dump(data, f)
-" "${TEAM_NS}" "${TEAM_NS}" "${ASSIGNED_KEY}" "${KUBECONFIG_CONTENT}" "${OUTPUT_DIR}/.tmp_team_${i}.json"
+" "${TEAM_ID}" "${TEAM_NS}" "${ASSIGNED_KEY}" "${KUBECONFIG_CONTENT}" "${OUTPUT_DIR}/.tmp_${TEAM_ID}.json"
 
     openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
-      -in "${OUTPUT_DIR}/.tmp_team_${i}.json" \
+      -in "${OUTPUT_DIR}/.tmp_${TEAM_ID}.json" \
       -out "${BUNDLE_OUT}" \
       -pass pass:"${PASSPHRASE}"
-    rm -f "${OUTPUT_DIR}/.tmp_team_${i}.json"
+    rm -f "${OUTPUT_DIR}/.tmp_${TEAM_ID}.json"
 
     chmod 644 "${BUNDLE_OUT}"
     echo "  🔒 Encrypted bundle created: ${BUNDLE_OUT}"
-    echo "Team: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT} | Encrypted Bundle: ${BUNDLE_OUT}" >> "${SUMMARY_FILE}"
+    echo "Team: ${TEAM_ID} | Namespace: ${TEAM_NS} | Encrypted Bundle: ${BUNDLE_OUT}" >> "${SUMMARY_FILE}"
     if [[ -n "${STORAGE_BASE_URL}" ]]; then
-      echo "       Download: ${STORAGE_BASE_URL}/team-${i}.enc" >> "${SUMMARY_FILE}"
-      echo "       Command : ./scripts/bootstrap-team.sh --team ${i} --pass \"${PASSPHRASE}\" --url \"${STORAGE_BASE_URL}\"" >> "${SUMMARY_FILE}"
+      echo "       Download: ${STORAGE_BASE_URL}/${TEAM_ID}.enc" >> "${SUMMARY_FILE}"
+      echo "       Command : ./scripts/bootstrap-team.sh --team ${TEAM_ID} --pass \"${PASSPHRASE}\" --url \"${STORAGE_BASE_URL}\"" >> "${SUMMARY_FILE}"
+    else
+      echo "       Command : ./scripts/bootstrap-team.sh --team ${TEAM_ID} --pass \"${PASSPHRASE}\" --url \"<STORAGE_URL>\"" >> "${SUMMARY_FILE}"
     fi
   else
-    echo "Team: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT}" >> "${SUMMARY_FILE}"
+    echo "Team: ${TEAM_ID} | Namespace: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT}" >> "${SUMMARY_FILE}"
   fi
 done
 
@@ -370,10 +423,18 @@ echo "Credential files saved to: ${OUTPUT_DIR}/"
 if [[ -n "${PASSPHRASE}" ]]; then
   echo ""
   echo "🔒 Encrypted bundles ready for Cloud Storage distribution:"
-  echo "   - Upload all *.enc files from '${OUTPUT_DIR}/' to your cloud bucket."
-  echo "   - Attendees run: ./scripts/bootstrap-team.sh --team <N> --pass \"${PASSPHRASE}\""
+  echo "   Upload Command (e.g. Google Cloud Storage, Cloudflare R2, AWS S3):"
+  echo "     gcloud storage cp ${OUTPUT_DIR}/*.enc gs://<YOUR_BUCKET>/"
+  echo "     # or: aws s3 cp ${OUTPUT_DIR}/ s3://<YOUR_BUCKET>/ --recursive --exclude \"*\" --include \"*.enc\""
+  echo ""
+  echo "   Attendee Command:"
+  if [[ -n "${STORAGE_BASE_URL}" ]]; then
+    echo "     ./scripts/bootstrap-team.sh --team <TEAM_ID> --pass \"${PASSPHRASE}\" --url \"${STORAGE_BASE_URL}\""
+  else
+    echo "     ./scripts/bootstrap-team.sh --team <TEAM_ID> --pass \"${PASSPHRASE}\" --url \"<STORAGE_URL>\""
+  fi
 fi
 echo ""
 echo "Quick Test Command:"
-echo "  KUBECONFIG=${OUTPUT_DIR}/kubeconfig-${PREFIX}-1.yaml kubectl get pods"
+echo "  KUBECONFIG=${OUTPUT_DIR}/kubeconfig-${NAMESPACES[0]}.yaml kubectl get pods"
 echo "=========================================================================="

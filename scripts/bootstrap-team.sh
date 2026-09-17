@@ -9,9 +9,9 @@
 #   ./scripts/bootstrap-team.sh [OPTIONS]
 #
 # Options:
-#   --team <N>                Team number (1, 2, 3...) -> maps to group-N
-#   --pass <PASS>             Room passphrase to decrypt your team bundle (team-N.enc)
-#   --url <URL>               Base URL of cloud storage hosting team-N.enc bundles
+#   --team <ID>               Team identifier (e.g. team-1, group-1, team-42)
+#   --pass <PASS>             Room passphrase to decrypt your team bundle (<TEAM>.enc)
+#   --url <URL>               Base URL of cloud storage hosting <TEAM>.enc bundles
 #   --kubeconfig <PATH>       Direct path or URL to unencrypted kubeconfig file
 #   --api-key <KEY>           LLM Gateway / OpenAI API key
 #   -h, --help                Show this help message
@@ -66,9 +66,9 @@ if [[ -z "$TEAM" && -z "$KUBECONFIG_SOURCE" ]]; then
   echo "=========================================================================="
   echo "🐝 NUDGEBEE SRE & AIOPS WORKSHOP · TEAM SETUP"
   echo "=========================================================================="
-  read -r -p "? Enter your assigned Team Number (1-10): " TEAM
+  read -r -p "? Enter your assigned Team ID (e.g. team-1): " TEAM
   if [[ -z "$TEAM" ]]; then
-    echo "❌ Team number is required." >&2
+    echo "❌ Team ID is required." >&2
     exit 1
   fi
 
@@ -76,19 +76,23 @@ if [[ -z "$TEAM" && -z "$KUBECONFIG_SOURCE" ]]; then
   echo ""
 
   if [[ -n "$PASSPHRASE" && -z "$STORAGE_URL" ]]; then
-    read -r -p "? Cloud Storage Base URL (press Enter to check local folder): " STORAGE_URL
+    read -r -p "? Cloud Storage Base URL (press Enter to check local directory): " STORAGE_URL
     STORAGE_URL="${STORAGE_URL%/}"
   fi
 fi
 
-TARGET_NS="group-${TEAM}"
+TARGET_NS="${TEAM}"
+if [[ ! "$TEAM" =~ ^(group|team)- ]]; then
+  TARGET_NS="group-${TEAM}"
+fi
+
 mkdir -p "${HOME}/.kube"
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
 echo ""
 echo "=========================================================================="
-echo "🐝 CONFIGURING ENVIRONMENT FOR TEAM: ${TARGET_NS}"
+echo "🐝 CONFIGURING ENVIRONMENT FOR TEAM: ${TEAM}"
 echo "=========================================================================="
 
 # ------------------------------------------------------------------------------
@@ -96,25 +100,32 @@ echo "==========================================================================
 # ------------------------------------------------------------------------------
 if [[ -n "$PASSPHRASE" ]]; then
   ENC_FILE=""
-  # Case A: Download from Storage URL
+  BUNDLE_NAME="${TEAM}.enc"
+
+  # Case A: Download from Storage URL if provided
   if [[ -n "$STORAGE_URL" ]]; then
-    REMOTE_URL="${STORAGE_URL}/team-${TEAM}.enc"
+    REMOTE_URL="${STORAGE_URL}/${BUNDLE_NAME}"
     echo "▶ Downloading encrypted bundle from ${REMOTE_URL}..."
-    if curl -f -sSL "${REMOTE_URL}" -o "${TMP_DIR}/bundle.enc"; then
-      ENC_FILE="${TMP_DIR}/bundle.enc"
+    if curl -f -sSL "${REMOTE_URL}" -o "${TMP_DIR}/${BUNDLE_NAME}" 2>/dev/null; then
+      ENC_FILE="${TMP_DIR}/${BUNDLE_NAME}"
     else
-      echo "❌ Error: Failed to download ${REMOTE_URL}. Check your storage URL and team number." >&2
-      exit 1
+      echo "⚠️ Could not download from ${REMOTE_URL}. Checking local directory..."
     fi
-  # Case B: Local workshop-credentials directory
-  elif [[ -f "./workshop-credentials/team-${TEAM}.enc" ]]; then
-    echo "▶ Using local encrypted bundle: ./workshop-credentials/team-${TEAM}.enc..."
-    ENC_FILE="./workshop-credentials/team-${TEAM}.enc"
-  elif [[ -f "./team-${TEAM}.enc" ]]; then
-    echo "▶ Using local encrypted bundle: ./team-${TEAM}.enc..."
-    ENC_FILE="./team-${TEAM}.enc"
-  else
-    echo "❌ Error: Passphrase provided, but no bundle found at ./workshop-credentials/team-${TEAM}.enc or via --url." >&2
+  fi
+
+  # Case B: Local workshop-credentials directory or root
+  if [[ -z "$ENC_FILE" ]]; then
+    if [[ -f "./workshop-credentials/${BUNDLE_NAME}" ]]; then
+      echo "▶ Using local encrypted bundle: ./workshop-credentials/${BUNDLE_NAME}..."
+      ENC_FILE="./workshop-credentials/${BUNDLE_NAME}"
+    elif [[ -f "./${BUNDLE_NAME}" ]]; then
+      echo "▶ Using local encrypted bundle: ./${BUNDLE_NAME}..."
+      ENC_FILE="./${BUNDLE_NAME}"
+    fi
+  fi
+
+  if [[ -z "$ENC_FILE" ]]; then
+    echo "❌ Error: Could not find bundle '${BUNDLE_NAME}' at ${STORAGE_URL:-'(no storage URL provided)'} or locally." >&2
     exit 1
   fi
 
@@ -124,7 +135,7 @@ if [[ -n "$PASSPHRASE" ]]; then
     exit 1
   fi
 
-  # Extract kubeconfig and api_key from JSON
+  # Extract kubeconfig, api_key, and namespace from JSON
   python3 -c "
 import json, sys, os
 
@@ -141,13 +152,26 @@ api_key = data.get('api_key', '')
 if api_key:
     with open(sys.argv[2], 'w') as af:
         af.write(api_key)
-" "${TMP_DIR}/payload.json" "${TMP_DIR}/extracted_key.txt"
+
+# Write namespace if present
+namespace = data.get('namespace', '')
+if namespace:
+    with open(sys.argv[3], 'w') as nf:
+        nf.write(namespace)
+" "${TMP_DIR}/payload.json" "${TMP_DIR}/extracted_key.txt" "${TMP_DIR}/extracted_ns.txt"
 
   chmod 600 "${HOME}/.kube/config"
   echo "✅ Kubeconfig decrypted and installed to ~/.kube/config"
 
   if [[ -f "${TMP_DIR}/extracted_key.txt" ]]; then
     API_KEY=$(cat "${TMP_DIR}/extracted_key.txt")
+  fi
+
+  if [[ -f "${TMP_DIR}/extracted_ns.txt" ]]; then
+    EXTRACTED_NS=$(cat "${TMP_DIR}/extracted_ns.txt" | xargs)
+    if [[ -n "$EXTRACTED_NS" ]]; then
+      TARGET_NS="$EXTRACTED_NS"
+    fi
   fi
 
 # ------------------------------------------------------------------------------
@@ -168,6 +192,9 @@ else
   elif [[ -f "./workshop-credentials/kubeconfig-${TARGET_NS}.yaml" ]]; then
     echo "▶ Using local credential: ./workshop-credentials/kubeconfig-${TARGET_NS}.yaml..."
     cp "./workshop-credentials/kubeconfig-${TARGET_NS}.yaml" "${HOME}/.kube/config"
+  elif [[ -f "./workshop-credentials/kubeconfig-${TEAM}.yaml" ]]; then
+    echo "▶ Using local credential: ./workshop-credentials/kubeconfig-${TEAM}.yaml..."
+    cp "./workshop-credentials/kubeconfig-${TEAM}.yaml" "${HOME}/.kube/config"
   fi
   chmod 600 "${HOME}/.kube/config" 2>/dev/null || true
 fi
@@ -224,7 +251,7 @@ fi
 
 echo ""
 echo "=========================================================================="
-echo "🎉 TEAM ${TARGET_NS} SETUP COMPLETE!"
+echo "🎉 TEAM ${TEAM} (NAMESPACE: ${TARGET_NS}) SETUP COMPLETE!"
 echo "=========================================================================="
 echo "Next Steps:"
 echo "  1. Verify your diagnostic tools: python3 agent/mini_agent.py --test-tools"
