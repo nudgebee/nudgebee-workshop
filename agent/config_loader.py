@@ -125,8 +125,33 @@ def load_yaml_file(file_path: str) -> Dict[str, Any]:
     return root
 
 
+def load_dotenv():
+    """Loads environment variables from local .env files into os.environ if not already set."""
+    candidates = [
+        os.path.join(AGENT_DIR, ".env"),
+        os.path.join(AGENT_DIR, "..", ".env"),
+    ]
+    for env_path in candidates:
+        if os.path.isfile(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            k = k.strip()
+                            if k.startswith("export "):
+                                k = k[7:].strip()
+                            v = v.strip().strip("\"'")
+                            if k and k not in os.environ:
+                                os.environ[k] = v
+            except Exception:
+                pass
+
+
 def load_config() -> Dict[str, Any]:
     """Loads configuration and prompts from YAML files and environment variables."""
+    load_dotenv()
     cfg_data = load_yaml_file(CONFIG_FILE)
     prompt_data = load_yaml_file(PROMPTS_FILE)
 

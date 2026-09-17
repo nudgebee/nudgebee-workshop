@@ -277,6 +277,21 @@ class TestPromptAssembly(unittest.TestCase):
         self.assertIn("EPISODIC MEMORY DIRECTIVE (MEMORY ACTIVE)", prompt3)
 
 
+class TestConfigCredentials(unittest.TestCase):
+    """Verifies multi-tier credentials resolution (Shell Env, .env, config.yaml)."""
+
+    def test_load_config_prioritizes_env_over_yaml(self):
+        from config_loader import load_config
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-override-key-999"}):
+            cfg = load_config()
+            self.assertEqual(cfg["api_key"], "sk-override-key-999")
+
+    def test_load_dotenv_safely_handles_missing_file(self):
+        from config_loader import load_dotenv
+        # Should execute cleanly without throwing when candidates don't exist
+        load_dotenv()
+
+
 if __name__ == "__main__":
     unittest.main()
 

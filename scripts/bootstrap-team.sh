@@ -19,6 +19,8 @@
 
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 TEAM=""
 PASSPHRASE=""
 STORAGE_URL=""
@@ -140,9 +142,15 @@ if [[ -n "$PASSPHRASE" ]]; then
 
   # Case B: Local workshop-credentials directory or root
   if [[ -z "$ENC_FILE" ]]; then
-    if [[ -f "./workshop-credentials/${BUNDLE_NAME}" ]]; then
+    if [[ -f "${REPO_ROOT}/workshop-credentials/${BUNDLE_NAME}" ]]; then
+      echo "▶ Using local encrypted bundle: ${REPO_ROOT}/workshop-credentials/${BUNDLE_NAME}..."
+      ENC_FILE="${REPO_ROOT}/workshop-credentials/${BUNDLE_NAME}"
+    elif [[ -f "./workshop-credentials/${BUNDLE_NAME}" ]]; then
       echo "▶ Using local encrypted bundle: ./workshop-credentials/${BUNDLE_NAME}..."
       ENC_FILE="./workshop-credentials/${BUNDLE_NAME}"
+    elif [[ -f "${REPO_ROOT}/${BUNDLE_NAME}" ]]; then
+      echo "▶ Using local encrypted bundle: ${REPO_ROOT}/${BUNDLE_NAME}..."
+      ENC_FILE="${REPO_ROOT}/${BUNDLE_NAME}"
     elif [[ -f "./${BUNDLE_NAME}" ]]; then
       echo "▶ Using local encrypted bundle: ./${BUNDLE_NAME}..."
       ENC_FILE="./${BUNDLE_NAME}"
@@ -225,39 +233,65 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 3. Update agent/config.yaml namespace to team namespace
+# 3. Update agent/config.yaml (namespace & API key) and .env
 # ------------------------------------------------------------------------------
-CONFIG_FILE="./agent/config.yaml"
+CONFIG_FILE="${REPO_ROOT}/agent/config.yaml"
 if [[ -f "$CONFIG_FILE" ]]; then
-  echo "▶ Setting target namespace to '${TARGET_NS}' in ${CONFIG_FILE}..."
-  if command -v sed >/dev/null 2>&1; then
-    sed -i.bak -E "s/^namespace: \".*\"/namespace: \"${TARGET_NS}\"/" "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
-  fi
+  echo "▶ Configuring namespace and LLM credentials in ${CONFIG_FILE}..."
+  python3 -c "
+import sys, re
+
+config_path = sys.argv[1]
+namespace = sys.argv[2]
+api_key = sys.argv[3] if len(sys.argv) > 3 else ''
+
+try:
+    with open(config_path, 'r') as f:
+        content = f.read()
+    if namespace:
+        content = re.sub(r'^(namespace:\s*)[\"\x27]?.*?[\"\x27]?(\s*(#.*)?)$', rf'\1\"{namespace}\"\2', content, flags=re.MULTILINE)
+    if api_key:
+        content = re.sub(r'^(api_key:\s*)[\"\x27]?.*?[\"\x27]?(\s*(#.*)?)$', rf'\1\"{api_key}\"\2', content, flags=re.MULTILINE)
+    with open(config_path, 'w') as f:
+        f.write(content)
+except Exception as e:
+    print(f'Warning: Could not update config.yaml: {e}', file=sys.stderr)
+" "${CONFIG_FILE}" "${TARGET_NS}" "${API_KEY}"
+  echo "✅ Target namespace ('${TARGET_NS}') and API key configured in ${CONFIG_FILE}"
+fi
+
+# Write local .env files for dotenv loaders and offline scripts
+if [[ -n "$API_KEY" ]]; then
+  for ENV_FILE in "${REPO_ROOT}/.env" "${REPO_ROOT}/agent/.env"; do
+    if [[ -f "$ENV_FILE" ]]; then
+      if grep -q "^OPENAI_API_KEY=" "$ENV_FILE"; then
+        sed -i.bak -E "s/^OPENAI_API_KEY=\".*\"/OPENAI_API_KEY=\"${API_KEY}\"/" "$ENV_FILE" && rm -f "${ENV_FILE}.bak"
+      else
+        echo "OPENAI_API_KEY=\"${API_KEY}\"" >> "$ENV_FILE"
+      fi
+    else
+      echo "OPENAI_API_KEY=\"${API_KEY}\"" > "$ENV_FILE"
+    fi
+    chmod 600 "$ENV_FILE" 2>/dev/null || true
+  done
+  echo "✅ LLM Gateway API key saved to .env"
 fi
 
 # ------------------------------------------------------------------------------
-# 4. Configure OPENAI_API_KEY
+# 4. Configure OPENAI_API_KEY in Persistent Shell Profiles
 # ------------------------------------------------------------------------------
 if [[ -n "$API_KEY" ]]; then
   export OPENAI_API_KEY="$API_KEY"
-  BASHRC="${HOME}/.bashrc"
-  ZSHRC="${HOME}/.zshrc"
-
-  if [[ -f "$BASHRC" ]]; then
-    if ! grep -q "OPENAI_API_KEY=" "$BASHRC"; then
-      echo "export OPENAI_API_KEY=\"${API_KEY}\"" >> "$BASHRC"
-    else
-      sed -i.bak -E "s/export OPENAI_API_KEY=\".*\"/export OPENAI_API_KEY=\"${API_KEY}\"/" "$BASHRC" && rm -f "${BASHRC}.bak"
+  for RC in "${HOME}/.bashrc" "${HOME}/.zshrc" "${HOME}/.bash_profile" "${HOME}/.profile"; do
+    if [[ -f "$RC" ]]; then
+      if ! grep -q "OPENAI_API_KEY=" "$RC"; then
+        echo "export OPENAI_API_KEY=\"${API_KEY}\"" >> "$RC"
+      else
+        sed -i.bak -E "s/export OPENAI_API_KEY=\".*\"/export OPENAI_API_KEY=\"${API_KEY}\"/" "$RC" && rm -f "${RC}.bak"
+      fi
     fi
-  fi
-  if [[ -f "$ZSHRC" ]]; then
-    if ! grep -q "OPENAI_API_KEY=" "$ZSHRC"; then
-      echo "export OPENAI_API_KEY=\"${API_KEY}\"" >> "$ZSHRC"
-    else
-      sed -i.bak -E "s/export OPENAI_API_KEY=\".*\"/export OPENAI_API_KEY=\"${API_KEY}\"/" "$ZSHRC" && rm -f "${ZSHRC}.bak"
-    fi
-  fi
-  echo "✅ LLM Gateway API key configured in environment and shell profile."
+  done
+  echo "✅ LLM Gateway API key configured in persistent shell profile(s)."
 fi
 
 # ------------------------------------------------------------------------------
@@ -339,7 +373,15 @@ echo ""
 echo "=========================================================================="
 echo "🎉 TEAM ${TEAM} (NAMESPACE: ${TARGET_NS}) SETUP COMPLETE!"
 echo "=========================================================================="
+if [[ -n "$API_KEY" ]]; then
+  echo "Credentials configured:"
+  echo "  • LLM Gateway Key  : saved in agent/config.yaml & .env"
+  echo "  • Current Shell Tip: To use \$OPENAI_API_KEY directly in this specific terminal without opening a new tab, run:"
+  echo "                       export OPENAI_API_KEY=\"${API_KEY}\""
+  echo ""
+fi
 echo "Next Steps:"
 echo "  1. Verify your diagnostic tools: python3 agent/mini_agent.py --test-tools"
 echo "  2. Run your first simulation:    python3 agent/mini_agent.py --scenario badDeploy1405 --model mock"
+echo "  3. Run live with frontier model: python3 agent/mini_agent.py --scenario badDeploy1405"
 echo "=========================================================================="
