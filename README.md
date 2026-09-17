@@ -41,8 +41,8 @@ All web tools are zero-build, dependency-free static pages that can be opened di
 | Web Tool | Description | Target User |
 | :--- | :--- | :--- |
 | **[index.html](index.html)** | **Workshop Portal** · Landing page, prerequisite checks, and quick links. | Attendees & Instructors |
-| **[lab.html](lab.html)** | **Student Playbook** · Step-by-step instructions for all 9 hands-on modules (M0–M8). | Attendee Pairs |
-| **[scoreboard.html](scoreboard.html)** | **Room Scoreboard** · Aggregates token burn, latency, cost, and ground-truth accuracy across pairs. | Room Display |
+| **[lab.html](lab.html)** | **Student Playbook** · Step-by-step instructions for all 9 hands-on modules (M0–M8). | Attendees & Teams |
+| **[scoreboard.html](scoreboard.html)** | **Room Scoreboard** · Aggregates token burn, latency, cost, and ground-truth accuracy across teams. | Room Display |
 | **[calculator.html](calculator.html)** | **ROI & Cost Modeler** · Interactive token math, caching savings, and model price comparisons. | Attendees |
 | **[guardrails.html](guardrails.html)** | **Security Guardrails** · Visualizes read-only enforcement and human confirmation gates. | Attendees |
 | **[scorecard.html](scorecard.html)** | **Buy vs Build Scorecard** · Participant decision matrix submitting AI capacity vs build tolerance. | Attendees |
