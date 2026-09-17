@@ -424,6 +424,10 @@
             </div>
             <div class="border-t border-slate-800 pt-2.5 mt-2.5 space-y-1">
               <span class="text-slate-300 font-bold uppercase tracking-wider block text-[11px] mb-1">🧰 Flags You Will Use Across Modules</span>
+              <div class="text-[11px] text-amber-300/90 mb-1.5">
+                📁 The command above is the only one with <code>cd agent</code> &mdash; it puts you in the agent directory and every later
+                module runs from there. Opened a fresh terminal? Run <code>cd agent</code> again first.
+              </div>
               <div class="text-[11px] text-slate-400 space-y-1">
                 <div><code>--fault-status</code> &mdash; show which fault is currently active in your namespace (read-only).</div>
                 <div><code>--clear-faults</code> &mdash; reset your namespace to healthy. Use this if a run was interrupted and left a fault behind.</div>
@@ -509,19 +513,19 @@
             <div class="space-y-1">
               <div class="flex items-center justify-between text-[11px] uppercase font-bold">
                 <span class="text-emerald-400">1. Frontier Model</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy frontier</button>
+                <button onclick="copyCmd('python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy frontier</button>
               </div>
               <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-xs overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure</code>
+                <code>python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure</code>
               </div>
             </div>
             <div class="space-y-1 mt-2">
               <div class="flex items-center justify-between text-[11px] uppercase font-bold">
                 <span class="text-amber-300">2. Small Model</span>
-                <button onclick="copyCmd('cd agent && python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy small</button>
+                <button onclick="copyCmd('python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy small</button>
               </div>
               <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
-                <code>cd agent &amp;&amp; python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure</code>
+                <code>python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure</code>
               </div>
             </div>
             <div class="text-[11px] text-slate-400">
@@ -604,10 +608,10 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-purple-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario poisonedEntity --max-turns 15', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('python3 mini_agent.py --scenario poisonedEntity --max-turns 15', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-purple-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario poisonedEntity --max-turns 15</code>
+              <code>python3 mini_agent.py --scenario poisonedEntity --max-turns 15</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
@@ -696,10 +700,10 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-amber-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario emailMemoryLeak', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('python3 mini_agent.py --scenario emailMemoryLeak', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario emailMemoryLeak</code>
+              <code>python3 mini_agent.py --scenario emailMemoryLeak</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
@@ -789,10 +793,10 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-cyan-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario postgresSlow', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('python3 mini_agent.py --scenario postgresSlow', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario postgresSlow</code>
+              <code>python3 mini_agent.py --scenario postgresSlow</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
@@ -877,10 +881,10 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-rose-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario badDeploy1405', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('python3 mini_agent.py --scenario badDeploy1405', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-rose-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario badDeploy1405</code>
+              <code>python3 mini_agent.py --scenario badDeploy1405</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
@@ -973,10 +977,10 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-emerald-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('python3 mini_agent.py --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario postgresFailure</code>
+              <code>python3 mini_agent.py --scenario postgresFailure</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
@@ -1066,10 +1070,10 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-purple-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario episodicRecurrence', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('python3 mini_agent.py --scenario episodicRecurrence', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-purple-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario episodicRecurrence</code>
+              <code>python3 mini_agent.py --scenario episodicRecurrence</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
