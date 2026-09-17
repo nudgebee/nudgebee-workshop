@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buy vs Build Decision Scorecard</title>
+  <title>Buy vs Build Decision Assessment</title>
     <!-- Zero-FOUT Theme Engine: Defaults to Light, remembers Dark -->
   <script>
     if (localStorage.getItem("theme") === "dark") {
@@ -19,28 +19,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
-      darkMode: "class",
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            display: ['"Space Grotesk"', 'sans-serif'],
-            mono: ['"IBM Plex Mono"', 'monospace'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
           },
           colors: {
-            canvas: '#0B0F17',
-            card: '#121824',
-            accent: '#00F2FE',
+            accent: '#00F0FF',
             'accent-emerald': '#10B981',
-            'border-subtle': '#1E293B',
+            canvas: '#0B0F19',
+            card: '#111827',
+            'card-subtle': '#162032',
+            'border-subtle': '#1B2436',
           }
         }
       }
     }
   </script>
   <style>
-    input[type=range] {
-      accent-color: #00F2FE;
+    input[type=range]::-webkit-slider-thumb {
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #00F0FF;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -6px;
     }
   </style>
 </head>
@@ -55,10 +62,10 @@
             <span>←</span> Workshop Portal
           </a>
           <span class="text-slate-400 dark:text-slate-600">/</span>
-          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Session 1 · Buy vs Build</span>
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Session 1 · Buy vs Build Assessment</span>
         </div>
-        <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Score Your Own Path</h1>
-        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Score your own organization across six operational axes. Leave with an objective verdict.</p>
+        <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Evaluate Your Production Seam</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Assess your organization across six operational axes. Leave with an objective platform verdict.</p>
       </div>
       <div class="flex items-center gap-3">
         <!-- 1-Click Theme Toggle -->
@@ -124,8 +131,8 @@
           <div class="axis-card p-4 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-3" data-axis="2">
             <div class="flex items-center justify-between">
               <div>
-                <label class="text-slate-900 dark:text-white font-medium text-sm">2. Topology & CMDB Quality</label>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Service dependency mapping and runtime graph discovery</p>
+                <label class="text-slate-900 dark:text-white font-medium text-sm">2. Service Topology &amp; Dependency Mapping</label>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Visibility into runtime service-to-service relationships and blast radius</p>
               </div>
               <div class="flex items-center gap-1.5 font-mono">
                 <span class="text-xs text-slate-500 dark:text-slate-400">Level:</span>
@@ -141,7 +148,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <label class="text-slate-900 dark:text-white font-medium text-sm">3. In-House AI Engineering Capacity</label>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Dedicated platform engineers for evals, harness & agents</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Dedicated platform engineers for evals, harness &amp; agents</p>
               </div>
               <div class="flex items-center gap-1.5 font-mono">
                 <span class="text-xs text-slate-500 dark:text-slate-400">Level:</span>
@@ -156,8 +163,8 @@
           <div class="axis-card p-4 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-3" data-axis="4">
             <div class="flex items-center justify-between">
               <div>
-                <label class="text-slate-900 dark:text-white font-medium text-sm">4. Tolerance for a 9-Month Build</label>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Organization runway before requiring proven production ROI</p>
+                <label class="text-slate-900 dark:text-white font-medium text-sm">4. Build Timeline &amp; Maintenance Runway</label>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Target delivery time-to-production and bandwidth for ongoing platform engineering</p>
               </div>
               <div class="flex items-center gap-1.5 font-mono">
                 <span class="text-xs text-slate-500 dark:text-slate-400">Level:</span>
@@ -172,8 +179,8 @@
           <div class="axis-card p-4 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-3" data-axis="5">
             <div class="flex items-center justify-between">
               <div>
-                <label class="text-slate-900 dark:text-white font-medium text-sm">5. Regulatory & Data Egress Constraints</label>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Cloud model egress, air-gap mandates, and privacy compliance</p>
+                <label class="text-slate-900 dark:text-white font-medium text-sm">5. AI Data Privacy &amp; Egress Governance</label>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Approved boundaries for sending operational logs, metrics, and incident context to LLMs</p>
               </div>
               <div class="flex items-center gap-1.5 font-mono">
                 <span class="text-xs text-slate-500 dark:text-slate-400">Level:</span>
@@ -188,8 +195,8 @@
           <div class="axis-card p-4 rounded-xl bg-slate-50 dark:bg-card-subtle border border-slate-200 dark:border-slate-800 space-y-3" data-axis="6">
             <div class="flex items-center justify-between">
               <div>
-                <label class="text-slate-900 dark:text-white font-medium text-sm">6. Runbook Differentiation</label>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Proprietary business logic vs standard Kubernetes remediation</p>
+                <label class="text-slate-900 dark:text-white font-medium text-sm">6. Runbook Differentiation &amp; Complexity</label>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Commodity infrastructure steps vs proprietary multi-system business workflows</p>
               </div>
               <div class="flex items-center gap-1.5 font-mono">
                 <span class="text-xs text-slate-500 dark:text-slate-400">Level:</span>
@@ -278,11 +285,11 @@
         "5: Golden signals, unified OTel traces, logs & metrics."
       ],
       2: [
-        "1: Outdated Confluence wiki. Nobody knows dependencies.",
-        "2: Static architecture diagram updated 6 months ago.",
-        "3: Service ownership catalog (e.g. Backstage), manual edges.",
-        "4: Semi-automated CMDB with weekly dependency discovery.",
-        "5: Real-time automated service dependency graph."
+        "1: Tribal knowledge or stale wikis. No centralized dependency map.",
+        "2: Static architecture diagrams or wiki pages (updated periodically).",
+        "3: Service ownership catalog (e.g. Backstage) with manual upstream/downstream links.",
+        "4: Semi-automated discovery (periodic CMDB scans or scheduled APM dependency maps).",
+        "5: Real-time dynamic topology auto-discovered via tracing, service mesh, or eBPF."
       ],
       3: [
         "1: Zero dedicated AI/LLM engineers on the platform team.",
@@ -292,25 +299,25 @@
         "5: Full dedicated AI Platform & Infrastructure engineering team."
       ],
       4: [
-        "1: Must be in production this quarter (No tolerance).",
-        "2: 3-4 months max for a working PoC.",
-        "3: 6 months acceptable if milestone-gated.",
-        "4: 9 months acceptable with dedicated executive sponsor.",
-        "5: 12+ months: Long-term strategic R&D platform initiative."
+        "1: Current Quarter: Must be in production in < 3 months; zero bandwidth for custom dev or maintenance.",
+        "2: 1–2 Quarters: 3–6 months for scoped pilot; minimal appetite for long-term maintenance.",
+        "3: 2–3 Quarters: 6–9 months acceptable; team can maintain lightweight glue code & custom hooks.",
+        "4: 3–4 Quarters: 9–12 months with executive sponsorship and dedicated maintenance budget.",
+        "5: 4+ Quarters: Multi-year platform initiative (> 1 year); fully funded for continuous R&D & 24/7 support."
       ],
       5: [
         "1: Strict on-prem air-gap. Zero data egress allowed to any cloud LLM.",
-        "2: Private VPC self-hosted models only.",
-        "3: Dedicated enterprise agreement cloud LLM (Azure/GCP Vertex) only.",
-        "4: Commercial LLM APIs allowed with PII masking & zero-data-retention.",
-        "5: Standard SaaS / Cloud LLM APIs fully approved."
+        "2: Private VPC self-hosted models only; operational data cannot leave internal network.",
+        "3: Dedicated enterprise cloud endpoints (Azure OpenAI / Vertex AI) with signed BAA & zero retention.",
+        "4: Commercial cloud LLM APIs allowed with automated PII masking and credential scrubbing.",
+        "5: Standard SaaS / Cloud LLM APIs fully approved for operational payloads."
       ],
       6: [
-        "1: Generic playbooks (restart pod, scale HPA, bounce DB).",
-        "2: Mostly standard k8s runbooks with custom alerts.",
-        "3: Mix of standard operational steps and team-specific workflows.",
-        "4: Highly customized operational pipelines and scripts.",
-        "5: Deeply proprietary business logic, complex stateful recovery."
+        "1: Commodity infrastructure actions (restart pod, bounce VM, scale HPA, clean disk).",
+        "2: Basic service SOPs: standard infra remediation with simple service-specific checks.",
+        "3: Composite operational workflows: chained playbooks (replica failover, canary rollback, cache warm).",
+        "4: Custom multi-system pipelines: orchestrates across proprietary internal APIs & approval gates.",
+        "5: Deeply proprietary business logic: complex stateful recovery (ledger replay, transaction sync)."
       ]
     };
 
@@ -390,9 +397,9 @@
       const a1 = parseInt(document.getElementById('axis1').value, 10); // Telemetry
       const a2 = parseInt(document.getElementById('axis2').value, 10); // Topology
       const a3 = parseInt(document.getElementById('axis3').value, 10); // AI Capacity
-      const a4 = parseInt(document.getElementById('axis4').value, 10); // 9-Month Tolerance
-      const a5 = parseInt(document.getElementById('axis5').value, 10); // Regulatory/Egress
-      const a6 = parseInt(document.getElementById('axis6').value, 10); // Runbook Diff
+      const a4 = parseInt(document.getElementById('axis4').value, 10); // Build Runway
+      const a5 = parseInt(document.getElementById('axis5').value, 10); // Privacy & Egress
+      const a6 = parseInt(document.getElementById('axis6').value, 10); // Runbook Complexity
 
       const badge = document.getElementById('verdictBadge');
       const title = document.getElementById('verdictTitle');
@@ -412,8 +419,8 @@
           decisive.textContent = 'Strict Air-Gap Egress & Dedicated AI Engineering Runway.';
           flip.textContent = 'Approving Cloud LLM SaaS (Axis 5 → 4) would flip you to The Hybrid Seam.';
         } else {
-          subtitle.textContent = 'High in-house AI engineering capacity and a 9–12+ month strategic runway justify building a proprietary internal platform.';
-          decisive.textContent = 'In-House AI Capacity (high) & 9-Month Tolerance (high runway).';
+          subtitle.textContent = 'High in-house AI engineering capacity and a dedicated 3–4+ quarter runway justify building a proprietary internal platform.';
+          decisive.textContent = 'In-House AI Capacity (high) & Build Runway (dedicated).';
           flip.textContent = 'Shortening your timeline to this quarter (Axis 4 → 1) would flip you to The Hybrid Seam.';
         }
         if (dontBuild) dontBuild.textContent = 'Foundational LLM model weights from scratch, commodity vector databases, off-the-shelf basic log stores.';
@@ -423,7 +430,7 @@
         badge.className = 'p-4 rounded-xl border text-center transition-all duration-300 bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-500/50 dark:text-blue-300';
         title.textContent = 'BUY THE PLATFORM';
         subtitle.textContent = 'Low in-house AI bandwidth and urgent production timeline make building in-house an extreme risk.';
-        decisive.textContent = 'In-House AI Capacity (low) & 9-Month Tolerance (low).';
+        decisive.textContent = 'In-House AI Capacity (low) & Build Runway (urgent).';
         flip.textContent = 'Increasing in-house AI engineering headcount would flip you to Hybrid.';
         if (dontBuild) dontBuild.textContent = 'Agent runtime engine, telemetry connectors, multi-tenant RBAC, LLM eval harness, complex model routing.';
         if (doBuild) doBuild.textContent = 'Service catalog mapping, basic webhook incident triggers, company-specific escalation routing, alert channel policies.';
@@ -433,7 +440,7 @@
         title.textContent = 'THE HYBRID SEAM';
         subtitle.textContent = 'Buy the multi-tenant harness, OTel connectors and eval gate. Build your runbook logic & topology seam.';
         decisive.textContent = 'Runbook Differentiation & AI Platform Opportunity Cost.';
-        flip.textContent = 'A zero-tolerance deadline (Axis 4 → 1) would flip you to immediate Buy.';
+        flip.textContent = 'A zero-runway deadline (Axis 4 → 1) would flip you to immediate Buy.';
         if (dontBuild) dontBuild.textContent = 'Telemetry connectors, multi-tenant RBAC, LLM eval harness, model pinning.';
         if (doBuild) doBuild.textContent = 'Custom runbooks, CMDB taxonomy, escalation policies, approval gate rules.';
       }

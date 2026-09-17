@@ -57,7 +57,7 @@
           </span>
         </div>
         <h1 class="text-3xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white tracking-tight">The Buy vs Build Room Scatter</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Paired with <a href="./scorecard.html" class="underline hover:text-accent">scorecard.html</a> (Relay Topic: <code class="font-mono text-[11px]">nudgebee/aiops-workshop/submissions</code>). For M1–M8 benchmark tracking, see <a href="./scoreboard.html" class="underline hover:text-accent">Live Scoreboard</a>.</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Paired with <a href="./scorecard.html" class="underline hover:text-accent">scorecard.html</a> (Relay Topic: <code class="font-mono text-[11px]">nudgebee/aiops-workshop/submissions</code>). For M1–M8 benchmark tracking, see <a href="./scoreboard.html" class="underline hover:text-accent">Live Benchmarks</a>.</p>
       </div>
 
       <div class="flex items-center gap-6">
@@ -86,15 +86,15 @@
     <div class="grid grid-cols-4 gap-3 mb-6 font-mono text-xs">
       <div class="bg-white dark:bg-card/70 border shadow-sm dark:shadow-none border-rose-900/40 p-2.5 rounded-xl text-center">
         <span class="text-rose-400 font-bold block">Top-Left: PoC Graveyard</span>
-        <span class="text-slate-400 text-[11px]">Low In-House AI + High Tolerance</span>
+        <span class="text-slate-400 text-[11px]">Low In-House AI + Long Runway</span>
       </div>
       <div class="bg-white dark:bg-card/70 border shadow-sm dark:shadow-none border-amber-800/40 p-2.5 rounded-xl text-center">
         <span class="text-amber-300 font-bold block">Top-Right: In-House Builders</span>
-        <span class="text-slate-400 text-[11px]">High In-House AI + 9-Month Build</span>
+        <span class="text-slate-400 text-[11px]">High In-House AI + Dedicated Runway</span>
       </div>
       <div class="bg-white dark:bg-card/70 border shadow-sm dark:shadow-none border-blue-900/40 p-2.5 rounded-xl text-center">
         <span class="text-blue-400 font-bold block">Bottom-Left: Pure Platform Buyers</span>
-        <span class="text-slate-400 text-[11px]">Low AI Team + Urgent Timeline</span>
+        <span class="text-slate-400 text-[11px]">Low AI Team + Urgent Quarter</span>
       </div>
       <div class="bg-white dark:bg-card/70 border shadow-sm dark:shadow-none border-accent-emerald/40 p-2.5 rounded-xl text-center">
         <span class="text-accent-emerald font-bold block">Bottom-Right: The Hybrid Seam</span>
@@ -112,7 +112,7 @@
 
   <!-- Footer -->
   <footer class="mt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono border-t border-slate-200 dark:border-border-subtle pt-4 gap-3">
-    <div>X-Axis: In-House AI Capacity (1-5) &nbsp;|&nbsp; Y-Axis: Tolerance for 9-Month Build (1-5)</div>
+    <div>X-Axis: In-House AI Capacity (1-5) &nbsp;|&nbsp; Y-Axis: Build Timeline &amp; Maintenance Runway (1-5)</div>
     <div class="flex items-center gap-4 text-xs font-mono">
       <a href="https://nudgebee.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-900 dark:hover:text-white transition">nudgebee.com ↗</a>
       <span class="text-slate-300 dark:text-slate-700">·</span>
@@ -217,7 +217,7 @@
             tooltip: {
               callbacks: {
                 label: function(ctx) {
-                  return ` ${ctx.dataset.label} (AI Capacity: ${ctx.raw.x}, Tolerance: ${ctx.raw.y})`;
+                  return ` ${ctx.dataset.label} (AI Capacity: ${ctx.raw.x}, Runway: ${ctx.raw.y})`;
                 }
               }
             }
@@ -240,7 +240,7 @@
               max: 5.5,
               title: {
                 display: true,
-                text: '← Urgent (No 9-Month Tolerance) ──────── 9-Month Tolerance ──────── High Tolerance (Long R&D) →',
+                text: '← Urgent (< 1 Qtr) ──────── 2–3 Quarters ──────── Multi-Year Runway (4+ Qtrs) →',
                 color: '#94A3B8',
                 font: { family: 'Space Grotesk', size: 13, weight: 'bold' }
               },
