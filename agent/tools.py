@@ -17,6 +17,10 @@ import urllib.parse
 import urllib.request
 from typing import Dict, Any, List, Tuple
 
+# How far back pod logs are read. Older lines are almost always residue from a
+# previous scenario run rather than evidence about the incident under investigation.
+LOG_WINDOW = os.getenv("AGENT_LOG_WINDOW", "10m")
+
 # RFC 1123 DNS label regex for safe Kubernetes resource names
 K8S_NAME_RE = re.compile(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
@@ -155,7 +159,14 @@ def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context
         return f"No pods matching prefix '{prefix}' found in namespace '{ns}'. Active pods: {', '.join(all_pods) if all_pods else 'none'}."
 
     target_pod = matched[0]
-    log_cmd = ["kubectl", "-n", ns, "logs", target_pod, f"--tail={safe_tail}"]
+    # Bound the window as well as the line count. Each scenario run injects a fault and
+    # clears it again, so error lines from a previous run linger in the ring buffer and
+    # would otherwise be read as live symptoms - the agent has diagnosed an already-
+    # cleared fault this way. LOG_WINDOW keeps observations close to the current state.
+    log_cmd = [
+        "kubectl", "-n", ns, "logs", target_pod,
+        f"--tail={safe_tail}", f"--since={LOG_WINDOW}",
+    ]
     code, stdout, stderr = run_cmd(log_cmd)
     if code != 0:
         return f"Error retrieving logs for pod '{target_pod}' in namespace '{ns}' (exit {code}): {stderr or stdout}"
