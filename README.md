@@ -16,8 +16,8 @@ Welcome to the **NudgeBee SRE & AIOps Agent Workshop** repository! This reposito
 ├── scoreboard.html      # Live Room Scoreboard & Leaderboard
 ├── calculator.html      # Token ROI, Latency & LLM Cost Modeler
 ├── guardrails.html      # Human-in-the-Loop Security Gate Visualizer
-├── scorecard.html       # Individual Investigation Scorecard Formatter
-├── projector.html       # Big-Screen High-Contrast Presenter View
+├── scorecard.html       # Buy vs Build Matrix & Participant Decision Scorecard
+├── projector.html       # Big-Screen Buy vs Build 4-Quadrant Room Scatter
 ├── agent/               # Autonomous SRE Investigation Agent
 │   ├── config.yaml      # Declarative student levers (models, tools, scenarios)
 │   ├── prompts.yaml     # Agent personas, security policies, reasoning modes
@@ -45,8 +45,8 @@ All web tools are zero-build, dependency-free static pages that can be opened di
 | **[scoreboard.html](scoreboard.html)** | **Room Scoreboard** · Aggregates token burn, latency, cost, and ground-truth accuracy across pairs. | Room Display |
 | **[calculator.html](calculator.html)** | **ROI & Cost Modeler** · Interactive token math, caching savings, and model price comparisons. | Attendees |
 | **[guardrails.html](guardrails.html)** | **Security Guardrails** · Visualizes read-only enforcement and human confirmation gates. | Attendees |
-| **[scorecard.html](scorecard.html)** | **Scorecard Formatter** · Formats investigation outputs into shareable scorecards. | Attendees |
-| **[projector.html](projector.html)** | **Presenter Display** · High-contrast timer, agenda, and module progression view. | Facilitators |
+| **[scorecard.html](scorecard.html)** | **Buy vs Build Scorecard** · Participant decision matrix submitting AI capacity vs build tolerance. | Attendees |
+| **[projector.html](projector.html)** | **Room Scatter Display** · Big-screen 4-quadrant room projection visualizer for Buy vs Build. | Facilitators |
 
 ### Running the Web Suite Locally
 ```bash
@@ -66,14 +66,30 @@ The agent is an autonomous, multi-turn ReAct investigation loop that connects to
 
 ### 🚀 Quickstart for Attendees
 
+#### Step 1: Launch Your Environment (Zero Setup)
+Open this repository in **GitHub Codespaces** (Click **Code** → **Codespaces** → **Create codespace on main**).
+Python 3.11, `kubectl`, port-forwarding, and VS Code extensions are pre-configured.
+
+#### Step 2: Bootstrap Your Team Credentials
+In the terminal, run the interactive bootstrap script:
+```bash
+./scripts/bootstrap-team.sh
+```
+Or run directly with your assigned team number and room passphrase:
+```bash
+./scripts/bootstrap-team.sh --team <YOUR_TEAM_NUM> --pass "<ROOM_PASSPHRASE>" --url "<STORAGE_URL>"
+```
+This automatically configures your team namespace, installs your scoped cluster `kubeconfig`, exports your LLM Gateway credentials, and tests cluster connectivity.
+
+#### Step 3: Run the Agent & Verify Tools
 ```bash
 cd agent
 
 # 1. Test live cluster diagnostic tools (Read-Only)
 python3 mini_agent.py --test-tools
 
-# 2. Run the autonomous investigation
-python3 mini_agent.py
+# 2. Run your first autonomous investigation
+python3 mini_agent.py --scenario badDeploy1405 --model mock
 
 # 3. Inspect full transcript and execution traces
 python3 mini_agent.py --logs      # Readable step-by-step transcript
@@ -102,7 +118,7 @@ For full details on configuring models, toggling tools, and running scenarios, r
 7. **Module 7: Guardrails & Human-in-the-Loop**  
    Enforce strict read-only diagnostic boundaries. Require interactive operator authorization (`ask_human_approval`) before mutating commands (`kubectl rollout undo`).
 8. **Module 8: Memory Tiers & Episodic Recall**  
-   Test Turn 1 (`enable_memory: false`) first-principles investigation versus Turn 2 (`enable_memory: true`) episodic memory recall (`INC-4092`), assessing whether past remediations held.
+   Test Turn 1 (`enable_memory_recall: false`, `persist_verified_resolution: true`) first-principles investigation baseline versus Turn 2 (`enable_memory_recall: true`) episodic memory recall (`INC-4092`), assessing whether past remediations held.
 
 ---
 

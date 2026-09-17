@@ -89,7 +89,7 @@ def save_to_episodic_memory(diagnosis: str, scenario: str, namespace: str, model
         f"- **Title**: {title}\n"
         f"- **Root Cause**: {record['root_cause'][:250]}...\n"
         f"- **Remediation**: `{remediation}`\n"
-        f"- **Ledger Status**: Saved to episodic store (Recallable via `enable_memory: true`)\n"
+        f"- **Ledger Status**: Saved to episodic store (Recallable via `enable_memory_recall: true`)\n"
         f"---\n"
     )
     with open(MD_PATH, "a", encoding="utf-8") as f:

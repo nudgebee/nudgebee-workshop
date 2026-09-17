@@ -1,23 +1,24 @@
 # ==============================================================================
-# SRE Agent Workshop · Agent Configuration (config.yaml)
+# SRE Agent Workshop · Example Configuration Template (config.example.yaml)
 # ==============================================================================
-# Attendees: Modify this file to select models, toggle tools, adjust limits,
-# and select target namespaces. No Python coding required!
+# Copy this file to config.yaml:
+#   cp config.example.yaml config.yaml
+#
+# Set your API key via environment variable:
+#   export OPENAI_API_KEY="sk-..."
+# ==============================================================================
 
 # ------------------------------------------------------------------------------
 # 1. MODEL SELECTION (Module 2: Small vs Frontier Models)
 # ------------------------------------------------------------------------------
-# Available Workshop Models on NudgeBee Gateway:
-#   - "gemini-3.8-flash"                       # High-end frontier reasoning model (fast, deep)
-#   - "qwen/qwen3-235b-a22b-instruct-2507-maas" # High-end open model (235B parameters, fast tool calling)
-#   - "NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"    # Small model (great for tool ceiling & drift experiments)
-#   - "mock"                                   # Deterministic simulation (0 external API calls)
+# Available Workshop Models:
+#   - "gemini-3.8-flash"                       # High-end frontier reasoning model
+#   - "qwen/qwen3-235b-a22b-instruct-2507-maas" # High-end open model (235B parameters)
+#   - "NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"    # Small model (30B parameters)
+#   - "mock"                                   # Offline deterministic simulation
 model: "gemini-3.8-flash"
 
 # Gateway credentials:
-# Set OPENAI_API_KEY in your shell environment (recommended):
-#   export OPENAI_API_KEY="sk-..."
-# Or provide your key below (never commit your live key to version control):
 api_base: "https://llm-gateway.dev.nudgebee.pollux.in/v1"
 api_key: ""
 
@@ -39,34 +40,28 @@ enabled_tools:
 # ------------------------------------------------------------------------------
 namespace: "group-1"
 
-# Available Scenarios (from Workshop Curriculum):
-#   - "badDeploy1405"        # Session 1 & 2C: Checkout latency spike after 14:05 timeout deploy
-#   - "episodicRecurrence"   # Session 2A: Connection pool starvation matching INC-4092 (14 March)
-#   - "postgresFailure"      # Module 2 & 3: Database pool starvation / unreachable (gRPC 13 INTERNAL)
-#   - "emailMemoryLeak"      # Module 4: Unbounded heap buffer growth leading to OOMKill Exit Code 137
-#   - "postgresSlow"         # Module 4: Injected database query sleep (p99 latency without 500s)
-#   - "poisonedEntity"       # Session 4: Red-team hallucination & abstention testing (stale/fake entity)
-scenario: "episodicRecurrence"
+# Available Scenarios:
+#   - "badDeploy1405"        # Checkout latency spike after 14:05 timeout deploy
+#   - "episodicRecurrence"   # Connection pool starvation matching INC-4092
+#   - "postgresFailure"      # Database pool starvation / unreachable (gRPC 13 INTERNAL)
+#   - "emailMemoryLeak"      # Unbounded heap buffer growth leading to OOMKill Exit Code 137
+#   - "postgresSlow"         # Injected database query sleep (p99 latency without 500s)
+#   - "poisonedEntity"       # Red-team hallucination & abstention testing
+scenario: "badDeploy1405"
 
 # ------------------------------------------------------------------------------
 # 4. EPISODIC MEMORY (Session 2A: Memory ON vs Memory OFF)
 # ------------------------------------------------------------------------------
-# enable_memory_recall: When false, strictly disables historical incident search.
-# Set to false in Turn 1 (Cold Start Baseline), then true in Turn 2 (Warm Repeat).
 enable_memory_recall: false
-
-# persist_verified_resolution: When true, verified incident resolutions are saved
-# to memory/episodic_memory.json and episodic_memory.md so Turn 2 can recall them.
 persist_verified_resolution: true
 
 # ------------------------------------------------------------------------------
 # 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)
 # ------------------------------------------------------------------------------
-# Options: "structured_summary" (2k tokens) | "filtered_regex" (8k tokens) | "raw_80k" (80k uncurated dump)
 context_mode: "filtered_regex"
 enable_prompt_caching: true
 
 # ------------------------------------------------------------------------------
-# 5. INVESTIGATION LIMITS
+# 6. INVESTIGATION LIMITS
 # ------------------------------------------------------------------------------
 max_turns: 10

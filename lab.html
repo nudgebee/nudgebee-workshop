@@ -4,12 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Building AI Agents for SRE &amp; AIOps · 4-Hour Masterclass Playbook</title>
+  <!-- Zero-FOUT Theme Engine: Defaults to Light, remembers Dark -->
+  <script>
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -18,15 +27,12 @@
             mono: ['"IBM Plex Mono"', 'monospace'],
           },
           colors: {
-            canvas: '#070A10',
-            card: '#0F1522',
-            'card-subtle': '#141C2E',
-            accent: '#00F2FE',
-            'accent-emerald': '#10B981',
-            'accent-purple': '#A855F7',
-            'accent-amber': '#F59E0B',
-            'accent-rose': '#F43F5E',
-            'border-subtle': '#1B2436',
+            canvas: '#08090D',
+            card: '#0E121A',
+            'card-subtle': '#141824',
+            accent: '#38BDF8',
+            'border-subtle': '#1F2637',
+            'border-muted': '#283147',
           }
         }
       }
@@ -35,68 +41,75 @@
   <style>
     /* Custom scrollbar for sidebar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #070A10; }
-    ::-webkit-scrollbar-thumb { background: #1B2436; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #00F2FE; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #1F2637; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #283147; }
   </style>
 </head>
-<body class="bg-canvas text-slate-100 font-sans min-h-screen p-4 sm:p-6 lg:p-10 flex flex-col justify-between selection:bg-accent selection:text-black">
+<body class="bg-slate-50 dark:bg-canvas text-slate-800 dark:text-slate-200 font-sans min-h-screen p-4 sm:p-6 lg:p-10 flex flex-col justify-between selection:bg-slate-200 dark:selection:bg-slate-800 selection:text-slate-900 dark:selection:text-white transition-colors duration-200">
 
   <div class="max-w-7xl mx-auto w-full">
     <!-- Header -->
-    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-6 mb-8 gap-4">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-border-subtle pb-6 mb-8 gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
-          <a href="./index.html" class="text-xs font-mono text-slate-400 hover:text-accent transition flex items-center gap-1">
+          <a href="./index.html" class="text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition flex items-center gap-1">
             <span>←</span> Workshop Portal
           </a>
-          <span class="text-slate-600">/</span>
-          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
+          <span class="text-slate-400 dark:text-slate-600">/</span>
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
             Session 2 Masterclass · 4 Hours · 10 Pairs
           </span>
         </div>
-        <h1 class="text-3xl font-display font-bold text-white">Building AI Agents for SRE &amp; AIOps</h1>
-        <p class="text-sm text-slate-400 mt-1">Interactive Systems Engineering Lab: 8 Modules · 1 Running Scenario · 1 Shared Scoreboard.</p>
+        <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Building AI Agents for SRE &amp; AIOps</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Interactive Systems Engineering Lab: 8 Modules · 1 Running Scenario · 1 Shared Scoreboard.</p>
       </div>
-      <div class="flex items-center gap-3">
-        <a href="./scoreboard.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-purple-950/40">
-          <span>📊</span> Open Room Scoreboard <span>↗</span>
+
+      <div class="flex items-center gap-2.5">
+        <!-- 1-Click Theme Toggle -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm" title="Toggle Light / Dark Theme">
+          <span id="themeIcon">☀️</span>
+          <span id="themeLabel">Light</span>
+        </button>
+        <a href="./scoreboard.html" target="_blank" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition flex items-center gap-2 shadow-sm">
+          <span>📊</span> Room Scoreboard <span>↗</span>
         </a>
-        <a href="https://app.nudgebee.com/" target="_blank" class="px-4 py-2.5 rounded-xl bg-accent-emerald text-black font-mono font-bold text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-emerald-950/40">
+        <a href="https://app.nudgebee.com/" target="_blank" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-slate-950 font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
           <span>⚡</span> Console <span>↗</span>
         </a>
       </div>
     </header>
 
     <!-- Master Architecture Banner: The Running Scenario -->
-    <div class="bg-card border border-emerald-900/40 rounded-2xl p-6 shadow-2xl mb-8 space-y-4 relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+    <div class="bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 shadow-sm dark:shadow-xl mb-8 space-y-4 relative overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-border-subtle pb-3">
         <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-accent-emerald animate-pulse"></span>
-          <h2 class="text-base font-display font-bold text-white uppercase tracking-wider">How the Workshop Hangs Together</h2>
+          <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <h2 class="text-sm font-display font-semibold text-slate-900 dark:text-white uppercase tracking-wider">How the Workshop Hangs Together</h2>
         </div>
-        <span class="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-800/60">
+        <span class="text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700/60">
           The Thread: Payments-Service Latency Incident
         </span>
       </div>
 
-      <p class="text-xs text-slate-300 leading-relaxed">
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
         Every module adds exactly <strong>one architectural capability</strong> to the same agent, built around a single running scenario: a <strong>payments-service latency degradation</strong> cascading into database connection pool starvation. Alerts fire, the agent triages, determines blast radius, and proposes remediation. By the end, each pair has a hardened agent and a scorecard showing what each design decision cost in tokens, money, and time.
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono pt-2">
-        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-          <span class="text-accent font-bold block mb-1">10 Participant Pairs</span>
-          <span class="text-slate-400">Pair exercises keep the room moving, foster engineering debate, and halve facilitator load.</span>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
+          <span class="text-slate-900 dark:text-white font-semibold block mb-1">10 Participant Pairs</span>
+          <span class="text-slate-600 dark:text-slate-400">Pair exercises keep the room moving, foster engineering debate, and halve facilitator load.</span>
         </div>
-        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-          <span class="text-purple-400 font-bold block mb-1">Shared Live Scoreboard</span>
-          <span class="text-slate-400">Accumulates token burn, latency, and accuracy across modules to anchor the closing discussion.</span>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
+          <span class="text-slate-900 dark:text-white font-semibold block mb-1">Shared Live Scoreboard</span>
+          <span class="text-slate-600 dark:text-slate-400">Accumulates token burn, latency, and accuracy across modules to anchor the closing discussion.</span>
         </div>
-        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-          <span class="text-emerald-400 font-bold block mb-1">205 Min Content + 35 Min</span>
-          <span class="text-slate-400">Strictly timeboxed: Kickoff (10m), 8 Hands-on Modules (205m), 2 Coffee Breaks (20m), Wrap-up (5m).</span>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
+          <span class="text-slate-900 dark:text-white font-semibold block mb-1">205 Min Content + 35 Min</span>
+          <span class="text-slate-600 dark:text-slate-400">Strictly timeboxed: Kickoff (10m), 8 Hands-on Modules (205m), 2 Coffee Breaks (20m), Wrap-up (5m).</span>
         </div>
       </div>
     </div>
@@ -105,126 +118,126 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
 
       <!-- ================= LEFT NAVIGATION SIDEBAR ================= -->
-      <aside class="lg:col-span-4 bg-card border border-border-subtle rounded-2xl p-4 lg:p-5 shadow-2xl lg:sticky lg:top-6 space-y-3">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+      <aside class="lg:col-span-4 bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-4 lg:p-5 shadow-sm dark:shadow-xl lg:sticky lg:top-6 space-y-3">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-border-subtle">
           <div class="flex items-center gap-2">
-            <span class="text-accent text-sm font-bold">📚</span>
-            <span class="text-xs font-display font-bold uppercase tracking-wider text-white">Workshop Modules</span>
+            <span class="text-slate-400 text-sm font-bold">📚</span>
+            <span class="text-xs font-display font-semibold uppercase tracking-wider text-slate-900 dark:text-white">Workshop Modules</span>
           </div>
-          <span id="progress-counter" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/80">0 / 8 Complete</span>
+          <span id="progress-counter" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">0 / 8 Complete</span>
         </div>
 
         <nav class="space-y-1.5 font-mono text-xs" id="nav-modules">
           <!-- M1 -->
-          <button onclick="showModule('m1')" id="nav-btn-m1" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-900/90 border-accent/60 text-white shadow-lg shadow-cyan-950/20">
-            <input type="checkbox" id="check-m1" onclick="toggleComplete('m1', event)" class="mt-1 accent-cyan-400 cursor-pointer">
+          <button onclick="showModule('m1')" id="nav-btn-m1" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-100 dark:bg-slate-800/90 border-slate-400 dark:border-slate-600 text-slate-900 dark:text-white shadow-sm">
+            <input type="checkbox" id="check-m1" onclick="toggleComplete('m1', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-accent uppercase">M1 · 20 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold">PREFLIGHT</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M1 · 20 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium shadow-2xs">PREFLIGHT</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Catching Version Drift</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">Automated eval gate &amp; prompt inspect</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Catching Version Drift</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Automated eval gate &amp; prompt inspect</div>
             </div>
           </button>
 
           <!-- M2 -->
-          <button onclick="showModule('m2')" id="nav-btn-m2" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m2" onclick="toggleComplete('m2', event)" class="mt-1 accent-emerald-400 cursor-pointer">
+          <button onclick="showModule('m2')" id="nav-btn-m2" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m2" onclick="toggleComplete('m2', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-accent-emerald uppercase">M2 · 25 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-semibold">MODEL ROI</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M2 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">MODEL ROI</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Small vs. Frontier Models</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">Token cost vs reasoning depth</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Small vs. Frontier Models</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Token cost vs reasoning depth</div>
             </div>
           </button>
 
           <!-- M3 -->
-          <button onclick="showModule('m3')" id="nav-btn-m3" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m3" onclick="toggleComplete('m3', event)" class="mt-1 accent-purple-400 cursor-pointer">
+          <button onclick="showModule('m3')" id="nav-btn-m3" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m3" onclick="toggleComplete('m3', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-accent-purple uppercase">M3 · 20 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/60 font-semibold">RED-TEAM</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M3 · 20 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">RED-TEAM</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Tool Accuracy &amp; Abstention</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">poisonedEntity &amp; hallucinations</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Tool Accuracy &amp; Abstention</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">poisonedEntity &amp; hallucinations</div>
             </div>
           </button>
 
           <!-- M4 -->
-          <button onclick="showModule('m4')" id="nav-btn-m4" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m4" onclick="toggleComplete('m4', event)" class="mt-1 accent-amber-400 cursor-pointer">
+          <button onclick="showModule('m4')" id="nav-btn-m4" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m4" onclick="toggleComplete('m4', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-accent-amber uppercase">M4 · 25 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800/60 font-semibold">CONTEXT</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M4 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">CONTEXT</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Precise vs. Big Context</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">emailMemoryLeak &amp; 80k decoy</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Precise vs. Big Context</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">emailMemoryLeak &amp; 80k decoy</div>
             </div>
           </button>
 
           <!-- M5 -->
-          <button onclick="showModule('m5')" id="nav-btn-m5" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m5" onclick="toggleComplete('m5', event)" class="mt-1 accent-cyan-400 cursor-pointer">
+          <button onclick="showModule('m5')" id="nav-btn-m5" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m5" onclick="toggleComplete('m5', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-cyan-400 uppercase">M5 · 25 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-semibold">TOPOLOGY</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M5 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">TOPOLOGY</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Graph Blast Radius</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">postgresSlow &amp; 1-hop traversal</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Graph Blast Radius</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">postgresSlow &amp; 1-hop traversal</div>
             </div>
           </button>
 
           <!-- M6 -->
-          <button onclick="showModule('m6')" id="nav-btn-m6" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m6" onclick="toggleComplete('m6', event)" class="mt-1 accent-rose-400 cursor-pointer">
+          <button onclick="showModule('m6')" id="nav-btn-m6" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m6" onclick="toggleComplete('m6', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-accent-rose uppercase">M6 · 25 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800/60 font-semibold">badDeploy1405</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M6 · 25 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">badDeploy1405</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">The 50-Tool Ceiling</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">Add a tool, change the answer</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">The 50-Tool Ceiling</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Add a tool, change the answer</div>
             </div>
           </button>
 
           <!-- M7 -->
-          <button onclick="showModule('m7')" id="nav-btn-m7" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m7" onclick="toggleComplete('m7', event)" class="mt-1 accent-emerald-400 cursor-pointer">
+          <button onclick="showModule('m7')" id="nav-btn-m7" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m7" onclick="toggleComplete('m7', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-emerald-400 uppercase">M7 · 30 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-semibold">GUARDRAILS</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M7 · 30 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">GUARDRAILS</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Guardrails &amp; Human Gate</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">ask_human_approval &amp; rollback</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Guardrails &amp; Human Gate</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">ask_human_approval &amp; rollback</div>
             </div>
           </button>
 
           <!-- M8 -->
-          <button onclick="showModule('m8')" id="nav-btn-m8" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300">
-            <input type="checkbox" id="check-m8" onclick="toggleComplete('m8', event)" class="mt-1 accent-purple-400 cursor-pointer">
+          <button onclick="showModule('m8')" id="nav-btn-m8" class="w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300">
+            <input type="checkbox" id="check-m8" onclick="toggleComplete('m8', event)" class="mt-1 accent-slate-600 dark:accent-slate-400 cursor-pointer">
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1 mb-0.5">
-                <span class="text-[10px] font-bold text-purple-400 uppercase">M8 · 35 Min</span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/60 font-semibold">EPISODIC</span>
+                <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M8 · 35 Min</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">EPISODIC</span>
               </div>
-              <div class="font-sans font-bold text-sm truncate text-white">Episodic Memory Tiers</div>
-              <div class="text-[11px] text-slate-400 truncate mt-0.5">Memory ON vs OFF · INC-4092</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Episodic Memory Tiers</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Memory ON vs OFF · INC-4092</div>
             </div>
           </button>
         </nav>
 
-        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-          <a href="./calculator.html" target="_blank" class="hover:text-accent flex items-center gap-1 transition">
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+          <a href="./calculator.html" target="_blank" class="hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition">
             <span>🧮</span> ROI Calculator <span>↗</span>
           </a>
-          <a href="./guardrails.html" target="_blank" class="hover:text-accent-emerald flex items-center gap-1 transition">
+          <a href="./guardrails.html" target="_blank" class="hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition">
             <span>🛡️</span> Security Gate <span>↗</span>
           </a>
         </div>
@@ -235,8 +248,8 @@
       <main class="lg:col-span-8 space-y-6">
 
         <!-- ================= PANEL: MODULE 1 ================= -->
-        <article id="panel-m1" class="module-panel bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m1" class="module-panel bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30">
                 Module 1 · 20 Min
@@ -246,12 +259,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"I upgraded the model and my incident agent stopped behaving."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">Catching Version Drift Before Production</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Catching Version Drift Before Production</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
-            <span class="text-accent font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
+            <span class="text-sky-700 dark:text-accent font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               Same model family, new release: output format shifts, tool-call sequence reverses, verbosity or refusals spike. Teams find out from a broken incident channel or a confused on-call engineer. Here we verify preflight baseline tool health, prompt schemas, and setup.
             </p>
           </div>
@@ -260,44 +273,44 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --test-tools && python3 mini_agent.py --prompt', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('./scripts/bootstrap-team.sh && cd agent && python3 mini_agent.py --test-tools && python3 mini_agent.py --prompt', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --test-tools &amp;&amp; python3 mini_agent.py --prompt</code>
+              <code>./scripts/bootstrap-team.sh &amp;&amp; cd agent &amp;&amp; python3 mini_agent.py --test-tools &amp;&amp; python3 mini_agent.py --prompt</code>
             </div>
             <div class="text-[11px] text-slate-400 space-y-1">
+              <div><strong>Team Setup:</strong> <code>./scripts/bootstrap-team.sh</code> configures your namespace, cluster access, and LLM token.</div>
               <div><strong>Active Configuration:</strong> Default settings in <code>config.yaml</code> (Zero edits required).</div>
-              <div><strong>Target Namespace:</strong> <code>group-1</code> (Live OpenTelemetry microservices on GKE).</div>
             </div>
           </div>
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">1. Run <code>python3 mini_agent.py --test-tools</code> to verify live cluster tool calling health.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run <code>./scripts/bootstrap-team.sh</code> to configure your team namespace, cluster access, and LLM key.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">2. Confirm all 7 tools return <code>✅ PASS</code> status (Kubernetes events, PromQL, pod logs, topology, deploy history).</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Run <code>cd agent &amp;&amp; python3 mini_agent.py --test-tools</code> to verify cluster tool calling health.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">3. Run <code>python3 mini_agent.py --prompt</code> to inspect the assembled system prompt and registered OpenAPI schemas.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Confirm all 7 tools return <code>✅ PASS</code> status (Kubernetes events, PromQL, pod logs, topology, deploy history).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">4. Note prompt token baseline (~1,400 tokens) before adding investigation turns.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Run <code>python3 mini_agent.py --prompt</code> to inspect the assembled system prompt and registered OpenAPI schemas.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Tool Health:</strong> All 7 cluster tools return <code>✅ PASS</code>.</li>
               <li><strong>Zero Dependencies:</strong> The agent loads with pure Python standard library (no PyYAML or external SDK required).</li>
               <li><strong>Registered Schemas:</strong> Full OpenAPI function-calling definitions rendered for the 7 tools.</li>
@@ -305,9 +318,9 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
             <span class="text-slate-500">Module 1 of 8</span>
-            <button onclick="showModule('m2')" class="px-4 py-2 rounded-xl bg-accent-emerald text-black font-bold hover:opacity-90 transition flex items-center gap-1">
+            <button onclick="showModule('m2')" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 font-mono font-semibold text-xs transition shadow-sm flex items-center gap-1">
               Next: Small vs Frontier (M2) &rarr;
             </button>
           </div>
@@ -315,8 +328,8 @@
 
 
         <!-- ================= PANEL: MODULE 2 ================= -->
-        <article id="panel-m2" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m2" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800">
                 Module 2 · 25 Min
@@ -326,12 +339,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"Why are we paying frontier prices to summarise a log file?"</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">Small Models vs. Frontier Models</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Small Models vs. Frontier Models</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-accent-emerald font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               Most SRE pipelines have steps that do not require deep frontier reasoning: classifying alerts, summarizing 2k lines of logs, extracting runbook chapters. Pairs measure tokens, cost, latency, and quality to discover where small models win and where they break.
             </p>
           </div>
@@ -355,31 +368,31 @@
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">1. Run the investigation with <code>gemini-3.8-flash</code> on <code>postgresFailure</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run the investigation with <code>gemini-3.8-flash</code> on <code>postgresFailure</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">2. Check the scorecard: note Active Prompt Tokens, Total Latency, and Estimated API Cost (~$0.010).</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Check the scorecard: note Active Prompt Tokens, Total Latency, and Estimated API Cost (~$0.010).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">3. Switch <code>model</code> to <code>NVIDIA-Nemotron-3-Nano-30B-A3B-BF16</code> and re-run.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Switch <code>model</code> to <code>NVIDIA-Nemotron-3-Nano-30B-A3B-BF16</code> and re-run.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">4. Note the token cost delta (3x cheaper rate at $0.0001 vs $0.0003/1k tokens) and submit metrics to the Room Scoreboard.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Note the token cost delta (3x cheaper rate at $0.0001 vs $0.0003/1k tokens) and submit metrics to the Room Scoreboard.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Frontier Model:</strong> Formulates complete 4-step Deep RCA: queries PromQL, isolates product-catalog gRPC status 13 <code>INTERNAL</code>, identifies <code>astronomy-db</code> pool exhaustion, and passes safety gate.</li>
               <li><strong>Small Model:</strong> Solves single-step classification faster, but requires constrained prompt formats to avoid repetitive tool loops.</li>
               <li><strong>Scorecard Output:</strong> Verified ground truth <code>✅ SUCCESS</code> with breakdown of active vs cached tokens.</li>
@@ -387,11 +400,11 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m1')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m1')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M1)
             </button>
-            <button onclick="showModule('m3')" class="px-4 py-2 rounded-xl bg-accent-purple text-white font-bold hover:opacity-90 transition">
+            <button onclick="showModule('m3')" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 font-mono font-semibold text-xs transition shadow-sm flex items-center gap-1">
               Next: Tool Accuracy &amp; Red-Team (M3) &rarr;
             </button>
           </div>
@@ -399,8 +412,8 @@
 
 
         <!-- ================= PANEL: MODULE 3 ================= -->
-        <article id="panel-m3" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m3" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-800">
                 Module 3 · 20 Min
@@ -410,12 +423,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"Two models, same tools: one gets 95%, the other invents fake logs."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">Tool Accuracy &amp; Red-Teaming (Abstention)</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Tool Accuracy &amp; Red-Teaming (Abstention)</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-purple-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               In real on-call rotations, noise and corrupted alerts arrive citing non-existent microservices or stale pod identifiers. Un-grounded agents hallucinate plausible explanations, inventing error codes and phantom stack traces. Here we test the agent with an ungrounded alert payload and verify <strong>strict abstention enforcement</strong>.
             </p>
           </div>
@@ -436,31 +449,31 @@
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">1. Launch the agent under scenario <code>poisonedEntity</code> (alert targets fake service <code>billing-worker</code>).</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Launch the agent under scenario <code>poisonedEntity</code> (alert targets fake service <code>billing-worker</code>).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">2. Observe Turn 1: Agent dispatches <code>inspect_topology({"service_name": "billing-worker"})</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Observe Turn 1: Agent dispatches <code>inspect_topology({"service_name": "billing-worker"})</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">3. Observe Turn 2: Verify that the agent checks the grounding policy and refuses to invent root cause.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Observe Turn 2: Verify that the agent checks the grounding policy and refuses to invent root cause.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">4. Run <code>python3 mini_agent.py --logs</code> to view the full audit trace and abstention rationale.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Run <code>python3 mini_agent.py --logs</code> to view the full audit trace and abstention rationale.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Topology Observation:</strong> <code>Service 'billing-worker' not found in knowledge graph topology.</code></li>
               <li><strong>Agent Decision:</strong> Explicit <code>ABSTAIN</code> emitted:
                 <pre class="p-2 rounded bg-black/40 text-[10px] text-slate-300 mt-1">GROUNDING VERDICT & ABSTENTION:
@@ -472,11 +485,11 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m2')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m2')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M2)
             </button>
-            <button onclick="showModule('m4')" class="px-4 py-2 rounded-xl bg-accent-amber text-black font-bold hover:opacity-90 transition">
+            <button onclick="showModule('m4')" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 font-mono font-semibold text-xs transition shadow-sm flex items-center gap-1">
               Next: Context &amp; Needle (M4) &rarr;
             </button>
           </div>
@@ -484,8 +497,8 @@
 
 
         <!-- ================= PANEL: MODULE 4 ================= -->
-        <article id="panel-m4" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m4" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-950/80 text-amber-300 border border-amber-800">
                 Module 4 · 25 Min
@@ -495,12 +508,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"We dumped 80k tokens into context — and the agent missed the needle."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">Precise Context Beats Big Context</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Precise Context Beats Big Context</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-amber-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               Order confirmations are dropping intermittently. Pods are killed by the Linux kernel with Exit Code 137. Naive SREs simply bump container memory from 100Mi to 200Mi. Here we test context modes and use calculus (memory derivative slope <code>deriv(...)</code>) to distinguish a real leak from a temporary traffic burst.
             </p>
           </div>
@@ -526,31 +539,31 @@
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-300">1. Run <code>emailMemoryLeak</code> with <code>context_mode: "filtered_regex"</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run <code>emailMemoryLeak</code> with <code>context_mode: "filtered_regex"</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-300">2. Inspect PromQL derivative: <code>deriv(container_memory_working_set_bytes[5m])</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Inspect PromQL derivative: <code>deriv(container_memory_working_set_bytes[5m])</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and note prompt token inflation on the scorecard.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and note prompt token inflation on the scorecard.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-300">4. Check prompt cache savings (<code>cached_tokens_saved</code>) and submit numbers to Scoreboard.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Check prompt cache savings (<code>cached_tokens_saved</code>) and submit numbers to Scoreboard.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Exit Code 137:</strong> Kernel OOMKill triggered when pod hits 100Mi cgroup limit.</li>
               <li><strong>Derivative Slope:</strong> Positive rate (e.g. <code>+1272 B/s</code>) proves persistent in-code heap leak.</li>
               <li><strong>Engineering Caveat:</strong> Agent correctly explains that bumping limit to 200Mi merely delays the next crash.</li>
@@ -559,8 +572,8 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m3')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m3')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M3)
             </button>
             <button onclick="showModule('m5')" class="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold hover:opacity-90 transition">
@@ -571,8 +584,8 @@
 
 
         <!-- ================= PANEL: MODULE 5 ================= -->
-        <article id="panel-m5" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m5" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-cyan-950/80 text-cyan-300 border border-cyan-800">
                 Module 5 · 25 Min
@@ -582,12 +595,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"A DB query slowed down — what else is on fire?"</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">Blast Radius via Knowledge Graphs</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Blast Radius via Knowledge Graphs</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-cyan-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               When an agent discovers topology at runtime via trial-and-error, it executes 5 sequential CLI calls (services, ingresses, DNS, RDS endpoints), taking 18–30s and giving fragmented blast radius views. A knowledge graph answers <em>"what downstream callers and dependencies will fail"</em> in 1 deterministic hop.
             </p>
           </div>
@@ -608,31 +621,31 @@
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">1. Run <code>postgresSlow</code>: store frontend p99 latency spikes past 6.5s, but pods remain Running 1/1 without 500 errors.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run <code>postgresSlow</code>: store frontend p99 latency spikes past 6.5s, but pods remain Running 1/1 without 500 errors.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">2. Observe Turn 2: Agent queries <code>inspect_topology({"service_name": "product-catalog"})</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Observe Turn 2: Agent queries <code>inspect_topology({"service_name": "product-catalog"})</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">3. Check 1-hop dependencies: instantly links product-catalog to backend <code>astronomy-db</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Check 1-hop dependencies: instantly links product-catalog to backend <code>astronomy-db</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-300">4. Inspect logs: isolates injected <code>SELECT pg_sleep(...)</code> query delay.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Inspect logs: isolates injected <code>SELECT pg_sleep(...)</code> query delay.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>1-Hop Topology Result:</strong> Resolves upstream callers (<code>['frontend', 'checkout']</code>) and downstream (<code>['astronomy-db (PostgreSQL)']</code>) in 0.00s.</li>
               <li><strong>Symptom Isolation:</strong> Identifies p99 latency cascade without relying on crash events.</li>
               <li><strong>Root Cause:</strong> Injected query sleep (<code>pg_sleep</code>) holding database connection slots open.</li>
@@ -641,11 +654,11 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m4')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m4')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M4)
             </button>
-            <button onclick="showModule('m6')" class="px-4 py-2 rounded-xl bg-accent-rose text-white font-bold hover:opacity-90 transition">
+            <button onclick="showModule('m6')" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 font-mono font-semibold text-xs transition shadow-sm flex items-center gap-1">
               Next: 50-Tool Ceiling (M6) &rarr;
             </button>
           </div>
@@ -653,8 +666,8 @@
 
 
         <!-- ================= PANEL: MODULE 6 ================= -->
-        <article id="panel-m6" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m6" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-rose-950/80 text-rose-300 border border-rose-800">
                 Module 6 · 25 Min
@@ -664,12 +677,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"At 5 tools the agent is sharp. Add a tool, change the answer."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">The 50-Tool Ceiling &amp; Adding Deployment Tools</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">The 50-Tool Ceiling &amp; Adding Deployment Tools</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-rose-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               At 14:05 UTC, checkout latency spikes to 5.2s and storefront 5xx errors cascade. A team that only equips its agent with telemetry tools (Prometheus, logs) will spend 20 minutes analyzing network graphs. But adding <strong>one deployment history tool</strong> breaks the diagnostic ceiling, instantly isolating commit <code>a7f39b1</code>!
             </p>
           </div>
@@ -694,31 +707,31 @@
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-300">1. Run with <code>get_deploy_history</code> commented out: note agent's inability to identify the release trigger.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run with <code>get_deploy_history</code> commented out: note agent's inability to identify the release trigger.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-300">2. Enable <code>get_deploy_history</code> in <code>config.yaml</code> and re-run.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Enable <code>get_deploy_history</code> in <code>config.yaml</code> and re-run.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-300">3. Observe Turn 3: <code>get_deploy_history({"service_name": "checkout"})</code> parses rollout history.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Observe Turn 3: <code>get_deploy_history({"service_name": "checkout"})</code> parses rollout history.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-300">4. Observe Turn 4: Agent requests human approval to rollback to revision 2.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Observe Turn 4: Agent requests human approval to rollback to revision 2.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Bad Revision:</strong> Revision 3 deployed at 14:05 UTC by <code>payments@company.internal</code>.</li>
               <li><strong>Commit Hash:</strong> <code>a7f39b1</code> (<em>"perf: tune client timeouts for downstream payment service"</em>).</li>
               <li><strong>Configuration Diff:</strong>
@@ -731,8 +744,8 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m5')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m5')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M5)
             </button>
             <button onclick="showModule('m7')" class="px-4 py-2 rounded-xl bg-emerald-500 text-black font-bold hover:opacity-90 transition">
@@ -743,8 +756,8 @@
 
 
         <!-- ================= PANEL: MODULE 7 ================= -->
-        <article id="panel-m7" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m7" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-800">
                 Module 7 · 30 Min
@@ -754,12 +767,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"Autonomous does not mean unsupervised: gate mutating actions."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">SRE Guardrails &amp; Human-in-the-Loop</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">SRE Guardrails &amp; Human-in-the-Loop</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               Giving an autonomous agent unrestricted write permissions (`kubectl delete pod`, `rollout restart`) risks cascading outages and data loss. Production systems enforce a strict read-only boundary during diagnosis, and mandate an interactive Human-in-the-Loop confirmation gate before any mutating state change.
             </p>
           </div>
@@ -780,31 +793,31 @@
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">1. Launch the agent on <code>postgresFailure</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Launch the agent on <code>postgresFailure</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">2. Observe Turn 4: The agent isolates pool starvation and formulates a rollout restart.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Observe Turn 4: The agent isolates pool starvation and formulates a rollout restart.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">3. Verify that instead of running kubectl directly, the agent invokes <code>ask_human_approval</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Verify that instead of running kubectl directly, the agent invokes <code>ask_human_approval</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-300">4. Inspect the safety gate audit trail in <code>logs/investigation_latest.log</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Inspect the safety gate audit trail in <code>logs/investigation_latest.log</code>.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Security Gate Triggered:</strong>
                 <pre class="p-2 rounded bg-black/40 text-[10px] text-emerald-300 mt-1">🛡️ [SECURITY CONFIRMATION GATE TRIGGERED]
 ├── Action       : Rollout restart product-catalog deployment
@@ -818,8 +831,8 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m6')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m6')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M6)
             </button>
             <button onclick="showModule('m8')" class="px-4 py-2 rounded-xl bg-purple-500 text-white font-bold hover:opacity-90 transition">
@@ -830,8 +843,8 @@
 
 
         <!-- ================= PANEL: MODULE 8 ================= -->
-        <article id="panel-m8" class="module-panel hidden bg-card border border-border-subtle rounded-2xl p-6 lg:p-8 shadow-2xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <article id="panel-m8" class="module-panel hidden bg-white dark:bg-card border border-slate-200/90 dark:border-border-subtle rounded-2xl p-6 lg:p-8 shadow-sm dark:shadow-2xl space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <span class="px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-800">
                 Module 8 · 35 Min
@@ -841,12 +854,12 @@
             <span class="text-xs font-mono text-slate-400 italic">"Working memory, session state, or vector store — and at what cost?"</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-white">Episodic Memory Tiers &amp; Incident Recall</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Episodic Memory Tiers &amp; Incident Recall</h2>
 
           <!-- Section 1: Overview -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 font-mono text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-purple-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
-            <p class="text-slate-300 leading-relaxed">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
               Incidents often repeat. Without persistent episodic memory, every on-call agent starts from zero, burning hundreds of thousands of tokens re-diagnosing known patterns. In this exercise, pairs run Turn 1 (investigate from first principles and write post-mortem) versus Turn 2 (enable episodic recall, cite past incident <code>INC-4092</code>, and evaluate whether the previous fix held).
             </p>
           </div>
@@ -863,39 +876,39 @@
             <div class="text-[11px] text-slate-400 space-y-1">
               <div><strong>The 2-Turn Experiment in <code>config.yaml</code>:</strong></div>
               <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
-                <li><strong>Turn 1 (Memory OFF):</strong> Set <code>enable_memory: false</code>. Agent runs fresh and saves incident card to <code>memory/episodic_memory.md</code>.</li>
-                <li><strong>Turn 2 (Memory ON):</strong> Set <code>enable_memory: true</code>. Agent recalls past post-mortems via <code>search_incident_history</code>.</li>
+                <li><strong>Turn 1 (Recall OFF):</strong> Set <code>enable_memory_recall: false</code> (and <code>persist_verified_resolution: true</code>). Agent runs from scratch without historical recall, verifies root cause, and saves incident baseline to <code>memory/episodic_memory.md</code>.</li>
+                <li><strong>Turn 2 (Recall ON):</strong> Set <code>enable_memory_recall: true</code>. Agent immediately recalls the saved post-mortem via <code>search_incident_history</code> and accelerates resolution.</li>
               </ul>
             </div>
           </div>
 
           <!-- Section 3: What to Do -->
           <div class="space-y-3 font-mono text-xs">
-            <span class="text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
-            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-slate-900 dark:text-white font-bold uppercase tracking-wider block text-[11px]">🧪 Step-by-Step Pair Exercise:</span>
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">1. Set <code>enable_memory: false</code> in <code>config.yaml</code> and run <code>episodicRecurrence</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Set <code>enable_memory_recall: false</code> in <code>config.yaml</code> and run <code>episodicRecurrence</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">2. Open <code>memory/episodic_memory.md</code> to inspect the newly written post-mortem incident entry.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Open <code>memory/episodic_memory.md</code> to inspect the newly written post-mortem incident entry.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">3. Set <code>enable_memory: true</code> in <code>config.yaml</code> and re-run.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Set <code>enable_memory_recall: true</code> in <code>config.yaml</code> and re-run to observe accelerated diagnosis.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-300">4. Observe agent query <code>search_incident_history</code>, match <code>INC-4092</code>, compare symptoms, and assess why the prior fix failed.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Observe agent query <code>search_incident_history</code>, match <code>INC-4092</code>, compare symptoms, and assess why the prior fix failed.</span>
               </label>
             </div>
           </div>
 
           <!-- Section 4: What to Expect -->
-          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 font-mono text-xs">
-            <span class="text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
-            <ul class="list-disc pl-5 space-y-1 text-slate-300 text-[11px]">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
+            <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
+            <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Historical Citation:</strong> Agent directly matches <strong>INC-4092</strong> from <strong>14 March</strong>.</li>
               <li><strong>Symptom Comparison:</strong> Identical gRPC status 13 <code>INTERNAL</code> on product-catalog database queries.</li>
               <li><strong>Why Prior Fix Failed:</strong> Prior fix increased PostgreSQL server <code>max_connections=300</code>, but client-side connection pooling (<code>max_idle_conns</code>) remained unbounded.</li>
@@ -905,8 +918,8 @@
           </div>
 
           <!-- Module Footer Nav -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
-            <button onclick="showModule('m7')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-mono text-xs">
+            <button onclick="showModule('m7')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition shadow-sm">
               &larr; Previous (M7)
             </button>
             <a href="./scoreboard.html" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition flex items-center gap-1">
@@ -919,27 +932,27 @@
     </div>
 
     <!-- Cross-Cutting Facilitator Preparation Strip -->
-    <div class="bg-card-subtle border border-border-subtle rounded-2xl p-6 mb-10 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div class="bg-white dark:bg-card-subtle border border-slate-200/90 dark:border-border-subtle shadow-sm dark:shadow-xl rounded-2xl p-6 mb-10 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
         <div class="flex items-center gap-2">
-          <span class="text-accent font-bold">⚙️</span>
-          <h2 class="text-sm font-display font-bold text-white uppercase tracking-wider">Cross-Cutting Workshop Preparation Checklist</h2>
+          <span class="text-sky-600 dark:text-accent font-bold">⚙️</span>
+          <h2 class="text-sm font-display font-bold text-slate-900 dark:text-white uppercase tracking-wider">Cross-Cutting Workshop Preparation Checklist</h2>
         </div>
-        <span class="text-[10px] font-mono text-slate-400">Facilitator Pre-Flight</span>
+        <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400">Facilitator Pre-Flight</span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
-        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-          <span class="text-accent font-bold block text-[11px]">1. Sandbox Repo &amp; Data Pack</span>
-          <p class="text-slate-400 text-[11px]">Mock tools, golden eval datasets, dependency graph YAML, and 1 incident with planted ground truth tested on fresh clone.</p>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <span class="text-sky-700 dark:text-accent font-bold block text-[11px]">1. Sandbox Repo &amp; Data Pack</span>
+          <p class="text-slate-600 dark:text-slate-400 text-[11px]">Mock tools, golden eval datasets, dependency graph YAML, and 1 incident with planted ground truth tested on fresh clone.</p>
         </div>
-        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-          <span class="text-emerald-400 font-bold block text-[11px]">2. API Keys &amp; Rate Limits</span>
-          <p class="text-slate-400 text-[11px]">Pre-provisioned provider keys checked for 20 concurrent participants hitting models without HTTP 429 throttling.</p>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <span class="text-emerald-700 dark:text-emerald-400 font-bold block text-[11px]">2. API Keys &amp; Rate Limits</span>
+          <p class="text-slate-600 dark:text-slate-400 text-[11px]">Pre-provisioned provider keys checked for 20 concurrent participants hitting models without HTTP 429 throttling.</p>
         </div>
-        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-          <span class="text-purple-400 font-bold block text-[11px]">3. Pre-Recorded Fallbacks</span>
-          <p class="text-slate-400 text-[11px]">Pre-captured outputs and token counts for every single notebook exercise in case venue Wi-Fi or model APIs stutter.</p>
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <span class="text-purple-700 dark:text-purple-400 font-bold block text-[11px]">3. Pre-Recorded Fallbacks</span>
+          <p class="text-slate-600 dark:text-slate-400 text-[11px]">Pre-captured outputs and token counts for every single notebook exercise in case venue Wi-Fi or model APIs stutter.</p>
         </div>
       </div>
     </div>
@@ -979,9 +992,9 @@
         }
         if (btn) {
           if (m === id) {
-            btn.className = "w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-900/90 border-accent/80 text-white shadow-lg shadow-cyan-950/30";
+            btn.className = "w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-100 dark:bg-slate-800/90 border-slate-400 dark:border-slate-600 text-slate-900 dark:text-white shadow-sm";
           } else {
-            btn.className = "w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-card-subtle/50 border-slate-800 hover:border-slate-700 text-slate-300";
+            btn.className = "w-full text-left p-3 rounded-xl border transition flex items-start gap-3 bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300";
           }
         }
       });
@@ -1040,6 +1053,23 @@
     });
 
     // Initialize on load
+    
+    function updateThemeUI() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const icon = document.getElementById("themeIcon");
+      const label = document.getElementById("themeLabel");
+      if (icon) icon.innerText = isDark ? "🌙" : "☀️";
+      if (label) label.innerText = isDark ? "Dark" : "Light";
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      updateThemeUI();
+    }
+
+    window.addEventListener("DOMContentLoaded", updateThemeUI);
+
     window.addEventListener('DOMContentLoaded', () => {
       updateProgressCounter();
       const hash = window.location.hash.replace('#', '');

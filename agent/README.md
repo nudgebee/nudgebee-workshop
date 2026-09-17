@@ -8,6 +8,12 @@ Attendees interact entirely through declarative configuration files (`config.yam
 
 ## ⚡ 2-Minute Quickstart
 
+### 0. Bootstrap Team Credentials (Codespaces / Local)
+From the repository root, run the bootstrap script to configure your team namespace, cluster access, and LLM credentials:
+```bash
+../scripts/bootstrap-team.sh
+```
+
 ### 1. Verify Cluster Tools Health
 ```bash
 python3 mini_agent.py --test-tools
@@ -16,7 +22,7 @@ python3 mini_agent.py --test-tools
 
 ### 2. Run the Autonomous Investigation
 ```bash
-python3 mini_agent.py
+python3 mini_agent.py --scenario badDeploy1405 --model mock
 ```
 *Launches the multi-turn ReAct investigation loop. The agent reasons, invokes diagnostic tools, respects security confirmation gates, isolates root cause, and generates a run scorecard.*
 
@@ -67,7 +73,7 @@ Select any scenario in `config.yaml` (`scenario: "<name>"`) or override via CLI 
 | Scenario Key | Masterclass Module | Incident Archetype | Expected Root Cause & Evidence |
 | :--- | :--- | :--- | :--- |
 | **`badDeploy1405`** | **Module 6 & Session 2C**<br/>*(Add a Tool, Change the Answer)* | Checkout latency spike & 5xx cascading to Storefront | Correlate with `get_deploy_history`. Commit `a7f39b1` bumped `payment_client_timeout` from `500ms` to `5000ms`, exhausting worker threads. Roll back to Rev 2 via `ask_human_approval`. |
-| **`episodicRecurrence`** | **Module 8 & Session 2A**<br/>*(Episodic Memory On vs Off)* | Recurrent connection pool starvation on `astronomy-db` | Turn 1 (`enable_memory: false`): Fresh investigation. Turn 2 (`enable_memory: true`): Recalls `INC-4092` from 14 March via `search_incident_history`, comparing symptoms and prior fix. |
+| **`episodicRecurrence`** | **Module 8 & Session 2A**<br/>*(Episodic Memory On vs Off)* | Recurrent connection pool starvation on `astronomy-db` | Turn 1 (`enable_memory_recall: false`, `persist_verified_resolution: true`): Fresh investigation baseline without memory recall; saves verified post-mortem to `memory/`. Turn 2 (`enable_memory_recall: true`): Recalls `INC-4092` / Turn 1 incident via `search_incident_history`, comparing symptoms and prior fix. |
 | **`postgresFailure`** | **Module 2 & 3**<br/>*(Small vs Frontier & Tool Ceiling)* | Database pool exhaustion / unreachable PostgreSQL | Product-catalog throws gRPC status 13 `INTERNAL`. Saturated connection slots trigger rollout restart via safety gate. |
 | **`emailMemoryLeak`** | **Module 4**<br/>*(Context & Telemetry Needle)* | Kernel OOMKill Exit Code 137 on `email` service | Calculate 10-minute soak derivative `deriv(container_memory_working_set_bytes[5m]) > 0` to prove progressive heap leak vs normal spike. |
 | **`postgresSlow`** | **Module 4**<br/>*(Latency Without Errors)* | Artificial `pg_sleep` injected in database queries | Pods remain `Running 1/1` with zero 500 errors. Agent analyzes p99 query duration percentiles to isolate slow queries. |
@@ -85,7 +91,7 @@ Select any scenario in `config.yaml` (`scenario: "<name>"`) or override via CLI 
 | **2. Tool Deprivation** | `enabled_tools` | Comment out tools under `enabled_tools:` list | **Module 3 & 6**: Observe how the agent behaves when deprived of `get_deploy_history`, `query_pod_logs`, or `inspect_topology`. |
 | **3. Context Window** | `context_mode` | `"structured_summary"` (2k tokens)<br/>`"filtered_regex"` (8k tokens)<br/>`"raw_80k"` (80k uncurated dump) | **Module 4**: Test lost-in-the-middle needle retrieval and observe token cost multipliers. |
 | **4. Prompt Caching** | `enable_prompt_caching` | `true` / `false` | **Module 4 & 8**: Measure prompt cache hit rates and dollar savings on subsequent turns. |
-| **5. Episodic Memory** | `enable_memory` | `false` (Turn 1: Record)<br/>`true` (Turn 2: Recall) | **Module 8**: Turn 1 writes post-mortems to `memory/`; Turn 2 prompts agent to recall past incidents via `search_incident_history`. |
+| **5. Episodic Memory** | `enable_memory_recall`<br/>`persist_verified_resolution` | `enable_memory_recall: false` (Turn 1: Baseline)<br/>`enable_memory_recall: true` (Turn 2: Recall) | **Module 8**: Turn 1 runs without recall and records verified post-mortems to `memory/`; Turn 2 prompts agent to recall past incidents via `search_incident_history`. |
 | **6. Turn Budget** | `max_turns` | Integer (default: `10`) | Control investigation loop budget before forcing final root cause synthesis. |
 
 ### Levers in `prompts.yaml`
