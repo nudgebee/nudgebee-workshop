@@ -3,33 +3,28 @@
 # NudgeBee SRE & AIOps Workshop · Team Account & Kubeconfig Generator
 # ==============================================================================
 # Provisions isolated namespaces, RBAC ServiceAccounts, Prometheus proxy roles,
-# and standalone kubeconfig files for workshop teams (group-1 to group-N).
+# and standalone kubeconfig files for workshop teams from a teams definition file.
 #
 # Usage:
-#   ./scripts/generate-workshop-teams.sh [OPTIONS]
+#   ./scripts/generate-workshop-teams.sh --teams-file <FILE> [OPTIONS]
 #
 # Options:
-#   --teams-file <FILE>       Path to CSV/text file with: <team_id>,<namespace>,<api_key>
-#   --num-teams <N>           Number of teams to provision if no file given (default: 10)
-#   --prefix <NAME>           Namespace prefix (default: group) -> group-1..group-N
+#   --teams-file <FILE>       Path to file with: <team_id>,<namespace>,<api_key> (REQUIRED)
 #   --output-dir <DIR>        Output directory for kubeconfig files (default: ./workshop-credentials)
 #   --duration <DUR>          Token validity duration (default: 48h)
 #   --proxy-ns <NS>           Namespace where Prometheus service lives (default: nudgebee-agent)
 #   --prom-svc <SVC>          Prometheus service name (default: nudgebee-prometheus-kube-p-prometheus)
 #   --pass <PASS>             Room passphrase for AES-256 encrypted bundles
-#   --api-key <KEY>           Fallback LLM Gateway API key to bundle into team payloads
-#   --api-keys-file <FILE>    Path to file containing 1 API key per line for each team
+#   --api-key <KEY>           Fallback LLM Gateway API key if not specified per-team
 #   --storage-url <URL>       Public Cloud Storage base URL (e.g. https://storage.googleapis.com/<YOUR_BUCKET>)
 #   --context <NAME>          Kubernetes context to target (default: active context)
 #   --server-url <URL>        Override cluster server URL embedded in generated kubeconfigs
-#   --clean                   Teardown all created workshop team namespaces & RBAC
+#   --clean                   Teardown workshop team namespaces & RBAC defined in teams file
 #   -h, --help                Show this help message
 # ==============================================================================
 
 set -euo pipefail
 
-NUM_TEAMS=10
-PREFIX="group"
 OUTPUT_DIR="./workshop-credentials"
 DURATION="48h"
 PROXY_NS="nudgebee-agent"
@@ -37,7 +32,6 @@ PROM_SVC="nudgebee-prometheus-kube-p-prometheus"
 CLEAN_MODE=false
 PASSPHRASE=""
 API_KEY=""
-API_KEYS_FILE=""
 TEAMS_FILE=""
 STORAGE_BASE_URL=""
 TARGET_CONTEXT=""
@@ -47,14 +41,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --teams-file)
       TEAMS_FILE="$2"
-      shift 2
-      ;;
-    --num-teams)
-      NUM_TEAMS="$2"
-      shift 2
-      ;;
-    --prefix)
-      PREFIX="$2"
       shift 2
       ;;
     --output-dir)
@@ -81,10 +67,6 @@ while [[ $# -gt 0 ]]; do
       API_KEY="$2"
       shift 2
       ;;
-    --api-keys-file)
-      API_KEYS_FILE="$2"
-      shift 2
-      ;;
     --storage-url)
       STORAGE_BASE_URL="${2%/}"
       shift 2
@@ -102,7 +84,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      sed -n '2,27p' "$0" | cut -c 3-
+      sed -n '2,24p' "$0" | cut -c 3-
       exit 0
       ;;
     *)
@@ -114,6 +96,56 @@ done
 
 # ------------------------------------------------------------------------------
 # Pre-Flight Checks & Context Resolution
+# ------------------------------------------------------------------------------
+if [[ -z "${TEAMS_FILE}" ]]; then
+  echo "❌ Error: Missing required option --teams-file <FILE>." >&2
+  echo "Usage: $0 --teams-file <FILE> [OPTIONS]" >&2
+  exit 1
+fi
+
+if [[ ! -f "${TEAMS_FILE}" ]]; then
+  echo "❌ Error: Teams file '${TEAMS_FILE}' not found." >&2
+  exit 1
+fi
+
+# ------------------------------------------------------------------------------
+# Resolve Teams, Namespaces, and API Keys
+# ------------------------------------------------------------------------------
+TEAM_IDS=()
+NAMESPACES=()
+KEYS=()
+
+echo "▶ Loading teams from file: ${TEAMS_FILE}"
+while IFS= read -r line || [[ -n "$line" ]]; do
+  line=$(echo "$line" | sed 's/#.*//' | xargs)
+  [[ -z "$line" ]] && continue
+  if [[ "$line" == *","* ]]; then
+    T_ID=$(echo "$line" | awk -F',' '{print $1}' | xargs)
+    T_NS=$(echo "$line" | awk -F',' '{print $2}' | xargs)
+    T_KEY=$(echo "$line" | awk -F',' '{print $3}' | xargs)
+  else
+    T_ID=$(echo "$line" | awk '{print $1}')
+    T_NS=$(echo "$line" | awk '{print $2}')
+    T_KEY=$(echo "$line" | awk '{print $3}')
+  fi
+  [[ -z "$T_NS" ]] && T_NS="${T_ID}"
+  [[ -z "$T_KEY" ]] && T_KEY="${API_KEY}"
+
+  TEAM_IDS+=("$T_ID")
+  NAMESPACES+=("$T_NS")
+  KEYS+=("$T_KEY")
+done < "${TEAMS_FILE}"
+
+if [[ ${#TEAM_IDS[@]} -eq 0 ]]; then
+  echo "❌ Error: No valid team entries found in '${TEAMS_FILE}'." >&2
+  exit 1
+fi
+
+NUM_TEAMS=${#TEAM_IDS[@]}
+echo "  └── Loaded ${NUM_TEAMS} team(s) from ${TEAMS_FILE}"
+
+# ------------------------------------------------------------------------------
+# Kubernetes Context & Connectivity
 # ------------------------------------------------------------------------------
 if ! command -v kubectl >/dev/null 2>&1; then
   echo "❌ Error: 'kubectl' binary not found in PATH." >&2
@@ -172,47 +204,6 @@ if [[ "$SERVER_URL" =~ https?://(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|1
     echo "Aborted by user."
     exit 1
   fi
-fi
-
-# ------------------------------------------------------------------------------
-# Resolve Teams, Namespaces, and API Keys
-# ------------------------------------------------------------------------------
-TEAM_IDS=()
-NAMESPACES=()
-KEYS=()
-
-if [[ -n "${TEAMS_FILE}" && -f "${TEAMS_FILE}" ]]; then
-  echo "▶ Loading teams from file: ${TEAMS_FILE}"
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line=$(echo "$line" | sed 's/#.*//' | xargs)
-    [[ -z "$line" ]] && continue
-    if [[ "$line" == *","* ]]; then
-      T_ID=$(echo "$line" | awk -F',' '{print $1}' | xargs)
-      T_NS=$(echo "$line" | awk -F',' '{print $2}' | xargs)
-      T_KEY=$(echo "$line" | awk -F',' '{print $3}' | xargs)
-    else
-      T_ID=$(echo "$line" | awk '{print $1}')
-      T_NS=$(echo "$line" | awk '{print $2}')
-      T_KEY=$(echo "$line" | awk '{print $3}')
-    fi
-    [[ -z "$T_NS" ]] && T_NS="${T_ID}"
-    [[ -z "$T_KEY" ]] && T_KEY="${API_KEY}"
-
-    TEAM_IDS+=("$T_ID")
-    NAMESPACES+=("$T_NS")
-    KEYS+=("$T_KEY")
-  done < "${TEAMS_FILE}"
-  NUM_TEAMS=${#TEAM_IDS[@]}
-else
-  for i in $(seq 1 "$NUM_TEAMS"); do
-    TEAM_IDS+=("team-${i}")
-    NAMESPACES+=("${PREFIX}-${i}")
-    ASSIGNED_KEY="${API_KEY}"
-    if [[ -n "${API_KEYS_FILE}" && -f "${API_KEYS_FILE}" ]]; then
-      ASSIGNED_KEY=$(sed -n "${i}p" "${API_KEYS_FILE}" || echo "")
-    fi
-    KEYS+=("${ASSIGNED_KEY}")
-  done
 fi
 
 # ------------------------------------------------------------------------------
