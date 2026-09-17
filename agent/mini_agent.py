@@ -535,7 +535,7 @@ def run_investigation():
     result_badge = f"✅ SUCCESS ({eval_details})" if verified else f"⚠️ UNVERIFIED / PARTIAL ({eval_details})"
 
     print("="*75)
-    print("📊 RUN SCORECARD (Logged to file and ready for room scoreboard)")
+    print("📊 RUN SCORECARD (Logged to file)")
     print("="*75)
     print(f"├── Assigned Namespace    : {ns}")
     print(f"├── Model Architecture    : {model}")
@@ -551,7 +551,7 @@ def run_investigation():
     print("="*75)
     print("👉 View full readable log: python3 mini_agent.py --logs")
     print("👉 Inspect prompt & tools: python3 mini_agent.py --prompt")
-    print("👉 Enter metrics into:    https://nudgebee-workshop.pollux.in/scoreboard.html\n")
+    print("👉 Inspect JSON trace:    python3 mini_agent.py --json\n")
 
 
 # ==============================================================================
