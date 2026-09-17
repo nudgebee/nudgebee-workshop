@@ -20,6 +20,8 @@
 #   --api-key <KEY>           Fallback LLM Gateway API key to bundle into team payloads
 #   --api-keys-file <FILE>    Path to file containing 1 API key per line for each team
 #   --storage-url <URL>       Public Cloud Storage base URL (e.g. https://storage.googleapis.com/<YOUR_BUCKET>)
+#   --context <NAME>          Kubernetes context to target (default: active context)
+#   --server-url <URL>        Override cluster server URL embedded in generated kubeconfigs
 #   --clean                   Teardown all created workshop team namespaces & RBAC
 #   -h, --help                Show this help message
 # ==============================================================================
@@ -38,6 +40,8 @@ API_KEY=""
 API_KEYS_FILE=""
 TEAMS_FILE=""
 STORAGE_BASE_URL=""
+TARGET_CONTEXT=""
+OVERRIDE_SERVER_URL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -85,12 +89,20 @@ while [[ $# -gt 0 ]]; do
       STORAGE_BASE_URL="${2%/}"
       shift 2
       ;;
+    --context)
+      TARGET_CONTEXT="$2"
+      shift 2
+      ;;
+    --server-url)
+      OVERRIDE_SERVER_URL="$2"
+      shift 2
+      ;;
     --clean)
       CLEAN_MODE=true
       shift
       ;;
     -h|--help)
-      sed -n '2,25p' "$0" | cut -c 3-
+      sed -n '2,27p' "$0" | cut -c 3-
       exit 0
       ;;
     *)
@@ -101,25 +113,66 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ------------------------------------------------------------------------------
-# Pre-Flight Checks
+# Pre-Flight Checks & Context Resolution
 # ------------------------------------------------------------------------------
 if ! command -v kubectl >/dev/null 2>&1; then
   echo "❌ Error: 'kubectl' binary not found in PATH." >&2
   exit 1
 fi
 
+if [[ -n "${TARGET_CONTEXT}" ]]; then
+  if ! kubectl config get-contexts "${TARGET_CONTEXT}" >/dev/null 2>&1; then
+    echo "❌ Error: Context '${TARGET_CONTEXT}' not found in kubeconfig." >&2
+    exit 1
+  fi
+  ORIGINAL_CONTEXT=$(kubectl config current-context)
+  trap 'kubectl config use-context "${ORIGINAL_CONTEXT}" >/dev/null 2>&1 || true' EXIT
+  echo "▶ Switching active context to: ${TARGET_CONTEXT}"
+  kubectl config use-context "${TARGET_CONTEXT}" >/dev/null
+  CURRENT_CONTEXT="${TARGET_CONTEXT}"
+else
+  CURRENT_CONTEXT=$(kubectl config current-context)
+fi
+
 if ! kubectl cluster-info >/dev/null 2>&1; then
-  echo "❌ Error: Unable to communicate with Kubernetes cluster. Check active kubeconfig." >&2
+  echo "❌ Error: Unable to communicate with Kubernetes cluster in context '${CURRENT_CONTEXT}'." >&2
   exit 1
 fi
 
-CURRENT_CONTEXT=$(kubectl config current-context)
 CLUSTER_NAME=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"${CURRENT_CONTEXT}\")].context.cluster}")
 SERVER_URL=$(kubectl config view -o jsonpath="{.clusters[?(@.name == \"${CLUSTER_NAME}\")].cluster.server}")
-CA_DATA=$(kubectl config view --raw -o jsonpath="{.clusters[?(@.name == \"${CLUSTER_NAME}\")].cluster.certificate-authority-data}")
+if [[ -n "${OVERRIDE_SERVER_URL}" ]]; then
+  SERVER_URL="${OVERRIDE_SERVER_URL}"
+fi
 
-# If CA_DATA is empty, check for insecure-skip-tls-verify
+CA_DATA=$(kubectl config view --raw -o jsonpath="{.clusters[?(@.name == \"${CLUSTER_NAME}\")].cluster.certificate-authority-data}")
 INSECURE_SKIP=$(kubectl config view -o jsonpath="{.clusters[?(@.name == \"${CLUSTER_NAME}\")].cluster.insecure-skip-tls-verify}" || echo "")
+
+# Safety Warning for RFC 1918 Private IP Endpoints
+if [[ "$SERVER_URL" =~ https?://(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|127\.0\.0\.1|localhost) ]]; then
+  echo ""
+  echo "=========================================================================="
+  echo "⚠️  CRITICAL WARNING: TARGET CLUSTER ENDPOINT IS A PRIVATE / INTERNAL IP!"
+  echo "=========================================================================="
+  echo "Active Context : ${CURRENT_CONTEXT}"
+  echo "Server URL     : ${SERVER_URL}"
+  echo ""
+  echo "Attendees in GitHub Codespaces will NOT be able to connect to this private IP"
+  echo "and will experience connection timeouts."
+  echo ""
+  echo "Recommended Actions:"
+  echo "  1. Target the public workshop cluster context:"
+  echo "     --context gke_nudgebee-hyd-workshop_us-central1-a_workshop-1"
+  echo "  2. Or override with a public endpoint URL:"
+  echo "     --server-url https://<PUBLIC_IP>"
+  echo "=========================================================================="
+  echo ""
+  read -r -p "? Are you sure you want to generate bundles with this private IP? (y/N): " CONFIRM_PRIVATE
+  if [[ ! "$CONFIRM_PRIVATE" =~ ^[Yy]$ ]]; then
+    echo "Aborted by user."
+    exit 1
+  fi
+fi
 
 # ------------------------------------------------------------------------------
 # Resolve Teams, Namespaces, and API Keys

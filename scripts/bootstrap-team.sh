@@ -239,14 +239,75 @@ fi
 # ------------------------------------------------------------------------------
 # 5. Verify Cluster Connectivity
 # ------------------------------------------------------------------------------
-if command -v kubectl >/dev/null 2>&1 && [[ -f "${DEST_KUBECONFIG}" ]]; then
+if [[ -f "${DEST_KUBECONFIG}" ]]; then
+  SERVER_ENDPOINT=$(python3 -c "
+import sys, re
+try:
+    with open(sys.argv[1], 'r') as f:
+        for line in f:
+            m = re.search(r'server:\s*[\"\x27]?(https?://[^\s\"\x27]+)', line)
+            if m:
+                print(m.group(1).rstrip('/'))
+                break
+except Exception:
+    pass
+" "${DEST_KUBECONFIG}")
+
+  # 1. Instant check for RFC 1918 Private / Internal IPs
+  if [[ "$SERVER_ENDPOINT" =~ https?://(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|127\.0\.0\.1|localhost) ]]; then
+    echo ""
+    echo "=========================================================================="
+    echo "❌ CRITICAL CONFIGURATION ERROR: PRIVATE CLUSTER ENDPOINT"
+    echo "=========================================================================="
+    echo "Target Cluster Endpoint: ${SERVER_ENDPOINT}"
+    echo ""
+    echo "⚠️  DIAGNOSIS: The cluster server endpoint is an internal/private IP address."
+    echo "   GitHub Codespaces cannot route traffic to internal private networks."
+    echo "   The workshop bundle must be re-generated using the cluster's public endpoint."
+    echo "=========================================================================="
+    exit 1
+  fi
+
   echo ""
-  echo "▶ Testing live cluster connectivity in namespace '${TARGET_NS}'..."
-  if KUBECONFIG="${DEST_KUBECONFIG}" kubectl get pods -n "${TARGET_NS}" --request-timeout='5s' >/dev/null 2>&1; then
-    echo "✅ Cluster connectivity verified! Active pods:"
-    KUBECONFIG="${DEST_KUBECONFIG}" kubectl get pods -n "${TARGET_NS}" --no-headers | head -n 6 || true
-  else
-    echo "⚠️ Note: Could not query pods in '${TARGET_NS}'. Verify cluster availability."
+  echo "▶ Testing live cluster connectivity (namespace: '${TARGET_NS}')..."
+
+  # 2. Fast TCP / TLS probe (times out in 4s if port 443 is firewalled or unreachable)
+  if command -v curl >/dev/null 2>&1 && [[ -n "${SERVER_ENDPOINT}" ]]; then
+    if ! curl --connect-timeout 4 -k -sSL "${SERVER_ENDPOINT}/version" -o /dev/null 2>/dev/null; then
+      echo ""
+      echo "=========================================================================="
+      echo "❌ CLUSTER CONNECTIVITY ERROR: ENDPOINT UNREACHABLE"
+      echo "=========================================================================="
+      echo "Target Cluster Endpoint: ${SERVER_ENDPOINT}"
+      echo ""
+      echo "⚠️  DIAGNOSIS: TCP connection to ${SERVER_ENDPOINT}:443 timed out or was refused."
+      echo "   Possible causes:"
+      echo "     1. GKE Authorized Networks does not allow access from this machine/Codespaces."
+      echo "     2. Outbound firewall or proxy blocks port 443."
+      echo "     3. The Kubernetes cluster control plane is offline."
+      echo "=========================================================================="
+      exit 1
+    fi
+  fi
+
+  # 3. Authenticated Kubernetes API query
+  if command -v kubectl >/dev/null 2>&1; then
+    KUBE_ERR_FILE="${TMP_DIR}/kube_err.log"
+    if KUBECONFIG="${DEST_KUBECONFIG}" kubectl get pods -n "${TARGET_NS}" --request-timeout='6s' > "${TMP_DIR}/pods.txt" 2> "${KUBE_ERR_FILE}"; then
+      echo "✅ Cluster connectivity verified! Active pods in '${TARGET_NS}':"
+      head -n 6 "${TMP_DIR}/pods.txt" || true
+    else
+      KUBE_ERR=$(cat "${KUBE_ERR_FILE}" 2>/dev/null || echo "Unknown error")
+      echo ""
+      echo "=========================================================================="
+      echo "❌ KUBERNETES AUTHORIZATION / NAMESPACE ERROR"
+      echo "=========================================================================="
+      echo "Target Cluster Endpoint: ${SERVER_ENDPOINT}"
+      echo "Error Details:"
+      echo "  ${KUBE_ERR}"
+      echo "=========================================================================="
+      exit 1
+    fi
   fi
 fi
 
