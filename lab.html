@@ -72,7 +72,7 @@
           </a>
           <span class="text-slate-400 dark:text-slate-600">/</span>
           <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            Session 2 Masterclass · 90 Minutes · 10 Teams
+            Session 2 Masterclass · 90 Minutes · Individual Workspaces
           </span>
         </div>
         <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Building AI Agents for SRE &amp; AIOps</h1>
@@ -112,12 +112,12 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono pt-2">
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
-          <span class="text-slate-900 dark:text-white font-semibold block mb-1">10 Participant Teams</span>
+          <span class="text-slate-900 dark:text-white font-semibold block mb-1">One Namespace Per Participant</span>
           <span class="text-slate-600 dark:text-slate-400">Hands-on exercises keep the room moving and foster deep engineering debate.</span>
         </div>
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
-          <span class="text-slate-900 dark:text-white font-semibold block mb-1">Live Room Benchmarks</span>
-          <span class="text-slate-600 dark:text-slate-400">Accumulates token burn, latency, and accuracy across modules to anchor the closing discussion.</span>
+          <span class="text-slate-900 dark:text-white font-semibold block mb-1">Per-Run Scorecard</span>
+          <span class="text-slate-600 dark:text-slate-400">Every run prints token burn, latency, cost, and a ground-truth verdict to anchor the closing discussion.</span>
         </div>
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
           <span class="text-slate-900 dark:text-white font-semibold block mb-1">90 Min Total · 8 Modules + Setup</span>
@@ -148,7 +148,7 @@
                 <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M0 · 10 Min</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium shadow-2xs">SETUP</span>
               </div>
-              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Environment &amp; Team Bootstrap</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Environment &amp; Workspace Bootstrap</div>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">./scripts/bootstrap-team.sh &amp; cluster access</div>
             </div>
           </button>
@@ -281,16 +281,16 @@
               </span>
               <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 font-semibold">Environment Bootstrap</span>
             </div>
-            <span class="text-xs font-mono text-slate-400 italic">"Before diagnosing incidents, establish your isolated team cluster seat."</span>
+            <span class="text-xs font-mono text-slate-400 italic">"Before diagnosing incidents, establish your own isolated cluster seat."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Environment Setup &amp; Team Credential Bootstrap</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Environment Setup &amp; Credential Bootstrap</h2>
 
           <!-- Section 1: Overview -->
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-sky-700 dark:text-accent font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
             <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-              Every participant team operates in an isolated Kubernetes namespace (<code>group-&lt;team-id&gt;</code>) with dedicated RBAC permissions, service accounts, and LLM gateway access tokens. Bootstrapping downloads and decrypts your team bundle, verifies endpoint connectivity, and configures your local environment in seconds.
+              Every participant operates in their own isolated Kubernetes namespace (<code>group-&lt;your-email-name&gt;</code>) with dedicated RBAC permissions, service accounts, and LLM gateway access tokens. Bootstrapping downloads and decrypts your bundle, verifies endpoint connectivity, and configures your local environment in seconds.
             </p>
           </div>
 
@@ -320,14 +320,14 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
-              <button onclick="copyCmd('./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url &quot;&lt;STORAGE_URL&gt;&quot; --pass &quot;&lt;PASSPHRASE&gt;&quot;', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('./scripts/bootstrap-team.sh --team &lt;your-email&gt; --url &quot;&lt;STORAGE_URL&gt;&quot; --pass &quot;&lt;PASSPHRASE&gt;&quot;', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
-              <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>
+              <code>./scripts/bootstrap-team.sh --team &lt;your-email&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>
             </div>
             <div class="text-[11px] text-slate-400 space-y-1.5">
-              <div><strong>Example:</strong> For Team 3, run: <code class="text-slate-200">./scripts/bootstrap-team.sh --team 3 --url "&lt;STORAGE_URL&gt;" --pass "..."</code></div>
-              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh --team 3</code> and follow the prompts.</div>
+              <div><strong>Example:</strong> <code class="text-slate-200">./scripts/bootstrap-team.sh --team you@example.com --url "&lt;STORAGE_URL&gt;" --pass "..."</code> &mdash; the script takes the part before the <code>@</code> and turns dots into dashes, so this lands in <code>group-you-example</code>.</div>
+              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh</code> and follow the prompts.</div>
               <div><strong>Bundle Storage URL:</strong> Announced on-screen / provided by workshop facilitator.</div>
               <div><strong>Encryption Key:</strong> Room decryption passphrase announced on-screen during kickoff.</div>
             </div>
@@ -343,19 +343,19 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Note your assigned Team ID (or email), Storage URL, and room decryption passphrase from the facilitator screen.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Note the Storage URL and room decryption passphrase from the facilitator screen. Your identifier is your own email address.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute <code>./scripts/bootstrap-team.sh --team &lt;your-email&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Confirm the script downloads <code>&lt;team-id&gt;.enc</code>, decrypts your team kubeconfig, and sets your namespace in <code>agent/config.yaml</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Confirm the script downloads your encrypted bundle, decrypts your kubeconfig, and sets your namespace in <code>agent/config.yaml</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">5. Confirm the preflight cluster connectivity check succeeds and prints <code>🎉 TEAM &lt;ID&gt; SETUP COMPLETE!</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">5. Confirm the preflight cluster connectivity check succeeds and prints the <code>SETUP COMPLETE</code> banner.</span>
               </label>
             </div>
           </div>
@@ -365,9 +365,9 @@
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Kubeconfig Installed:</strong> Scoped credentials decrypted to <code>~/.kube/config</code> (or <code>$KUBECONFIG</code>).</li>
-              <li><strong>Agent Config Bound:</strong> <code>agent/config.yaml</code> updated with <code>namespace: group-&lt;team-id&gt;</code>.</li>
+              <li><strong>Agent Config Bound:</strong> <code>agent/config.yaml</code> updated with <code>namespace: group-&lt;your-email-name&gt;</code>.</li>
               <li><strong>LLM Key Active:</strong> API token configured in shell environment and profile for agent execution.</li>
-              <li><strong>Cluster Verified:</strong> Live query verifies your microservices in namespace <code>group-&lt;team-id&gt;</code>.</li>
+              <li><strong>Cluster Verified:</strong> Live query verifies your microservices in namespace <code>group-&lt;your-email-name&gt;</code>.</li>
             </ul>
           </div>
 
@@ -548,7 +548,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Note the token cost delta (3x cheaper rate at $0.0001 vs $0.0003/1k tokens) and submit metrics to Room Benchmarks.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Note the token cost delta (3x cheaper rate at $0.0001 vs $0.0003/1k tokens) from each run's scorecard and compare the two.</span>
               </label>
             </div>
           </div>
@@ -732,7 +732,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Check prompt cache savings (<code>cached_tokens_saved</code>) and submit numbers to Room Benchmarks.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Check prompt cache savings (<code>cached_tokens_saved</code>) on the run scorecard and compare against the uncached run.</span>
               </label>
             </div>
           </div>
