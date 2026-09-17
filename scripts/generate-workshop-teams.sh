@@ -15,6 +15,10 @@
 #   --duration <DUR>          Token validity duration (default: 48h)
 #   --proxy-ns <NS>           Namespace where Prometheus service lives (default: nudgebee-agent)
 #   --prom-svc <SVC>          Prometheus service name (default: nudgebee-prometheus-kube-p-prometheus)
+#   --pass <PASS>             Room passphrase for AES-256 encrypted bundles (team-N.enc)
+#   --api-key <KEY>           LLM Gateway / OpenAI API key to bundle into team payloads
+#   --api-keys-file <FILE>    Path to file containing 1 API key per line for each team
+#   --storage-url <URL>       Public Cloud Storage base URL for team downloads
 #   --clean                   Teardown all created workshop team namespaces & RBAC
 #   -h, --help                Show this help message
 # ==============================================================================
@@ -28,6 +32,10 @@ DURATION="48h"
 PROXY_NS="nudgebee-agent"
 PROM_SVC="nudgebee-prometheus-kube-p-prometheus"
 CLEAN_MODE=false
+PASSPHRASE=""
+API_KEY=""
+API_KEYS_FILE=""
+STORAGE_BASE_URL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -53,6 +61,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prom-svc)
       PROM_SVC="$2"
+      shift 2
+      ;;
+    --pass)
+      PASSPHRASE="$2"
+      shift 2
+      ;;
+    --api-key)
+      API_KEY="$2"
+      shift 2
+      ;;
+    --api-keys-file)
+      API_KEYS_FILE="$2"
+      shift 2
+      ;;
+    --storage-url)
+      STORAGE_BASE_URL="${2%/}"
       shift 2
       ;;
     --clean)
@@ -296,7 +320,46 @@ EOF
 
   chmod 600 "${KUBECONFIG_OUT}"
   echo "  ✅ Kubeconfig generated: ${KUBECONFIG_OUT}"
-  echo "Team: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT}" >> "${SUMMARY_FILE}"
+
+  # 8. Resolve API Key for this Team
+  ASSIGNED_KEY="${API_KEY}"
+  if [[ -n "${API_KEYS_FILE}" && -f "${API_KEYS_FILE}" ]]; then
+    ASSIGNED_KEY=$(sed -n "${i}p" "${API_KEYS_FILE}" || echo "")
+  fi
+
+  # 9. Optionally Generate AES-256 Encrypted Bundle
+  if [[ -n "${PASSPHRASE}" ]]; then
+    BUNDLE_OUT="${OUTPUT_DIR}/team-${i}.enc"
+    KUBECONFIG_CONTENT=$(cat "${KUBECONFIG_OUT}")
+
+    python3 -c "
+import json, sys
+data = {
+    'team': sys.argv[1],
+    'namespace': sys.argv[2],
+    'api_key': sys.argv[3],
+    'kubeconfig': sys.argv[4]
+}
+with open(sys.argv[5], 'w') as f:
+    json.dump(data, f)
+" "${TEAM_NS}" "${TEAM_NS}" "${ASSIGNED_KEY}" "${KUBECONFIG_CONTENT}" "${OUTPUT_DIR}/.tmp_team_${i}.json"
+
+    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
+      -in "${OUTPUT_DIR}/.tmp_team_${i}.json" \
+      -out "${BUNDLE_OUT}" \
+      -pass pass:"${PASSPHRASE}"
+    rm -f "${OUTPUT_DIR}/.tmp_team_${i}.json"
+
+    chmod 644 "${BUNDLE_OUT}"
+    echo "  🔒 Encrypted bundle created: ${BUNDLE_OUT}"
+    echo "Team: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT} | Encrypted Bundle: ${BUNDLE_OUT}" >> "${SUMMARY_FILE}"
+    if [[ -n "${STORAGE_BASE_URL}" ]]; then
+      echo "       Download: ${STORAGE_BASE_URL}/team-${i}.enc" >> "${SUMMARY_FILE}"
+      echo "       Command : ./scripts/bootstrap-team.sh --team ${i} --pass \"${PASSPHRASE}\" --url \"${STORAGE_BASE_URL}\"" >> "${SUMMARY_FILE}"
+    fi
+  else
+    echo "Team: ${TEAM_NS} | Kubeconfig: ${KUBECONFIG_OUT}" >> "${SUMMARY_FILE}"
+  fi
 done
 
 echo ""
@@ -304,6 +367,12 @@ echo "==========================================================================
 echo "🎉 ALL ${NUM_TEAMS} WORKSHOP TEAMS PROVISIONED SUCCESSFULLY!"
 echo "=========================================================================="
 echo "Credential files saved to: ${OUTPUT_DIR}/"
+if [[ -n "${PASSPHRASE}" ]]; then
+  echo ""
+  echo "🔒 Encrypted bundles ready for Cloud Storage distribution:"
+  echo "   - Upload all *.enc files from '${OUTPUT_DIR}/' to your cloud bucket."
+  echo "   - Attendees run: ./scripts/bootstrap-team.sh --team <N> --pass \"${PASSPHRASE}\""
+fi
 echo ""
 echo "Quick Test Command:"
 echo "  KUBECONFIG=${OUTPUT_DIR}/kubeconfig-${PREFIX}-1.yaml kubectl get pods"
