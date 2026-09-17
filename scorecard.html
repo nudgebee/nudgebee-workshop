@@ -231,11 +231,11 @@
             <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
               <div class="bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/30 p-2.5 rounded">
                 <span class="text-rose-700 dark:text-rose-400 font-bold block mb-1">✕ DON'T BUILD</span>
-                <span class="text-slate-600 dark:text-slate-400">Telemetry connectors, multi-tenant RBAC, LLM eval harness, model pinning.</span>
+                <span id="dontBuildText" class="text-slate-600 dark:text-slate-400 leading-snug block">Telemetry connectors, multi-tenant RBAC, LLM eval harness, model pinning.</span>
               </div>
               <div class="bg-emerald-50 border border-emerald-200 dark:bg-accent-emerald/10 dark:border-accent-emerald/30 p-2.5 rounded">
                 <span class="text-emerald-700 dark:text-accent-emerald font-bold block mb-1">✓ DO BUILD</span>
-                <span class="text-slate-700 dark:text-slate-300">Custom runbooks, CMDB taxonomy, escalation policies, approval gate rules.</span>
+                <span id="doBuildText" class="text-slate-700 dark:text-slate-300 leading-snug block">Custom runbooks, CMDB taxonomy, escalation policies, approval gate rules.</span>
               </div>
             </div>
           </div>
@@ -378,6 +378,8 @@
       const subtitle = document.getElementById('verdictSubtitle');
       const decisive = document.getElementById('decisiveAxes');
       const flip = document.getElementById('flipAxis');
+      const dontBuild = document.getElementById('dontBuildText');
+      const doBuild = document.getElementById('doBuildText');
 
       // Decision engine logic
       if ((a3 >= 4 && a4 >= 4) || (a5 <= 2 && a3 >= 3 && a4 >= 3)) {
@@ -393,6 +395,8 @@
           decisive.textContent = 'In-House AI Capacity (high) & 9-Month Tolerance (high runway).';
           flip.textContent = 'Shortening your timeline to this quarter (Axis 4 → 1) would flip you to The Hybrid Seam.';
         }
+        if (dontBuild) dontBuild.textContent = 'Foundational LLM model weights from scratch, commodity vector databases, off-the-shelf basic log stores.';
+        if (doBuild) doBuild.textContent = 'Proprietary agent orchestration runtime, custom telemetry connectors, domain-specific eval gates, internal air-gap security controls.';
       } else if (a3 <= 2 && a4 <= 2) {
         // Pure Buy
         badge.className = 'p-4 rounded-xl border text-center transition-all duration-300 bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-500/50 dark:text-blue-300';
@@ -400,6 +404,8 @@
         subtitle.textContent = 'Low in-house AI bandwidth and urgent production timeline make building in-house an extreme risk.';
         decisive.textContent = 'In-House AI Capacity (low) & 9-Month Tolerance (low).';
         flip.textContent = 'Increasing in-house AI engineering headcount would flip you to Hybrid.';
+        if (dontBuild) dontBuild.textContent = 'Agent runtime engine, telemetry connectors, multi-tenant RBAC, LLM eval harness, complex model routing.';
+        if (doBuild) doBuild.textContent = 'Service catalog mapping, basic webhook incident triggers, company-specific escalation routing, alert channel policies.';
       } else {
         // Hybrid Seam
         badge.className = 'p-4 rounded-xl border text-center transition-all duration-300 bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/30 dark:border-accent-emerald/50 dark:text-accent-emerald';
@@ -407,6 +413,8 @@
         subtitle.textContent = 'Buy the multi-tenant harness, OTel connectors and eval gate. Build your runbook logic & topology seam.';
         decisive.textContent = 'Runbook Differentiation & AI Platform Opportunity Cost.';
         flip.textContent = 'A zero-tolerance deadline (Axis 4 → 1) would flip you to immediate Buy.';
+        if (dontBuild) dontBuild.textContent = 'Telemetry connectors, multi-tenant RBAC, LLM eval harness, model pinning.';
+        if (doBuild) doBuild.textContent = 'Custom runbooks, CMDB taxonomy, escalation policies, approval gate rules.';
       }
     }
 
