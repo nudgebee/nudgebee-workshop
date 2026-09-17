@@ -67,17 +67,20 @@
         <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Interactive Systems Engineering Lab: 9 Modules (M0–M8) · 1 Running Scenario · 1 Shared Scoreboard.</p>
       </div>
 
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2">
         <!-- 1-Click Theme Toggle -->
         <button onclick="toggleTheme()" id="themeToggleBtn" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm" title="Toggle Light / Dark Theme">
           <span id="themeIcon">☀️</span>
           <span id="themeLabel">Light</span>
         </button>
-        <a href="./scoreboard.html" target="_blank" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition flex items-center gap-2 shadow-sm">
-          <span>📊</span> Room Scoreboard <span>↗</span>
+        <a href="https://codespaces.new/nudgebee/nudgebee-workshop" target="_blank" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm" title="Launch workshop devcontainer in GitHub Codespaces">
+          <span>⚡</span> Codespaces <span>↗</span>
         </a>
-        <a href="https://app.nudgebee.com/" target="_blank" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-slate-950 font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
-          <span>⚡</span> Console <span>↗</span>
+        <a href="https://github.com/nudgebee/nudgebee-workshop" target="_blank" class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition flex items-center gap-1.5 shadow-sm" title="GitHub Repository">
+          <span>🐙</span> GitHub <span>↗</span>
+        </a>
+        <a href="./scoreboard.html" target="_blank" class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <span>📊</span> Scoreboard <span>↗</span>
         </a>
       </div>
     </header>
@@ -282,6 +285,31 @@
             </p>
           </div>
 
+          <!-- Section 1.5: Launch Workspace -->
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-3 font-mono text-xs shadow-md">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-emerald-400 font-bold text-sm">🚀 Launch Your Workshop Workspace</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 font-semibold">1-CLICK CLOUD DEV</span>
+                </div>
+                <p class="text-slate-400 text-[11px] mt-1">Spin up a zero-install cloud workspace with Python 3, kubectl, and diagnostic tools pre-installed.</p>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <a href="https://codespaces.new/nudgebee/nudgebee-workshop" target="_blank" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+                  <span>⚡</span> Open in GitHub Codespaces <span>↗</span>
+                </a>
+                <a href="https://github.com/nudgebee/nudgebee-workshop" target="_blank" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-mono text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+                  <span>🐙</span> nudgebee-workshop <span>↗</span>
+                </a>
+              </div>
+            </div>
+            <div class="pt-2.5 border-t border-slate-800 text-[11px] text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span><strong>GitHub Repo:</strong> <a href="https://github.com/nudgebee/nudgebee-workshop" target="_blank" class="text-cyan-400 hover:underline">https://github.com/nudgebee/nudgebee-workshop</a></span>
+              <span><strong>Local Clone:</strong> <code class="text-slate-300">git clone https://github.com/nudgebee/nudgebee-workshop.git &amp;&amp; cd nudgebee-workshop</code></span>
+            </div>
+          </div>
+
           <!-- Section 2: How to Invoke -->
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
@@ -305,19 +333,23 @@
             <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">1. Note your assigned Team ID (1–10) and room decryption passphrase from the facilitator screen.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Launch a cloud workspace from <a href="https://github.com/nudgebee/nudgebee-workshop" target="_blank" class="text-sky-600 dark:text-accent underline font-semibold">nudgebee/nudgebee-workshop</a> via <a href="https://codespaces.new/nudgebee/nudgebee-workshop" target="_blank" class="text-emerald-600 dark:text-emerald-400 underline font-semibold">GitHub Codespaces</a> (or clone locally).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Execute <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "&lt;PASSPHRASE&gt;"</code> in your terminal.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Note your assigned Team ID (1–10) and room decryption passphrase from the facilitator screen.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Confirm the script downloads <code>&lt;team-id&gt;.enc</code>, decrypts your team kubeconfig, and sets your namespace in <code>agent/config.yaml</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "&lt;PASSPHRASE&gt;"</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Confirm the preflight cluster connectivity check succeeds and prints <code>🎉 TEAM &lt;ID&gt; SETUP COMPLETE!</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Confirm the script downloads <code>&lt;team-id&gt;.enc</code>, decrypts your team kubeconfig, and sets your namespace in <code>agent/config.yaml</code>.</span>
+              </label>
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
+                <span class="text-slate-700 dark:text-slate-300">5. Confirm the preflight cluster connectivity check succeeds and prints <code>🎉 TEAM &lt;ID&gt; SETUP COMPLETE!</code>.</span>
               </label>
             </div>
           </div>
