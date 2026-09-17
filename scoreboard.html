@@ -51,15 +51,15 @@
     <header class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-border-subtle pb-6 mb-8 gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
-          <a href="./index.html" class="text-xs font-mono text-slate-400 hover:text-white transition flex items-center gap-1">
+          <a href="./index.html" class="text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition flex items-center gap-1">
             <span>←</span> Workshop Portal
           </a>
-          <span class="text-slate-600">/</span>
-          <a href="./lab.html" class="text-xs font-mono text-slate-400 hover:text-white transition flex items-center gap-1">
-            8-Module Lab Playbook
+          <span class="text-slate-400 dark:text-slate-600">/</span>
+          <a href="./lab.html" class="text-xs font-mono text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition flex items-center gap-1">
+            Hands-On Lab (M0–M8)
           </a>
-          <span class="text-slate-600">/</span>
-          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-800 text-slate-300 border border-slate-700">
+          <span class="text-slate-400 dark:text-slate-600">/</span>
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
             Room Scoreboard
           </span>
         </div>
@@ -73,11 +73,17 @@
           <span id="themeIcon">☀️</span>
           <span id="themeLabel">Light</span>
         </button>
+        <a href="https://codespaces.new/nudgebee/nudgebee-workshop" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm" title="Launch workshop devcontainer in GitHub Codespaces">
+          <span>⚡</span> Codespaces <span>↗</span>
+        </a>
+        <a href="https://github.com/nudgebee/nudgebee-workshop" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 font-mono text-xs font-medium transition flex items-center gap-1.5 shadow-sm" title="GitHub Repository">
+          <span>🐙</span> GitHub <span>↗</span>
+        </a>
         <div id="syncStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-mono">
           <span class="w-2 h-2 rounded-full bg-accent-emerald animate-pulse"></span>
           <span>Connecting to Relay...</span>
         </div>
-        <button onclick="seedDemoData()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-mono text-xs transition">
+        <button onclick="seedDemoData()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border dark:border-slate-700 font-mono text-xs transition">
           Seed Sample Data
         </button>
       </div>
@@ -148,7 +154,7 @@
               <option value="M4">Module 4: Context Stuffing vs Filtered</option>
               <option value="M5">Module 5: Blast Radius via KG</option>
               <option value="M6">Module 6: Tool Count Ceiling (5 vs 60)</option>
-              <option value="M7">Module 7: SRE Skill Triggers</option>
+              <option value="M7">Module 7: SRE Guardrails &amp; Human Gate</option>
               <option value="M8">Module 8: Memory Tiers &amp; Sizing</option>
             </select>
           </div>
@@ -158,12 +164,12 @@
             <div>
               <label class="block text-slate-400 mb-1 text-[11px] uppercase font-semibold">Model Used</label>
               <select id="inputModel" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-accent">
-                <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                <option value="Gemini 3.8 Flash (Frontier)">Gemini 3.8 Flash (Frontier)</option>
+                <option value="Qwen 3 235B (Frontier)">Qwen 3 235B (Frontier)</option>
+                <option value="NVIDIA Nemotron 30B (Small)">NVIDIA Nemotron 30B (Small)</option>
                 <option value="GPT-4o">GPT-4o</option>
-                <option value="GPT-4o-mini">GPT-4o-mini</option>
-                <option value="Gemini 1.5 Pro">Gemini 1.5 Pro</option>
-                <option value="Gemini 1.5 Flash">Gemini 1.5 Flash</option>
-                <option value="Llama 3.1 8B">Llama 3.1 8B</option>
+                <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                <option value="Mock (Offline Simulation)">Mock (Offline Simulation)</option>
               </select>
             </div>
             <div>
@@ -300,8 +306,12 @@
 
     // Cost Model lookup ($ per 1k tokens blended approx)
     const MODEL_PRICES = {
-      'Claude 3.5 Sonnet': 0.005,
+      'Gemini 3.8 Flash (Frontier)': 0.0003,
+      'Qwen 3 235B (Frontier)': 0.0008,
+      'NVIDIA Nemotron 30B (Small)': 0.0002,
       'GPT-4o': 0.006,
+      'Claude 3.5 Sonnet': 0.005,
+      'Mock (Offline Simulation)': 0.0000,
       'GPT-4o-mini': 0.0003,
       'Gemini 1.5 Pro': 0.004,
       'Gemini 1.5 Flash': 0.0002,
@@ -649,15 +659,15 @@
     }
 
     function seedDemoData() {
-      const sampleModels = ['Claude 3.5 Sonnet', 'GPT-4o', 'GPT-4o-mini', 'Gemini 1.5 Flash'];
+      const sampleModels = ['Gemini 3.8 Flash (Frontier)', 'Qwen 3 235B (Frontier)', 'NVIDIA Nemotron 30B (Small)', 'Claude 3.5 Sonnet', 'GPT-4o'];
       const sampleNotes = [
         'M1: Caught 3 version drift mismatches via eval gate',
-        'M2: Flash model cut cost by 89% with zero missed logs',
+        'M2: Small model cut cost by 89% with zero missed logs',
         'M3: Parallel tool calls succeeded on 14/15 alerts',
         'M4: 8k filtered context eliminated planted hallucination',
         'M5: Knowledge Graph resolved payments blast radius in 180ms',
         'M6: 60 tools caused schema prompt to eat 5k tokens',
-        'M7: Kafka lag skill triggered with 100% precision',
+        'M7: Destructive DROP/DELETE blocked by human gate interceptor',
         'M8: Session state layer sized at $0.038 per incident'
       ];
 
