@@ -8,6 +8,12 @@ Attendees interact entirely through declarative configuration files (`config.yam
 
 ## ⚡ 2-Minute Quickstart
 
+### 0. Bootstrap Team Credentials (Codespaces / Local)
+From the repository root, run the bootstrap script to configure your team namespace, cluster access, and LLM credentials:
+```bash
+../scripts/bootstrap-team.sh
+```
+
 ### 1. Verify Cluster Tools Health
 ```bash
 python3 mini_agent.py --test-tools
@@ -16,7 +22,7 @@ python3 mini_agent.py --test-tools
 
 ### 2. Run the Autonomous Investigation
 ```bash
-python3 mini_agent.py
+python3 mini_agent.py --scenario badDeploy1405 --model mock
 ```
 *Launches the multi-turn ReAct investigation loop. The agent reasons, invokes diagnostic tools, respects security confirmation gates, isolates root cause, and generates a run scorecard.*
 

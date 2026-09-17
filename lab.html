@@ -273,14 +273,14 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --test-tools && python3 mini_agent.py --prompt', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('./scripts/bootstrap-team.sh && cd agent && python3 mini_agent.py --test-tools && python3 mini_agent.py --prompt', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --test-tools &amp;&amp; python3 mini_agent.py --prompt</code>
+              <code>./scripts/bootstrap-team.sh &amp;&amp; cd agent &amp;&amp; python3 mini_agent.py --test-tools &amp;&amp; python3 mini_agent.py --prompt</code>
             </div>
             <div class="text-[11px] text-slate-400 space-y-1">
+              <div><strong>Team Setup:</strong> <code>./scripts/bootstrap-team.sh</code> configures your namespace, cluster access, and LLM token.</div>
               <div><strong>Active Configuration:</strong> Default settings in <code>config.yaml</code> (Zero edits required).</div>
-              <div><strong>Target Namespace:</strong> <code>group-1</code> (Live OpenTelemetry microservices on GKE).</div>
             </div>
           </div>
 
@@ -290,19 +290,19 @@
             <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">1. Run <code>python3 mini_agent.py --test-tools</code> to verify live cluster tool calling health.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run <code>./scripts/bootstrap-team.sh</code> to configure your team namespace, cluster access, and LLM key.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Confirm all 7 tools return <code>✅ PASS</code> status (Kubernetes events, PromQL, pod logs, topology, deploy history).</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Run <code>cd agent &amp;&amp; python3 mini_agent.py --test-tools</code> to verify cluster tool calling health.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Run <code>python3 mini_agent.py --prompt</code> to inspect the assembled system prompt and registered OpenAPI schemas.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Confirm all 7 tools return <code>✅ PASS</code> status (Kubernetes events, PromQL, pod logs, topology, deploy history).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Note prompt token baseline (~1,400 tokens) before adding investigation turns.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Run <code>python3 mini_agent.py --prompt</code> to inspect the assembled system prompt and registered OpenAPI schemas.</span>
               </label>
             </div>
           </div>

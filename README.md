@@ -66,14 +66,30 @@ The agent is an autonomous, multi-turn ReAct investigation loop that connects to
 
 ### 🚀 Quickstart for Attendees
 
+#### Step 1: Launch Your Environment (Zero Setup)
+Open this repository in **GitHub Codespaces** (Click **Code** → **Codespaces** → **Create codespace on main**).
+Python 3.11, `kubectl`, port-forwarding, and VS Code extensions are pre-configured.
+
+#### Step 2: Bootstrap Your Team Credentials
+In the terminal, run the interactive bootstrap script:
+```bash
+./scripts/bootstrap-team.sh
+```
+Or run directly with your assigned team number and room passphrase:
+```bash
+./scripts/bootstrap-team.sh --team <YOUR_TEAM_NUM> --pass "<ROOM_PASSPHRASE>" --url "<STORAGE_URL>"
+```
+This automatically configures your team namespace, installs your scoped cluster `kubeconfig`, exports your LLM Gateway credentials, and tests cluster connectivity.
+
+#### Step 3: Run the Agent & Verify Tools
 ```bash
 cd agent
 
 # 1. Test live cluster diagnostic tools (Read-Only)
 python3 mini_agent.py --test-tools
 
-# 2. Run the autonomous investigation
-python3 mini_agent.py
+# 2. Run your first autonomous investigation
+python3 mini_agent.py --scenario badDeploy1405 --model mock
 
 # 3. Inspect full transcript and execution traces
 python3 mini_agent.py --logs      # Readable step-by-step transcript
