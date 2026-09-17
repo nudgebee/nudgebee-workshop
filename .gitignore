@@ -18,6 +18,11 @@ agent/group-*/
 workshop-credentials/
 *kubeconfig*.yaml
 *.kubeconfig
+*.enc
+teams*.txt
+*teams*.txt
+api-keys*.txt
+*api-keys*.txt
 
 # App specific
 app/build

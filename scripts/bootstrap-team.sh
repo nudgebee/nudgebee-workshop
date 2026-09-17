@@ -86,7 +86,8 @@ if [[ ! "$TEAM" =~ ^(group|team)- ]]; then
   TARGET_NS="group-${TEAM}"
 fi
 
-mkdir -p "${HOME}/.kube"
+DEST_KUBECONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
+mkdir -p "$(dirname "${DEST_KUBECONFIG}")"
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
@@ -143,25 +144,25 @@ with open(sys.argv[1], 'r') as f:
     data = json.load(f)
 
 # Write kubeconfig
-kube_path = os.path.expanduser('~/.kube/config')
+kube_path = sys.argv[2]
 with open(kube_path, 'w') as kf:
     kf.write(data.get('kubeconfig', ''))
 
 # Write api_key if present
 api_key = data.get('api_key', '')
 if api_key:
-    with open(sys.argv[2], 'w') as af:
+    with open(sys.argv[3], 'w') as af:
         af.write(api_key)
 
 # Write namespace if present
 namespace = data.get('namespace', '')
 if namespace:
-    with open(sys.argv[3], 'w') as nf:
+    with open(sys.argv[4], 'w') as nf:
         nf.write(namespace)
-" "${TMP_DIR}/payload.json" "${TMP_DIR}/extracted_key.txt" "${TMP_DIR}/extracted_ns.txt"
+" "${TMP_DIR}/payload.json" "${DEST_KUBECONFIG}" "${TMP_DIR}/extracted_key.txt" "${TMP_DIR}/extracted_ns.txt"
 
-  chmod 600 "${HOME}/.kube/config"
-  echo "✅ Kubeconfig decrypted and installed to ~/.kube/config"
+  chmod 600 "${DEST_KUBECONFIG}"
+  echo "✅ Kubeconfig decrypted and installed to ${DEST_KUBECONFIG}"
 
   if [[ -f "${TMP_DIR}/extracted_key.txt" ]]; then
     API_KEY=$(cat "${TMP_DIR}/extracted_key.txt")
@@ -181,22 +182,22 @@ else
   if [[ -n "$KUBECONFIG_SOURCE" ]]; then
     if [[ "$KUBECONFIG_SOURCE" =~ ^https?:// ]]; then
       echo "▶ Downloading kubeconfig from ${KUBECONFIG_SOURCE}..."
-      curl -sSL "$KUBECONFIG_SOURCE" -o "${HOME}/.kube/config"
+      curl -sSL "$KUBECONFIG_SOURCE" -o "${DEST_KUBECONFIG}"
     elif [[ -f "$KUBECONFIG_SOURCE" ]]; then
       echo "▶ Installing kubeconfig from ${KUBECONFIG_SOURCE}..."
-      cp "$KUBECONFIG_SOURCE" "${HOME}/.kube/config"
+      cp "$KUBECONFIG_SOURCE" "${DEST_KUBECONFIG}"
     else
       echo "❌ Error: File not found: ${KUBECONFIG_SOURCE}" >&2
       exit 1
     fi
   elif [[ -f "./workshop-credentials/kubeconfig-${TARGET_NS}.yaml" ]]; then
     echo "▶ Using local credential: ./workshop-credentials/kubeconfig-${TARGET_NS}.yaml..."
-    cp "./workshop-credentials/kubeconfig-${TARGET_NS}.yaml" "${HOME}/.kube/config"
+    cp "./workshop-credentials/kubeconfig-${TARGET_NS}.yaml" "${DEST_KUBECONFIG}"
   elif [[ -f "./workshop-credentials/kubeconfig-${TEAM}.yaml" ]]; then
     echo "▶ Using local credential: ./workshop-credentials/kubeconfig-${TEAM}.yaml..."
-    cp "./workshop-credentials/kubeconfig-${TEAM}.yaml" "${HOME}/.kube/config"
+    cp "./workshop-credentials/kubeconfig-${TEAM}.yaml" "${DEST_KUBECONFIG}"
   fi
-  chmod 600 "${HOME}/.kube/config" 2>/dev/null || true
+  chmod 600 "${DEST_KUBECONFIG}" 2>/dev/null || true
 fi
 
 # ------------------------------------------------------------------------------
@@ -238,12 +239,12 @@ fi
 # ------------------------------------------------------------------------------
 # 5. Verify Cluster Connectivity
 # ------------------------------------------------------------------------------
-if command -v kubectl >/dev/null 2>&1 && [[ -f "${HOME}/.kube/config" ]]; then
+if command -v kubectl >/dev/null 2>&1 && [[ -f "${DEST_KUBECONFIG}" ]]; then
   echo ""
   echo "▶ Testing live cluster connectivity in namespace '${TARGET_NS}'..."
-  if kubectl get pods -n "${TARGET_NS}" --request-timeout='5s' >/dev/null 2>&1; then
+  if KUBECONFIG="${DEST_KUBECONFIG}" kubectl get pods -n "${TARGET_NS}" --request-timeout='5s' >/dev/null 2>&1; then
     echo "✅ Cluster connectivity verified! Active pods:"
-    kubectl get pods -n "${TARGET_NS}" --no-headers | head -n 6 || true
+    KUBECONFIG="${DEST_KUBECONFIG}" kubectl get pods -n "${TARGET_NS}" --no-headers | head -n 6 || true
   else
     echo "⚠️ Note: Could not query pods in '${TARGET_NS}'. Verify cluster availability."
   fi
