@@ -1,6 +1,6 @@
 # 🤖 Autonomous SRE Incident Investigation Agent
 
-A transparent, modular, and configurable AI SRE investigation agent designed for the **Building AI Agents for SRE & AIOps** 4-hour masterclass.
+A transparent, modular, and configurable AI SRE investigation agent designed for the **Building AI Agents for SRE & AIOps** 90-minute masterclass.
 
 Attendees interact entirely through declarative configuration files (`config.yaml` and `prompts.yaml`) — **no Python coding required**.
 
