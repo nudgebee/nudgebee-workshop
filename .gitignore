@@ -15,6 +15,9 @@ agent/config.local.yaml
 agent/logs/*.log
 agent/logs/*.json
 agent/group-*/
+workshop-credentials/
+*kubeconfig*.yaml
+*.kubeconfig
 
 # App specific
 app/build
