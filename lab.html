@@ -323,15 +323,15 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
-              <button onclick="copyCmd('./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url &quot;https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18&quot; --pass &quot;&lt;PASSPHRASE&gt;&quot;', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url &quot;&lt;STORAGE_URL&gt;&quot; --pass &quot;&lt;PASSPHRASE&gt;&quot;', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
-              <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "&lt;PASSPHRASE&gt;"</code>
+              <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>
             </div>
             <div class="text-[11px] text-slate-400 space-y-1.5">
-              <div><strong>Example:</strong> For Team 3, run: <code class="text-slate-200">./scripts/bootstrap-team.sh --team 3 --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "..."</code></div>
-              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh 3</code> and enter the room passphrase when prompted.</div>
-              <div><strong>Bundle Storage URL:</strong> <code>https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18</code></div>
+              <div><strong>Example:</strong> For Team 3, run: <code class="text-slate-200">./scripts/bootstrap-team.sh --team 3 --url "&lt;STORAGE_URL&gt;" --pass "..."</code></div>
+              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh --team 3</code> and follow the prompts.</div>
+              <div><strong>Bundle Storage URL:</strong> Announced on-screen / provided by workshop facilitator.</div>
               <div><strong>Encryption Key:</strong> Room decryption passphrase announced on-screen during kickoff.</div>
             </div>
           </div>
@@ -346,11 +346,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Note your assigned Team ID (1–10) and room decryption passphrase from the facilitator screen.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Note your assigned Team ID (or email), Storage URL, and room decryption passphrase from the facilitator screen.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18" --pass "&lt;PASSPHRASE&gt;"</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute <code>./scripts/bootstrap-team.sh --team &lt;team-id&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">

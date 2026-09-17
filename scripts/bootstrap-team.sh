@@ -70,11 +70,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Default workshop storage bucket if not explicitly overridden
-DEFAULT_STORAGE_URL="https://storage.googleapis.com/nudgebee-hyd-workshop-2026-09-18"
-if [[ -z "$STORAGE_URL" ]]; then
-  STORAGE_URL="${DEFAULT_STORAGE_URL}"
-fi
+# Workshop storage URL from --url or WORKSHOP_STORAGE_URL environment variable
+STORAGE_URL="${STORAGE_URL:-${WORKSHOP_STORAGE_URL:-}}"
 
 # ------------------------------------------------------------------------------
 # Interactive Mode if arguments are omitted
@@ -83,7 +80,7 @@ if [[ -z "$TEAM" && -z "$KUBECONFIG_SOURCE" ]]; then
   echo "=========================================================================="
   echo "🐝 NUDGEBEE SRE & AIOPS WORKSHOP · TEAM SETUP"
   echo "=========================================================================="
-  read -r -p "? Enter your assigned Team ID (e.g. 1 or team-1): " TEAM
+  read -r -p "? Enter your assigned Team ID or Email: " TEAM
   if [[ -z "$TEAM" ]]; then
     echo "❌ Team ID is required." >&2
     exit 1
@@ -97,8 +94,8 @@ fi
 
 # ------------------------------------------------------------------------------
 # Normalize Team ID & Build Candidate Bundle List
-# Supports full emails (pavan@gmail.com), usernames (pavan), dotted IDs (charan.p.408),
-# slugs (charan-p-408), and legacy numbers (1, team-1, group-1).
+# Supports full emails (user@example.com), usernames (user.name), dotted IDs (user.p.408),
+# slugs (user-p-408), and legacy numbers (1, team-1, group-1).
 # ------------------------------------------------------------------------------
 RAW_TEAM="${TEAM}"
 LOWER_TEAM=$(echo "$RAW_TEAM" | tr '[:upper:]' '[:lower:]' | xargs)
@@ -125,11 +122,11 @@ add_candidate() {
   CANDIDATE_BUNDLES+=("$b")
 }
 
-# 1. Sanitized slug (e.g. charan-p-408.enc, pavan2017aravindh.enc)
+# 1. Sanitized slug (e.g. user-p-408.enc, user2026.enc)
 add_candidate "${SLUG}.enc"
-# 2. Lowercase user part before @ (e.g. charan.p.408.enc)
+# 2. Lowercase user part before @ (e.g. user.p.408.enc)
 add_candidate "${USER_PART}.enc"
-# 3. Lowercase full string (e.g. charan.p.408@gmail.com.enc)
+# 3. Lowercase full string (e.g. user.p.408@example.com.enc)
 add_candidate "${LOWER_TEAM}.enc"
 # 4. Exact raw string
 add_candidate "${RAW_TEAM}.enc"
@@ -140,6 +137,23 @@ add_candidate "team-${SLUG}.enc"
 # 6. Legacy prefix stripping (e.g. group-1 or team-1 -> 1.enc)
 if [[ "$SLUG" =~ ^(team|group)-(.+)$ ]]; then
   add_candidate "${BASH_REMATCH[2]}.enc"
+fi
+
+# If storage URL was not passed and bundle is not found locally, prompt interactively
+if [[ -z "$STORAGE_URL" && -z "$KUBECONFIG_SOURCE" && -n "$PASSPHRASE" ]]; then
+  LOCAL_FOUND=false
+  for CANDIDATE in "${CANDIDATE_BUNDLES[@]}"; do
+    for SEARCH_DIR in "${REPO_ROOT}/workshop-credentials" "./workshop-credentials" "${REPO_ROOT}" "."; do
+      if [[ -f "${SEARCH_DIR}/${CANDIDATE}" ]]; then
+        LOCAL_FOUND=true
+        break 2
+      fi
+    done
+  done
+  if [[ "$LOCAL_FOUND" == false ]]; then
+    read -r -p "? Enter Storage URL hosting encrypted bundles (e.g. https://storage.googleapis.com/<BUCKET>): " STORAGE_URL
+    STORAGE_URL="${STORAGE_URL%/}"
+  fi
 fi
 
 DEST_KUBECONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
