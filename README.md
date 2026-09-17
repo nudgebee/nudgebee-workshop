@@ -1,7 +1,7 @@
 # 🐝 Building AI Agents for SRE & AIOps
 
 > **90-Minute Interactive Systems Engineering Masterclass**<br/>
-> *9 Modules (M0–M8) · 1 Running Scenario · Live Room Benchmarks · Autonomous SRE Agent*
+> *8 Modules (M1–M8) + M0 Setup · 1 Running Scenario · Live Room Benchmarks · Autonomous SRE Agent*
 
 Welcome to the **NudgeBee SRE & AIOps Agent Workshop** repository! This repository contains the complete curriculum, web-based operational tools, and an autonomous SRE investigation agent used during the 90-minute hands-on masterclass.
 
@@ -41,7 +41,7 @@ All web tools are zero-build, dependency-free static pages that can be opened di
 | Web Tool | Description | Target User |
 | :--- | :--- | :--- |
 | **[index.html](index.html)** | **Workshop Portal** · Landing page, prerequisite checks, and quick links. | Attendees & Instructors |
-| **[lab.html](lab.html)** | **Student Playbook** · Step-by-step instructions for all 9 hands-on modules (M0–M8). | Attendees & Teams |
+| **[lab.html](lab.html)** | **Student Playbook** · Step-by-step instructions for 8 hands-on modules (M1–M8) + M0 Setup. | Attendees & Teams |
 | **[scoreboard.html](scoreboard.html)** | **Room Benchmarks** · Aggregates token burn, latency, cost, and ground-truth accuracy across teams. | Room Display |
 | **[calculator.html](calculator.html)** | **ROI & Cost Modeler** · Interactive token math, caching savings, and model price comparisons. | Attendees |
 | **[guardrails.html](guardrails.html)** | **Security Guardrails** · Visualizes read-only enforcement and human confirmation gates. | Attendees |
