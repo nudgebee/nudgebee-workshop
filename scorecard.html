@@ -208,12 +208,6 @@
           </div>
 
         </div>
-
-        <button id="broadcastBtn" class="w-full py-3 px-4 rounded-xl bg-sky-600 dark:bg-accent text-white dark:text-black font-display font-bold text-sm hover:opacity-90 transition active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-          Plot Anonymously to Stage Projector
-        </button>
-        <p id="broadcastMsg" class="text-xs text-center text-emerald-600 dark:text-accent-emerald font-mono hidden">✓ Submitted! Watch your dot appear on the room's scatter screen.</p>
       </div>
 
       <!-- Verdict Column (5 cols) -->
@@ -497,33 +491,38 @@
     // Local tab BroadcastChannel fallback
     const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('aiops_workshop_channel') : null;
 
-    document.getElementById('broadcastBtn').addEventListener('click', () => {
-      const data = {
-        aiCapacity: parseInt(document.getElementById('axis3').value, 10),
-        buildTolerance: parseInt(document.getElementById('axis4').value, 10),
-        verdict: document.getElementById('verdictTitle').textContent,
-        ts: Date.now()
-      };
+    const broadcastBtn = document.getElementById('broadcastBtn');
+    if (broadcastBtn) {
+      broadcastBtn.addEventListener('click', () => {
+        const data = {
+          aiCapacity: parseInt(document.getElementById('axis3').value, 10),
+          buildTolerance: parseInt(document.getElementById('axis4').value, 10),
+          verdict: document.getElementById('verdictTitle').textContent,
+          ts: Date.now()
+        };
 
-      // 1. Send via Real-Time Cloud WebSocket across all laptops
-      if (mqttClient && mqttClient.connected) {
-        mqttClient.publish(MQTT_TOPIC, JSON.stringify(data));
-      }
+        // 1. Send via Real-Time Cloud WebSocket across all laptops
+        if (mqttClient && mqttClient.connected) {
+          mqttClient.publish(MQTT_TOPIC, JSON.stringify(data));
+        }
 
-      // 2. Send via local BroadcastChannel as backup
-      if (channel) {
-        try { channel.postMessage(data); } catch (err) {}
-      }
+        // 2. Send via local BroadcastChannel as backup
+        if (channel) {
+          try { channel.postMessage(data); } catch (err) {}
+        }
 
-      // 3. Save to localStorage as local backup
-      const existing = JSON.parse(localStorage.getItem('aiops_submissions') || '[]');
-      existing.push(data);
-      localStorage.setItem('aiops_submissions', JSON.stringify(existing));
+        // 3. Save to localStorage as local backup
+        const existing = JSON.parse(localStorage.getItem('aiops_submissions') || '[]');
+        existing.push(data);
+        localStorage.setItem('aiops_submissions', JSON.stringify(existing));
 
-      const msg = document.getElementById('broadcastMsg');
-      msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 4000);
-    });
+        const msg = document.getElementById('broadcastMsg');
+        if (msg) {
+          msg.classList.remove('hidden');
+          setTimeout(() => msg.classList.add('hidden'), 4000);
+        }
+      });
+    }
   </script>
 
   <!-- Theme Controller Script -->
