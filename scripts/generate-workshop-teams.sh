@@ -162,7 +162,7 @@ if [[ "$SERVER_URL" =~ https?://(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|1
   echo ""
   echo "Recommended Actions:"
   echo "  1. Target the public workshop cluster context:"
-  echo "     --context gke_nudgebee-hyd-workshop_us-central1-a_workshop-1"
+  echo "     --context <PUBLIC_CONTEXT_NAME>"
   echo "  2. Or override with a public endpoint URL:"
   echo "     --server-url https://<PUBLIC_IP>"
   echo "=========================================================================="
