@@ -495,13 +495,24 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-emerald-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy frontier</button>
             </div>
-            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure</code>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-[11px] uppercase font-bold">
+                <span class="text-emerald-400">1. Frontier Model</span>
+                <button onclick="copyCmd('cd agent && python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy frontier</button>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 font-mono text-xs overflow-x-auto">
+                <code>cd agent &amp;&amp; python3 mini_agent.py --model gemini-3.8-flash --scenario postgresFailure</code>
+              </div>
             </div>
-            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto mt-2">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure</code>
+            <div class="space-y-1 mt-2">
+              <div class="flex items-center justify-between text-[11px] uppercase font-bold">
+                <span class="text-amber-300">2. Small Model</span>
+                <button onclick="copyCmd('cd agent && python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure', this)" class="text-accent hover:underline lowercase">copy small</button>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
+                <code>cd agent &amp;&amp; python3 mini_agent.py --model NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 --scenario postgresFailure</code>
+              </div>
             </div>
             <div class="text-[11px] text-slate-400">
               <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>model: "gemini-3.8-flash"</code> then switch to <code>"NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"</code> or <code>"qwen/qwen3-235b-a22b-instruct-2507-maas"</code>.
@@ -579,13 +590,14 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-purple-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario poisonedEntity', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <button onclick="copyCmd('cd agent && python3 mini_agent.py --scenario poisonedEntity --max-turns 15', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-purple-300 font-mono text-xs overflow-x-auto">
-              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario poisonedEntity</code>
+              <code>cd agent &amp;&amp; python3 mini_agent.py --scenario poisonedEntity --max-turns 15</code>
             </div>
             <div class="text-[11px] text-slate-400">
-              <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>scenario: "poisonedEntity"</code>.
+              <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>scenario: "poisonedEntity"</code> and <code>max_turns: 15</code>.
+              <br/>Red-teaming needs extra steps: the agent must probe topology, fail to ground <code>billing-worker</code>, and still reach an abstention verdict.
             </div>
           </div>
 

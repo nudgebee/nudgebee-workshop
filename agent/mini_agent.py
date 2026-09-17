@@ -16,6 +16,8 @@ Modular Structure:
 
 Diagnostic Commands:
   python3 mini_agent.py --test-tools   # Verify cluster tools health
+  python3 mini_agent.py --test-tools --debug  # ...with full uncapped output
+  python3 mini_agent.py --max-turns 15 # Raise step budget for complex incidents
   python3 mini_agent.py --prompt       # Inspect exact system prompt & schemas
   python3 mini_agent.py --logs         # View human-readable transcript
   python3 mini_agent.py --json         # View machine-parseable JSON trace
@@ -34,9 +36,37 @@ from memory import save_to_episodic_memory
 from llm_client import call_openai_chat_completions
 from logger import AuditLogger
 from mock_planner import MockAgentPlanner
-from tools import OPENAI_TOOLS, TOOL_DISPATCH, test_all_tools
+from tools import OPENAI_TOOLS, TOOL_DISPATCH, debug_enabled, test_all_tools
 
 CONFIG = load_config()
+
+
+PLAN_MARKERS = (
+    "plan:",
+    "hypothesis:",
+    "**hypothesis",
+    "i will query",
+    "i will check",
+    "i will inspect",
+    "let me query",
+    "next step:",
+    "query more logs",
+)
+
+
+def looks_like_plan(text: str) -> bool:
+    """True when a 'diagnosis' is really another investigation step.
+
+    The synthesis turn sometimes answers with 'Plan: query more logs...' because the
+    system prompt mandates plan-before-act. Such a reply is not a conclusion, and
+    keyword-based ground truth would otherwise score it as a pass.
+    """
+    if not text:
+        return False
+    head = text.strip().lower()[:200]
+    if any(head.startswith(m) or f"\n{m}" in head for m in PLAN_MARKERS):
+        return True
+    return False
 
 
 def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -> Tuple[bool, str]:
@@ -51,6 +81,8 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
     d_lower = diagnosis.lower()
     if d_lower.startswith("investigation failed") or "api_error" in d_lower:
         return False, "Investigation failed due to provider or execution error."
+    if looks_like_plan(diagnosis):
+        return False, "No conclusion reached: agent returned another investigation plan instead of a root cause."
 
     if scenario == "badDeploy1405":
         # Evidence tuple: (Service: checkout, Root Cause: commit a7f39b1 or 5000ms timeout regression, Remediation: rollback/undo)
@@ -87,7 +119,9 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
     elif scenario == "postgresSlow":
         # Evidence tuple: (Service: astronomy-db / postgres, Mechanism: pg_sleep / query latency injection)
         has_db = any(k in d_lower for k in ["postgres", "astronomy-db", "database"])
-        has_delay = any(k in d_lower for k in ["pg_sleep", "sleep", "latency injection", "6.8s", "artificial latency", "slow query"])
+        # "inject" covers both "latency injection" and "injected query latency" - the
+        # model phrases the same mechanism either way, and word order should not decide a pass.
+        has_delay = any(k in d_lower for k in ["pg_sleep", "sleep", "inject", "6.8s", "artificial latency", "slow query"])
         if has_db and has_delay:
             return True, "Evidence verified: Isolated PostgreSQL query execution latency caused by injected pg_sleep delay."
         elif has_db and "latency" in d_lower:
@@ -156,7 +190,10 @@ def run_investigation():
         config_snapshot=CONFIG
     )
 
-    initial_prompt = CONFIG["initial_user_prompt"].format(namespace=ns, scenario=scenario)
+    # A scenario-specific alert (if defined) replaces the generic framing, so the
+    # agent sees the same page an on-call SRE would - including any bogus entity.
+    alert_template = CONFIG.get("scenario_alerts", {}).get(scenario)
+    initial_prompt = (alert_template or CONFIG["initial_user_prompt"]).format(namespace=ns, scenario=scenario)
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -348,7 +385,30 @@ def run_investigation():
     # Final synthesis turn if max_turns was reached without explicit stop
     if not is_final and not investigation_failed:
         print("\n▶ [Final Synthesis] Maximum turns reached. Formulating definitive root cause...")
+        # The system prompt orders the agent to plan before acting, which on the
+        # synthesis turn makes it answer with another "Plan: ..." instead of a
+        # conclusion. Re-assert the format as a system message (outranks the
+        # standing plan-first instruction) and forbid proposing further steps.
+        synth_directive = (
+            "FINAL SYNTHESIS TURN - INVESTIGATION IS NOW CLOSED.\n"
+            "You have no tools and cannot gather more telemetry. Do NOT propose a plan, "
+            "a hypothesis, or any further queries. Using only evidence already collected, "
+            "reply with a conclusion in exactly this shape:\n"
+            "ROOT CAUSE IDENTIFIED: <one sentence naming the failing service and mechanism>\n"
+            "EVIDENCE: <the specific metrics, log lines, events or revisions that prove it>\n"
+            "REMEDIATION: <the concrete corrective action>\n"
+            "Quote the exact identifiers you observed rather than paraphrasing them - container "
+            "exit codes (e.g. 137 / OOMKilled), gRPC status codes, commit SHAs and revision "
+            "numbers, timeout values, connection-pool or max_connections limits, query latency "
+            "percentiles, and any prior incident IDs recalled from memory. Name the underlying "
+            "failure mechanism (for example connection pool exhaustion, memory leak, injected "
+            "query delay), not just the surface symptom.\n"
+            "If the evidence does not support a conclusion, or the entity under investigation "
+            "could not be found in the cluster, say so explicitly and abstain - an honest "
+            "abstention is a valid and correct answer."
+        )
         synth_messages = list(messages) + [
+            {"role": "system", "content": synth_directive},
             {"role": "user", "content": "Based on all the telemetry, logs, and deployment data you have inspected, declare the definitive ROOT CAUSE IDENTIFIED, key evidence, and remediation actions."}
         ]
         if is_live_llm:
@@ -364,11 +424,41 @@ def run_investigation():
                 )
                 choice = resp["choices"][0]["message"]
                 final_diagnosis = (choice.get("content") or choice.get("reasoning_content") or "").strip()
-                if not final_diagnosis:
-                    final_diagnosis = f"Investigation concluded after {CONFIG['max_turns']} turns. Telemetry gathered in log."
                 usage = resp.get("usage", {})
                 total_prompt_tokens += usage.get("prompt_tokens", 800)
                 total_completion_tokens += usage.get("completion_tokens", 100)
+
+                # One retry when the model returns nothing or answers with a plan.
+                # A trimmed context (system + task + directive) removes the
+                # mid-investigation momentum that causes it to keep planning.
+                if not final_diagnosis or looks_like_plan(final_diagnosis):
+                    print("  ⚠️ Synthesis returned no conclusion - retrying with a condensed context...")
+                    evidence = "\n".join(
+                        f"- {m['content']}" for m in messages
+                        if m.get("role") == "user" and str(m.get("content", "")).startswith("Observation:")
+                    )[-6000:]
+                    retry_messages = [
+                        {"role": "system", "content": synth_directive},
+                        {"role": "user", "content": (
+                            f"Incident under investigation: scenario '{scenario}' in namespace '{ns}'.\n\n"
+                            f"Evidence collected during the investigation:\n{evidence or '(no observations recorded)'}\n\n"
+                            "Now state your conclusion in the required format."
+                        )},
+                    ]
+                    retry = call_openai_chat_completions(
+                        CONFIG["api_base"], CONFIG["api_key"], model,
+                        retry_messages, tools=None, tool_choice="none", timeout=60
+                    )
+                    retry_choice = retry["choices"][0]["message"]
+                    retry_text = (retry_choice.get("content") or retry_choice.get("reasoning_content") or "").strip()
+                    r_usage = retry.get("usage", {})
+                    total_prompt_tokens += r_usage.get("prompt_tokens", 800)
+                    total_completion_tokens += r_usage.get("completion_tokens", 100)
+                    if retry_text and not looks_like_plan(retry_text):
+                        final_diagnosis = retry_text
+
+                if not final_diagnosis:
+                    final_diagnosis = f"Investigation concluded after {CONFIG['max_turns']} turns. Telemetry gathered in log."
             except Exception as e:
                 print(f"  ⚠️ Synthesis notice: {e}")
                 final_diagnosis = f"Investigation concluded after {CONFIG['max_turns']} turns. Telemetry gathered in log."
@@ -441,23 +531,42 @@ def run_investigation():
 # ==============================================================================
 # CLI HANDLERS
 # ==============================================================================
-def cli_test_tools(namespace: str):
+def cli_test_tools(namespace: str, debug: bool = False):
+    debug = debug_enabled(debug)
     print(f"\n🔍 RUNNING CLUSTER TOOLS HEALTH CHECK AGAINST NAMESPACE: '{namespace}'...")
     print("-" * 75)
-    results = test_all_tools(namespace)
+    results = test_all_tools(namespace, debug=debug)
+    failures = 0
     for name, passed, output in results:
+        if not passed:
+            failures += 1
         status = "✅ PASS" if passed else "❌ FAIL"
-        clean_out = output.replace("\n", " ")
-        if len(clean_out) > 80:
-            clean_out = clean_out[:80] + "..."
-        print(f"{status} | {name:<18} | {clean_out}")
-    print("-" * 75 + "\n")
+
+        # Failures always print in full; passes print in full only in debug mode.
+        # Truncation itself lives in tools._summarize, so this only flattens newlines.
+        if passed and not debug:
+            print(f"{status} | {name:<18} | {output.replace(chr(10), ' ')}")
+            continue
+
+        detail = (output or "<no output returned>").rstrip().splitlines() or ["<empty output>"]
+        print(f"{status} | {name:<18} | {detail[0]}")
+        for extra in detail[1:]:
+            print(f"{'':<8}|{'':<20}| {extra}")
+    print("-" * 75)
+    if failures:
+        print(f"⚠️  {failures} of {len(results)} tool(s) failed. Full error output shown above.")
+    else:
+        print(f"🎉 All {len(results)} tools healthy.")
+    if not debug:
+        print("💡 Re-run with --debug (or AGENT_DEBUG=1) to see full uncapped tool output.")
+    print()
 
 
 def cli_view_prompt():
     scen = CONFIG.get("scenario", "badDeploy1405")
     sys_p = assemble_system_prompt(CONFIG, scen)
-    user_p = CONFIG.get("initial_user_prompt", "").format(
+    scen_alert = CONFIG.get("scenario_alerts", {}).get(scen)
+    user_p = (scen_alert or CONFIG.get("initial_user_prompt", "")).format(
         namespace=CONFIG.get("namespace", "group-1"),
         scenario=scen
     )
@@ -494,6 +603,17 @@ def cli_view_json():
         print(f.read())
 
 
+def positive_int(value: str) -> int:
+    """argparse type: reject 0, negatives, and non-numeric step budgets."""
+    try:
+        parsed = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{value}' is not an integer.")
+    if parsed < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1 (got {parsed}).")
+    return parsed
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SRE Mini Investigation Agent")
     parser.add_argument("--test-tools", action="store_true", help="Run live health check on all cluster tools")
@@ -508,10 +628,22 @@ if __name__ == "__main__":
         help="Override scenario target"
     )
     parser.add_argument("--namespace", type=str, help="Override Kubernetes namespace")
+    parser.add_argument(
+        "--max-turns", "--steps",
+        type=positive_int,
+        dest="max_turns",
+        metavar="N",
+        help=f"Max agent reasoning steps before forced synthesis (default: {CONFIG['max_turns']} from config.yaml). "
+             "Raise it for complex multi-hop incidents, lower it to cap token spend."
+    )
+    parser.add_argument("--debug", action="store_true", help="Print full uncapped tool output (same as AGENT_DEBUG=1)")
     args = parser.parse_args()
 
+    if args.debug:
+        os.environ["AGENT_DEBUG"] = "1"
+
     if args.test_tools:
-        cli_test_tools(args.namespace or CONFIG["namespace"])
+        cli_test_tools(args.namespace or CONFIG["namespace"], debug=args.debug)
     elif args.prompt:
         cli_view_prompt()
     elif args.logs:
@@ -525,6 +657,8 @@ if __name__ == "__main__":
             CONFIG["scenario"] = args.scenario
         if args.namespace:
             CONFIG["namespace"] = args.namespace
+        if args.max_turns:
+            CONFIG["max_turns"] = args.max_turns
         try:
             run_investigation()
         except ValueError as err:
