@@ -21,12 +21,8 @@
     }
   },
   "postCreateCommand": "pip install --upgrade pip pyyaml requests || true",
-  "forwardPorts": [8000, 9090],
+  "forwardPorts": [9090],
   "portsAttributes": {
-    "8000": {
-      "label": "Workshop Static UI Portal",
-      "onAutoForward": "openBrowser"
-    },
     "9090": {
       "label": "Prometheus Forward",
       "onAutoForward": "notify"
