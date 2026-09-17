@@ -157,7 +157,15 @@ def _set_flags(ns: str, target: Optional[Tuple[str, str]]) -> dict:
         flag_name, variant = target
         spec = flags.get(flag_name)
         if not isinstance(spec, dict):
-            raise InjectionError(f"Flag '{flag_name}' is not present in this namespace's flagd config.")
+            # A freshly deployed namespace ships without the postgres flags: flagd's
+            # initContainer splices them into its own copy at startup, so they are
+            # served but absent from the ConfigMap. Redeploy or fix the chart values
+            # rather than patching them in here, which fights that initContainer.
+            raise InjectionError(
+                f"Flag '{flag_name}' is not present in namespace '{ns}'s flagd-config ConfigMap.\n"
+                f"   This namespace was deployed without it. Ask your facilitator to add the\n"
+                f"   postgres flags to the flagd-config for this namespace."
+            )
         variants = spec.get("variants", {})
         if variant not in variants:
             raise InjectionError(

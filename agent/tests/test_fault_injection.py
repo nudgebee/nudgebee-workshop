@@ -147,6 +147,24 @@ class TestFailureModes(unittest.TestCase):
         self.assertIn("configmaps: patch", message)
         self.assertIn("--no-inject", message)
 
+    def test_flag_absent_from_configmap_gives_actionable_error(self):
+        """A freshly deployed namespace ships without the postgres flags.
+
+        flagd serves them anyway (its initContainer splices them in at startup), but
+        they are absent from the ConfigMap. Patching them in fights that initContainer,
+        so the run must stop with an error naming the namespace instead.
+        """
+        cfg = sample_config()
+        del cfg["flags"]["postgresFailure"]
+        fake = FakeCluster(cfg)
+        with patch.object(fi, "run_cmd", fake.run_cmd):
+            with self.assertRaises(fi.InjectionError) as ctx:
+                fi.inject_scenario("group-3", "postgresFailure", warmup_s=0)
+        message = str(ctx.exception)
+        self.assertIn("postgresFailure", message)
+        self.assertIn("group-3", message)
+        self.assertEqual({}, fake.active(), "no fault should be left behind on failure")
+
     def test_active_faults_reports_state(self):
         fake = FakeCluster()
         with patch.object(fi, "run_cmd", fake.run_cmd):
