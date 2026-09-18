@@ -62,7 +62,12 @@ persist_verified_resolution: true
 # ------------------------------------------------------------------------------
 # 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)
 # ------------------------------------------------------------------------------
-# Options: "structured_summary" (2k tokens) | "filtered_regex" (8k tokens) | "raw_80k" (80k uncurated dump)
+# Options, measured per log-read on a busy pod:
+#   "structured_summary" (~50 tokens)  - line count + error count only
+#   "filtered_regex"     (~200 tokens) - just the lines matching error keywords
+#   "raw_80k"            (~12k tokens) - every line in the window, uncurated
+# Module 4 contrasts the first two against the third. Volume depends on how chatty
+# the pod is; a quiet service yields less in every mode.
 context_mode: "filtered_regex"
 enable_prompt_caching: true
 

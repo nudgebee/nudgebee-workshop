@@ -21,6 +21,14 @@ from typing import Dict, Any, List, Tuple
 # previous scenario run rather than evidence about the incident under investigation.
 LOG_WINDOW = os.getenv("AGENT_LOG_WINDOW", "10m")
 
+# Module 4 contrasts a curated context against an uncurated one, so "raw_80k" has to
+# actually be big. It gets its own line budget: the ordinary 200-line cap made it
+# return exactly what filtered_regex returned, and the module demonstrated nothing.
+# The character cap bounds cost - a busy pod emits ~50k tokens per 10m window, and
+# resending that every turn would dwarf the rest of the run.
+RAW_MODE_TAIL = 5000
+RAW_MODE_CHAR_CAP = int(os.getenv("AGENT_RAW_CHAR_CAP", "48000"))  # ~12k tokens
+
 # RFC 1123 DNS label regex for safe Kubernetes resource names
 K8S_NAME_RE = re.compile(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
@@ -146,6 +154,8 @@ def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context
         return f"Tool Input Validation Error: {err}"
 
     safe_tail = max(1, min(int(tail), 200))
+    # raw_80k deliberately ignores the small cap - it is the "dump everything" mode.
+    fetch_tail = RAW_MODE_TAIL if context_mode == "raw_80k" else safe_tail
 
     # Safe pod discovery via kubectl jsonpath
     find_cmd = ["kubectl", "-n", ns, "get", "pods", "-o", "jsonpath={.items[*].metadata.name}"]
@@ -165,7 +175,7 @@ def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context
     # cleared fault this way. LOG_WINDOW keeps observations close to the current state.
     log_cmd = [
         "kubectl", "-n", ns, "logs", target_pod,
-        f"--tail={safe_tail}", f"--since={LOG_WINDOW}",
+        f"--tail={fetch_tail}", f"--since={LOG_WINDOW}",
     ]
     code, stdout, stderr = run_cmd(log_cmd)
     if code != 0:
@@ -184,6 +194,15 @@ def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context
         error_count = sum(1 for l in lines if "error" in l.lower())
         sample = lines[-1] if lines else "none"
         return f"Structured Summary ({target_pod}): {len(lines)} lines scanned. Found {error_count} error events. Last line: '{sample}'"
+
+    if context_mode == "raw_80k":
+        dump = "\n".join(lines)
+        if len(dump) > RAW_MODE_CHAR_CAP:
+            # Keep the most recent slice; the newest lines describe the current state.
+            dump = dump[-RAW_MODE_CHAR_CAP:]
+            return (f"[raw_80k: {len(lines)} lines fetched, truncated to the most recent "
+                    f"{RAW_MODE_CHAR_CAP} chars]\n{dump}")
+        return f"[raw_80k: {len(lines)} lines, uncurated]\n{dump}"
 
     return "\n".join(lines[-safe_tail:])
 
