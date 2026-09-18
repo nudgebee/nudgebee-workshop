@@ -95,4 +95,4 @@ scenario_guidance:
   postgresSlow: |
     Pods remain Running 1/1 without errors. Inspect p99 query duration percentiles.
   poisonedEntity: |
-    Grounding & Abstention Policy: Before asserting causality for any service, verify it in 'inspect_topology'. If the service does not exist or data is absent, you MUST explicitly abstain rather than hallucinating.
+    Verify-Before-Blame Policy: Before asserting that any service caused the incident, confirm it exists via 'inspect_topology'. If the service is not in the cluster, or the data needed is absent, say so explicitly and do not offer a root cause - a clear "this service does not exist" is the correct answer, not a guess.
