@@ -630,11 +630,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Observe Turn 1: Agent dispatches <code>inspect_topology({"service_name": "billing-worker"})</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Watch for the turn where the agent dispatches <code>inspect_topology({"service_name": "billing-worker"})</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Observe Turn 2: check that the agent looks the service up first and refuses to invent a root cause.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Then check that the agent looks the service up first and refuses to invent a root cause.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
@@ -709,8 +709,8 @@
             <div class="text-[11px] text-slate-400 space-y-1">
               <div><strong>Context Levers in <code>config.yaml</code>:</strong></div>
               <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
-                <li><code>context_mode: "filtered_regex"</code> (8k tokens · Fast &amp; focused)</li>
-                <li><code>context_mode: "raw_80k"</code> (80k uncurated dump · Injects 12k+ token overhead per turn)</li>
+                <li><code>context_mode: "filtered_regex"</code> (~200 tokens per log read · error lines only)</li>
+                <li><code>context_mode: "raw_80k"</code> (every line in the window, uncurated · ~12k tokens per log read on a busy pod)</li>
                 <li><code>enable_prompt_caching: true</code> (Observe 75% prompt token discount on turns 2–5)</li>
               </ul>
             </div>
@@ -814,7 +814,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Observe Turn 2: Agent queries <code>inspect_topology({"service_name": "product-catalog"})</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Watch for the turn where the agent queries <code>inspect_topology({"service_name": "product-catalog"})</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
@@ -910,11 +910,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Observe Turn 3: <code>get_deploy_history({"service_name": "checkout"})</code> parses rollout history.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Watch for the turn where <code>get_deploy_history({"service_name": "checkout"})</code> parses rollout history.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Observe Turn 4: Agent requests human approval to rollback to revision 2.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Then watch it request human approval to roll back to revision 2.</span>
               </label>
             </div>
           </div>
@@ -998,7 +998,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Observe Turn 4: The agent isolates pool starvation and formulates a rollout restart.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Watch for the turn where the agent isolates the unavailable <code>astronomy-db</code> dependency and proposes a rollout restart.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
@@ -1079,7 +1079,7 @@
             <div class="text-[11px] text-slate-400 space-y-1">
               <div><strong>The 2-Turn Experiment in <code>config.yaml</code>:</strong></div>
               <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
-                <li><strong>Turn 1 (Recall OFF):</strong> Set <code>enable_memory_recall: false</code> (and <code>persist_verified_resolution: true</code>). Agent runs from scratch without historical recall, verifies root cause, and saves incident baseline to <code>memory/episodic_memory.md</code>.</li>
+                <li><strong>Turn 1 (Recall OFF):</strong> Set <code>enable_memory_recall: false</code>. The agent works from live telemetry alone with no historical context. Expect <code>⚠️ UNVERIFIED</code> &mdash; this is the cold-start baseline you are measuring against, not a failure on your part.</li>
                 <li><strong>Turn 2 (Recall ON):</strong> Set <code>enable_memory_recall: true</code>. Agent immediately recalls the saved post-mortem via <code>search_incident_history</code> and accelerates resolution.</li>
               </ul>
             </div>
@@ -1095,7 +1095,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Open <code>memory/episodic_memory.md</code> to inspect the newly written post-mortem incident entry.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Open <code>memory/episodic_memory.md</code> and read the seeded post-mortem <code>INC-20260914-153604</code>. This run wrote nothing new &mdash; without recall it cannot cite a prior incident, so it is graded UNVERIFIED, and only verified runs persist.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
@@ -1112,7 +1112,7 @@
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
-              <li><strong>Historical Citation:</strong> Agent directly matches <strong>INC-4092</strong> from <strong>14 March</strong>.</li>
+              <li><strong>Historical Citation:</strong> Agent matches seeded entry <code>INC-20260914-153604</code>, which records this failure as a recurrence of <strong>INC-4092</strong>.</li>
               <li><strong>Symptom Comparison:</strong> Identical gRPC status 13 <code>INTERNAL</code> on product-catalog database queries.</li>
               <li><strong>Why Prior Fix Failed:</strong> Prior fix increased PostgreSQL server <code>max_connections=300</code>, but client-side connection pooling (<code>max_idle_conns</code>) remained unbounded.</li>
               <li><strong>Permanent Fix:</strong> Enforce client connection pool capping in product-catalog Helm values.</li>
