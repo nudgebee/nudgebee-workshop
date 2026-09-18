@@ -189,7 +189,7 @@
                 <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">M3 · 10 Min</span>
                 <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium">RED-TEAM</span>
               </div>
-              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Tool Accuracy &amp; Abstention</div>
+              <div class="font-sans font-semibold text-sm truncate text-slate-900 dark:text-white">Tool Accuracy &amp; Saying "I Don't Know"</div>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">poisonedEntity &amp; hallucinations</div>
             </div>
           </button>
@@ -571,7 +571,7 @@
               &larr; Previous (M1)
             </button>
             <button onclick="showModule('m3')" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 font-mono font-semibold text-xs transition shadow-sm flex items-center gap-1">
-              Next: Tool Accuracy &amp; Red-Team (M3) &rarr;
+              Next: Tool Accuracy &amp; Saying "I Don't Know" (M3) &rarr;
             </button>
           </div>
         </article>
@@ -589,13 +589,13 @@
             <span class="text-xs font-mono text-slate-400 italic">"Two models, same tools: one gets 95%, the other invents fake logs."</span>
           </div>
 
-          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Tool Accuracy &amp; Red-Teaming (Abstention)</h2>
+          <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white">Tool Accuracy &amp; Knowing When to Say "I Don't Know"</h2>
 
           <!-- Section 1: Overview -->
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-purple-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
             <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-              In real on-call rotations, noise and corrupted alerts arrive citing non-existent microservices or stale pod identifiers. Un-grounded agents hallucinate plausible explanations, inventing error codes and phantom stack traces. Here we test the agent with an ungrounded alert payload and verify <strong>strict abstention enforcement</strong>.
+              On real on-call rotations, alerts arrive naming services that do not exist or pods that were deleted weeks ago. An agent that never checks will invent a convincing explanation for them &mdash; made-up error codes, stack traces that were never logged. Here we page the agent about a service that is not in the cluster and check that it <strong>verifies the service exists before blaming it, and says so plainly when it does not</strong>.
             </p>
           </div>
 
@@ -616,7 +616,7 @@
             </div>
             <div class="text-[11px] text-slate-400">
               <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>scenario: "poisonedEntity"</code> and <code>max_turns: 15</code>.
-              <br/>Red-teaming needs extra steps: the agent must probe topology, fail to ground <code>billing-worker</code>, and still reach an abstention verdict.
+              <br/>This takes extra steps: the agent has to search the cluster, fail to find <code>billing-worker</code>, and still reach a clear answer instead of guessing.
             </div>
           </div>
 
@@ -634,11 +634,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Observe Turn 2: Verify that the agent checks the grounding policy and refuses to invent root cause.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Observe Turn 2: check that the agent looks the service up first and refuses to invent a root cause.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Run <code>python3 mini_agent.py --logs</code> to view the full audit trace and abstention rationale.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Run <code>python3 mini_agent.py --logs</code> to read the full trace and see why it refused to guess.</span>
               </label>
             </div>
           </div>
@@ -648,12 +648,12 @@
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Topology Observation:</strong> <code>Service 'billing-worker' not found in knowledge graph topology.</code></li>
-              <li><strong>Agent Decision:</strong> Explicit <code>ABSTAIN</code> emitted:
-                <pre class="p-2 rounded bg-black/40 text-[10px] text-slate-300 mt-1">GROUNDING VERDICT & ABSTENTION:
+              <li><strong>Agent Decision:</strong> It refuses to name a cause, and says why:
+                <pre class="p-2 rounded bg-black/40 text-[10px] text-slate-300 mt-1">VERIFICATION RESULT:
 - Entity Verification Failed: Service 'billing-worker' does NOT exist.
-- Agent Decision: ABSTAIN from diagnosing non-existent entity.</pre>
+- Agent Decision: will not diagnose a service that does not exist.</pre>
               </li>
-              <li><strong>Ground Truth Score:</strong> <code>✅ SUCCESS</code> (Validates robust abstention behavior).</li>
+              <li><strong>Ground Truth Score:</strong> <code>✅ SUCCESS</code> &mdash; refusing to guess is the correct answer here.</li>
             </ul>
           </div>
 
