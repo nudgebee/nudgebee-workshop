@@ -91,6 +91,31 @@ class TestKubernetesInputValidation(unittest.TestCase):
         self.assertIn("Kubernetes API error", res_dict["get_deploy_history"][1])
 
 
+class TestPrometheusNamespaceScope(unittest.TestCase):
+    """Prometheus is shared by the room; another team's fault must not become evidence."""
+
+    def _query(self, series, scope):
+        import json as _json
+        import tools
+        body = _json.dumps({"status": "success", "data": {"result": series}})
+        with patch("tools.urllib.request.urlopen", side_effect=OSError("no local prometheus")), \
+             patch("tools.run_cmd", return_value=(0, body, "")):
+            return tools.query_prometheus("anything", scope_namespace=scope)
+
+    def test_other_namespaces_are_dropped(self):
+        series = [
+            {"metric": {"service_name": "product-catalog", "namespace": "group-a"}, "value": [0, "4.9"]},
+            {"metric": {"service_name": "product-catalog", "namespace": "group-b"}, "value": [0, "0.01"]},
+        ]
+        out = self._query(series, "group-b")
+        self.assertIn("0.0100", out)
+        self.assertNotIn("4.90", out)
+
+    def test_aggregates_without_namespace_label_carry_a_warning(self):
+        out = self._query([{"metric": {"service_name": "checkout"}, "value": [0, "2"]}], "group-b")
+        self.assertIn('namespace="group-b"', out)
+
+
 class TestHumanApprovalGate(unittest.TestCase):
     """Verifies security approval gate authorization behavior."""
 
@@ -180,6 +205,17 @@ class TestGroundTruthEvaluation(unittest.TestCase):
         verified, details = evaluate_ground_truth("badDeploy1405", partial_diag)
         self.assertFalse(verified, details)
         self.assertIn("Partial match", details)
+
+    def test_episodic_cold_start_passes_on_live_diagnosis(self):
+        """Turn 1 runs with recall off, so it must be graded (and persisted) without an incident ID."""
+        live = "ROOT CAUSE IDENTIFIED: product-catalog fails every query with gRPC 13 INTERNAL because astronomy-db is unavailable."
+        verified, details = evaluate_ground_truth("episodicRecurrence", live, memory_recall=False)
+        self.assertTrue(verified, details)
+        # With recall on, the same answer without a citation is only partial.
+        verified, details = evaluate_ground_truth("episodicRecurrence", live, memory_recall=True)
+        self.assertFalse(verified, details)
+        verified, details = evaluate_ground_truth("episodicRecurrence", live + " Recurrence of INC-4092.", memory_recall=True)
+        self.assertTrue(verified, details)
 
     def test_failed_investigation_never_verified(self):
         failed_diag = "Investigation FAILED (API_ERROR): Connection timed out."

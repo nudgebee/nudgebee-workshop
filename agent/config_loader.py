@@ -247,6 +247,7 @@ def load_config() -> Dict[str, Any]:
 MODEL_RATES = {
     "mock": 0.0000,
     "NVIDIA-Nemotron-3-Nano-30B-A3B-BF16": 0.0001,
+    "Qwen/Qwen3.6-35B-A3B-FP8": 0.0001,
     "qwen/qwen3-235b-a22b-instruct-2507-maas": 0.0008,
     "gemini-3.8-flash": 0.0003,
     "nb-fast": 0.0002,

@@ -48,6 +48,10 @@ from tools import OPENAI_TOOLS, TOOL_DISPATCH, debug_enabled, test_all_tools
 
 CONFIG = load_config()
 
+# The synthesis turn re-reads the whole transcript; small models on a busy gateway
+# routinely need more than a minute for it.
+SYNTHESIS_TIMEOUT_S = 150
+
 
 PLAN_MARKERS = (
     "plan:",
@@ -77,7 +81,8 @@ def looks_like_plan(text: str) -> bool:
     return False
 
 
-def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -> Tuple[bool, str]:
+def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False,
+                          memory_recall: bool = True) -> Tuple[bool, str]:
     """
     Evaluates agent diagnosis against scenario-specific ground truth using
     evidence-backed tuple verification rather than simple keyword presence.
@@ -104,8 +109,20 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
         return False, "Unverified: Failed to identify checkout deployment timeout regression."
 
     elif scenario == "episodicRecurrence":
-        # Evidence tuple: (Service: product-catalog / postgres, Cause: connection pool starvation, Historical Match: INC-4092)
-        has_pool = "connection" in d_lower and any(k in d_lower for k in ["pool", "starvation", "exhaustion", "conns"])
+        # Evidence tuple: (Service: product-catalog / postgres, Cause: the DB dependency failing, Historical Match: INC-4092)
+        # The injected fault is postgresFailure, so accept the same live diagnosis that scenario does.
+        has_db = any(k in d_lower for k in ["postgres", "astronomy-db", "product-catalog"])
+        has_failure = any(k in d_lower for k in [
+            "starvation", "exhaustion", "connection", "dial timeout", "pool",
+            "unavailable", "13 internal", "status 13", "failed to load products", "outage",
+        ])
+        has_pool = has_db and has_failure
+        if not memory_recall:
+            # Turn 1 (cold start) cannot cite memory by design; it passes on the live
+            # diagnosis alone, which is what gets persisted for Turn 2 to recall.
+            if has_pool:
+                return True, "Evidence verified (cold start): Diagnosed the PostgreSQL dependency failure from live telemetry."
+            return False, "Unverified: Did not isolate the PostgreSQL dependency failure from live telemetry."
         # Accept any genuine episodic correlation, not just the legacy INC-4092 label.
         # The seeded ledger stores IDs as INC-<YYYYMMDD>-<HHMMSS>, and a relevance search
         # may legitimately return any of several matching post-mortems. With recall OFF the
@@ -141,7 +158,10 @@ def evaluate_ground_truth(scenario: str, diagnosis: str, failed: bool = False) -
         has_db = any(k in d_lower for k in ["postgres", "astronomy-db", "database"])
         # "inject" covers both "latency injection" and "injected query latency" - the
         # model phrases the same mechanism either way, and word order should not decide a pass.
-        has_delay = any(k in d_lower for k in ["pg_sleep", "sleep", "inject", "6.8s", "artificial latency", "slow query"])
+        has_delay = any(k in d_lower for k in [
+            "pg_sleep", "sleep", "inject", "6.8s", "artificial latency", "slow query", "slow quer",
+            "query latency", "query delay", "query duration", "postgresslow", "synthetic delay",
+        ])
         if has_db and has_delay:
             return True, "Evidence verified: Isolated PostgreSQL query execution latency caused by injected pg_sleep delay."
         elif has_db and "latency" in d_lower:
@@ -367,11 +387,19 @@ def run_investigation():
             else:
                 handler = TOOL_DISPATCH.get(t_name)
                 if handler:
+                    # Harness-controlled arguments go to the handler only, never into the
+                    # transcript - otherwise the model copies them into later calls.
+                    call_args = dict(t_args)
                     if t_name == "search_incident_history":
-                        t_args["enable_memory"] = mem_recall
+                        call_args["enable_memory"] = mem_recall
                     elif t_name == "get_deploy_history":
-                        t_args["is_mock"] = (model == "mock")
-                    observation = handler(t_args)
+                        call_args["is_mock"] = (model == "mock")
+                    elif t_name == "query_pod_logs":
+                        # An attendee lever, not a model choice: the schema does not expose it.
+                        call_args["context_mode"] = CONFIG.get("context_mode", "filtered_regex")
+                    elif t_name == "query_prometheus":
+                        call_args["scope_namespace"] = ns
+                    observation = handler(call_args)
                 else:
                     observation = f"Error: Tool '{t_name}' is not registered."
 
@@ -410,11 +438,57 @@ def run_investigation():
 
     # Final synthesis turn if max_turns was reached without explicit stop
     if not is_final and not investigation_failed:
+        gate_called = any(m.get("role") == "tool" and m.get("name") == "ask_human_approval" for m in messages)
+        if is_live_llm and "ask_human_approval" in enabled_tool_names and not gate_called:
+            # Models spend the whole budget investigating and reach synthesis - which has no
+            # tools - without ever proposing their fix through the gate. Give them one turn
+            # with only the gate available, so a state-changing fix is always put to a human.
+            print("\n▶ [Remediation Gate] Maximum turns reached. Offering the approval gate for any state-changing fix...")
+            gate_start = time.time()
+            # A user turn, not a system one: Gemini rejects a trailing system message and
+            # vLLM-served models reject any system message after the first.
+            gate_messages = list(messages) + [{"role": "user", "content": (
+                "REMEDIATION TURN - investigation is closed. If the fix you would recommend changes "
+                "cluster state (rollback, restart, scale, config or feature-flag change), call "
+                "'ask_human_approval' now with the exact command, risk level and blast radius. "
+                "If no state change is needed, reply with the single word NONE."
+            )}]
+            gate_schema = [t for t in active_tool_schemas if t["function"]["name"] == "ask_human_approval"]
+            try:
+                resp = call_openai_chat_completions(
+                    CONFIG["api_base"], CONFIG["api_key"], model, gate_messages, gate_schema, timeout=60
+                )
+                choice = resp["choices"][0]["message"]
+                usage = resp.get("usage", {})
+                total_prompt_tokens += usage.get("prompt_tokens", 800)
+                total_completion_tokens += usage.get("completion_tokens", 100)
+                calls = choice.get("tool_calls") or []
+                if calls:
+                    tc0 = calls[0]
+                    g_args = json.loads(tc0["function"]["arguments"])
+                    print(f"  ⚡ Tool Dispatch: ask_human_approval({json.dumps(g_args)})")
+                    gate_obs = TOOL_DISPATCH["ask_human_approval"](g_args)
+                    messages.append({"role": "assistant", "tool_calls": [{
+                        "id": tc0["id"], "type": "function",
+                        "function": {"name": "ask_human_approval", "arguments": json.dumps(g_args)},
+                    }]})
+                    messages.append({"role": "tool", "tool_call_id": tc0["id"],
+                                     "name": "ask_human_approval", "content": str(gate_obs)})
+                    logger.log_turn(turn + 1, messages, "Remediation gate", {"name": "ask_human_approval", "args": g_args},
+                                    gate_obs, {"duration_s": time.time() - gate_start,
+                                               "active_prompt_tokens": usage.get("prompt_tokens", 0),
+                                               "cached_tokens_saved": 0,
+                                               "completion_tokens": usage.get("completion_tokens", 0)})
+                else:
+                    print("  ℹ️ Agent proposed no state-changing remediation.")
+            except Exception as e:
+                print(f"  ⚠️ Remediation gate notice: {e}")
+
         print("\n▶ [Final Synthesis] Maximum turns reached. Formulating definitive root cause...")
         # The system prompt orders the agent to plan before acting, which on the
         # synthesis turn makes it answer with another "Plan: ..." instead of a
-        # conclusion. Re-assert the format as a system message (outranks the
-        # standing plan-first instruction) and forbid proposing further steps.
+        # conclusion. Re-assert the format in the final turn and forbid
+        # proposing further steps.
         synth_directive = (
             "FINAL SYNTHESIS TURN - INVESTIGATION IS NOW CLOSED.\n"
             "You have no tools and cannot gather more telemetry. Do NOT propose a plan, "
@@ -433,9 +507,10 @@ def run_investigation():
             "could not be found in the cluster, say so explicitly and abstain - an honest "
             "abstention is a valid and correct answer."
         )
+        # One user turn carrying the directive: vLLM-served models reject a system message
+        # anywhere but first, so the directive cannot be appended as its own system turn.
         synth_messages = list(messages) + [
-            {"role": "system", "content": synth_directive},
-            {"role": "user", "content": "Based on all the telemetry, logs, and deployment data you have inspected, declare the definitive ROOT CAUSE IDENTIFIED, key evidence, and remediation actions."}
+            {"role": "user", "content": synth_directive + "\n\nBased on all the telemetry, logs, and deployment data you have inspected, declare the definitive ROOT CAUSE IDENTIFIED, key evidence, and remediation actions."}
         ]
         if is_live_llm:
             try:
@@ -446,7 +521,7 @@ def run_investigation():
                     synth_messages,
                     tools=None,
                     tool_choice="none",
-                    timeout=60
+                    timeout=SYNTHESIS_TIMEOUT_S
                 )
                 choice = resp["choices"][0]["message"]
                 final_diagnosis = (choice.get("content") or choice.get("reasoning_content") or "").strip()
@@ -459,9 +534,11 @@ def run_investigation():
                 # mid-investigation momentum that causes it to keep planning.
                 if not final_diagnosis or looks_like_plan(final_diagnosis):
                     print("  ⚠️ Synthesis returned no conclusion - retrying with a condensed context...")
+                    # Live runs carry observations as role "tool"; mock runs as "Observation:" user turns.
                     evidence = "\n".join(
-                        f"- {m['content']}" for m in messages
-                        if m.get("role") == "user" and str(m.get("content", "")).startswith("Observation:")
+                        f"- {m.get('name', 'observation')}: {m['content']}" for m in messages
+                        if m.get("role") == "tool"
+                        or (m.get("role") == "user" and str(m.get("content", "")).startswith("Observation:"))
                     )[-6000:]
                     retry_messages = [
                         {"role": "system", "content": synth_directive},
@@ -473,7 +550,7 @@ def run_investigation():
                     ]
                     retry = call_openai_chat_completions(
                         CONFIG["api_base"], CONFIG["api_key"], model,
-                        retry_messages, tools=None, tool_choice="none", timeout=60
+                        retry_messages, tools=None, tool_choice="none", timeout=SYNTHESIS_TIMEOUT_S
                     )
                     retry_choice = retry["choices"][0]["message"]
                     retry_text = (retry_choice.get("content") or retry_choice.get("reasoning_content") or "").strip()
@@ -497,7 +574,8 @@ def run_investigation():
         print(f"\n{final_diagnosis}\n")
 
     # Evaluate ground truth with evidence-backed validation
-    verified, eval_details = evaluate_ground_truth(scenario, final_diagnosis, failed=investigation_failed)
+    verified, eval_details = evaluate_ground_truth(scenario, final_diagnosis, failed=investigation_failed,
+                                                   memory_recall=mem_recall)
 
     # Persist investigation resolution to episodic memory store
     if verified and persist_res:
@@ -629,6 +707,79 @@ def cli_view_json():
         print(f.read())
 
 
+CACHE_MIN_PROMPT_TOKENS = 4096
+
+
+def cli_cache_demo(replay_turns: int = 5, passes: int = 2):
+    """Replay the latest run's last turns twice to show provider prompt caching live.
+
+    During a real run the prompt grows every turn, and Gemini's automatic caching rarely
+    reuses it. Sending the exact same prompts again shortly afterwards usually does hit
+    the cache, which makes the effect visible and repeatable without explicit caching.
+    """
+    model = CONFIG["model"]
+    if model == "mock":
+        print("The cache demo needs a live model - mock has no provider cache. Try: --cache-demo --model gemini-3.8-flash")
+        return
+    if not CONFIG.get("api_key"):
+        print("No API key configured (config.yaml or OPENAI_API_KEY) - cannot call the gateway.")
+        return
+    latest = os.path.join(CONFIG["log_dir"], "investigation_latest.json")
+    if not os.path.exists(latest):
+        print("No previous investigation found. Run an investigation first, e.g. python3 mini_agent.py --scenario emailMemoryLeak")
+        return
+    with open(latest, "r", encoding="utf-8") as f:
+        trajectory = json.load(f).get("trajectory", [])
+    prompts = [t["messages_input"] for t in trajectory if t.get("messages_input")][-replay_turns:]
+    if not prompts:
+        print("The latest investigation has no recorded turns to replay.")
+        return
+
+    tool_schemas = [t for t in OPENAI_TOOLS if t["function"]["name"] in CONFIG["enabled_tools"]]
+    rate = MODEL_RATES.get(model, 0.0003)
+    print("\n" + "=" * 75)
+    print(f"💾 PROMPT CACHE DEMO · model {model} · replaying the last {len(prompts)} turns x {passes}")
+    print("=" * 75)
+    print(f"{'pass':<6}{'turn':<6}{'prompt tokens':>15}{'cached':>10}{'hit %':>8}")
+    totals = []
+    for p in range(1, passes + 1):
+        prompt_sum = cached_sum = 0
+        for i, msgs in enumerate(prompts, 1):
+            try:
+                resp = call_openai_chat_completions(CONFIG["api_base"], CONFIG["api_key"], model, msgs, tool_schemas, timeout=120)
+            except Exception as e:
+                print(f"{p:<6}{i:<6}  ❌ {e}")
+                continue
+            usage = resp.get("usage", {})
+            prompt_tok = usage.get("prompt_tokens", 0)
+            cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0) or 0
+            prompt_sum += prompt_tok
+            cached_sum += cached
+            print(f"{p:<6}{i:<6}{prompt_tok:>15,}{cached:>10,}{(100 * cached / prompt_tok if prompt_tok else 0):>7.0f}%")
+        totals.append((prompt_sum, cached_sum))
+        print("-" * 45)
+    print()
+    # Same pricing as the run scorecard: the model's blended rate, cached tokens billed at 25%.
+    print(f"{'':<8}{'cached':>9}{'cost w/o cache':>16}{'cost w/ cache':>15}{'saved':>11}")
+    for p, (prompt_sum, cached_sum) in enumerate(totals, 1):
+        full = prompt_sum / 1000 * rate
+        saved = cached_sum / 1000 * rate * 0.75
+        print(f"Pass {p:<3}{(100 * cached_sum / prompt_sum if prompt_sum else 0):>8.0f}%"
+              f"{'$' + format(full, '.5f'):>16}{'$' + format(full - saved, '.5f'):>15}"
+              f"{'$' + format(saved, '.5f'):>11}  ({(100 * saved / full if full else 0):.0f}% cheaper)")
+    print(f"Prompt-token cost only, at the workshop's estimated rate of ${rate}/1k tokens with cached tokens "
+          f"billed at 25%. Scaled to 1,000 such runs a day, pass 2 would save "
+          f"~${(totals[-1][1] / 1000 * rate * 0.75) * 1000:.2f}/day.")
+    print("\nPass 1 resends the prompts your run built turn by turn; pass 2 repeats them word for word.")
+    print("Provider caching only pays off when the start of the prompt is identical - and is never guaranteed.")
+    if totals and totals[-1][0] and not totals[-1][1] and totals[0][0] / len(prompts) < CACHE_MIN_PROMPT_TOKENS:
+        # Measured on the workshop gateway: Gemini never cached prompts of ~3.9k tokens,
+        # and reliably cached ~60% of repeated prompts from ~4.5k tokens up.
+        print(f"No hits: these prompts average under ~{CACHE_MIN_PROMPT_TOKENS:,} tokens, below the size Gemini caches.")
+        print("Re-run the investigation with context_mode: \"raw_80k\" to build larger prompts, then try again.")
+    print()
+
+
 def positive_int(value: str) -> int:
     """argparse type: reject 0, negatives, and non-numeric step budgets."""
     try:
@@ -646,6 +797,8 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", "--view-prompt", action="store_true", help="Inspect exact system prompt and OpenAI tool schemas")
     parser.add_argument("--logs", "--view-log", action="store_true", help="Print the latest readable execution log")
     parser.add_argument("--json", "--view-json", action="store_true", help="Print the latest JSON execution trace")
+    parser.add_argument("--cache-demo", action="store_true",
+                        help="Replay the latest run's last turns twice to show live provider prompt caching")
     parser.add_argument("--model", type=str, help="Override LLM model (e.g. 'gemini-3.8-flash', 'NVIDIA-Nemotron-3-Nano-30B-A3B-BF16', 'mock')")
     parser.add_argument(
         "--scenario",
@@ -701,6 +854,10 @@ if __name__ == "__main__":
         cli_view_log()
     elif args.json:
         cli_view_json()
+    elif args.cache_demo:
+        if args.model:
+            CONFIG["model"] = args.model
+        cli_cache_demo()
     else:
         if args.model:
             CONFIG["model"] = args.model

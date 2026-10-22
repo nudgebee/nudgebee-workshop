@@ -11,6 +11,7 @@
 #   - "gemini-3.8-flash"                       # High-end frontier reasoning model (fast, deep)
 #   - "qwen/qwen3-235b-a22b-instruct-2507-maas" # High-end open model (235B parameters, fast tool calling)
 #   - "NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"    # Small model (great for tool ceiling & drift experiments)
+#   - "Qwen/Qwen3.6-35B-A3B-FP8"               # Small open model (35B, 3B active) - fallback if Nemotron is unavailable
 #   - "mock"                                   # Deterministic simulation (0 external API calls)
 model: "gemini-3.8-flash"
 
@@ -69,6 +70,8 @@ persist_verified_resolution: true
 # Module 4 contrasts the first two against the third. Volume depends on how chatty
 # the pod is; a quiet service yields less in every mode.
 context_mode: "filtered_regex"
+# enable_prompt_caching only affects model: mock (simulated 75% hit rate from turn 2).
+# Live runs report whatever the provider cached on its own, which is usually 0.
 enable_prompt_caching: true
 
 # ------------------------------------------------------------------------------

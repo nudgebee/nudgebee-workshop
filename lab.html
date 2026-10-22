@@ -87,6 +87,9 @@
           <span id="themeIcon">☀️</span>
           <span id="themeLabel">Light</span>
         </button>
+        <a href="./credentials.html" target="_blank" class="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm" title="Get Room Credentials & Passphrase">
+          <span>🔑</span> Credentials <span>↗</span>
+        </a>
         <a href="https://codespaces.new/nudgebee/nudgebee-workshop" target="_blank" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-semibold transition flex items-center gap-1.5 shadow-sm" title="Launch workshop devcontainer in GitHub Codespaces">
           <span>⚡</span> Codespaces <span>↗</span>
         </a>
@@ -320,18 +323,19 @@
 
           <!-- Section 2: How to Invoke -->
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold flex-wrap gap-2">
               <span class="text-accent flex items-center gap-1.5">⚡ How to Invoke in Lab (Terminal Command)</span>
-              <button onclick="copyCmd('./scripts/bootstrap-team.sh --team &lt;your-email&gt; --url &quot;&lt;STORAGE_URL&gt;&quot; --pass &quot;&lt;PASSPHRASE&gt;&quot;', this)" class="text-accent hover:underline lowercase">copy command</button>
+              <a href="./credentials.html" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition font-mono lowercase font-semibold flex items-center gap-1">
+                🔑 get room credentials &amp; 1-click command ↗
+              </a>
             </div>
             <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-accent font-mono text-xs overflow-x-auto">
               <code>./scripts/bootstrap-team.sh --team &lt;your-email&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>
             </div>
             <div class="text-[11px] text-slate-400 space-y-1.5">
-              <div><strong>Example:</strong> <code class="text-slate-200">./scripts/bootstrap-team.sh --team you@example.com --url "&lt;STORAGE_URL&gt;" --pass "..."</code> &mdash; the script takes the part before the <code>@</code> and turns dots into dashes, so this lands in <code>group-you-example</code>.</div>
-              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh</code> and follow the prompts.</div>
-              <div><strong>Bundle Storage URL:</strong> Announced on-screen / provided by workshop facilitator.</div>
-              <div><strong>Encryption Key:</strong> Room decryption passphrase announced on-screen during kickoff.</div>
+              <div><strong>Need Passphrase &amp; Storage URL?</strong> Open the <a href="./credentials.html" target="_blank" class="text-accent underline font-semibold">Room Credentials &amp; Setup Page (credentials.html) ↗</a> to copy your ready-to-run command in 1 click.</div>
+              <div><strong>Example:</strong> <code class="text-slate-200">./scripts/bootstrap-team.sh --team you@example.com --url "&lt;STORAGE_URL&gt;" --pass "..."</code> &mdash; the script maps your email to your team namespace (e.g. <code>group-you-example</code>).</div>
+              <div><strong>Interactive Shortcut:</strong> Or run <code class="text-slate-200">./scripts/bootstrap-team.sh</code> in your terminal and follow the interactive prompts.</div>
             </div>
           </div>
 
@@ -345,11 +349,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Note the Storage URL and room decryption passphrase from the facilitator screen. Your identifier is your own email address.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Note your Room Passphrase and Storage URL from the facilitator screen or <a href="./credentials.html" target="_blank" class="text-cyan-600 dark:text-accent underline font-semibold">credentials.html ↗</a>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute <code>./scripts/bootstrap-team.sh --team &lt;your-email&gt; --url "&lt;STORAGE_URL&gt;" --pass "&lt;PASSPHRASE&gt;"</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. In the terminal, execute your bootstrap command (or copy it in 1 click from <a href="./credentials.html" target="_blank" class="text-cyan-600 dark:text-accent underline">credentials.html</a>).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
@@ -525,6 +529,7 @@
             </div>
             <div class="text-[11px] text-slate-400">
               <strong>Or edit in <code>config.yaml</code>:</strong> Set <code>model: "gemini-3.8-flash"</code> then switch to <code>"NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"</code> or <code>"qwen/qwen3-235b-a22b-instruct-2507-maas"</code>.
+              <br/><strong>Small model returns <code>HTTP 502</code> / <code>404</code>?</strong> That model's backend is down on the gateway &mdash; use <code>--model Qwen/Qwen3.6-35B-A3B-FP8</code> as the small model instead.
               <div class="border-t border-slate-800 pt-2 mt-2">
                 <strong class="text-emerald-400">🧪 Both runs stage the same fault.</strong> Each command enables <code>postgresFailure</code> in your namespace,
                 waits ~45s for symptoms, then clears it &mdash; so the two models are compared against identical cluster conditions.
@@ -559,8 +564,8 @@
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
-              <li><strong>Frontier Model:</strong> Formulates complete 4-step Deep RCA: queries PromQL, isolates product-catalog gRPC status 13 <code>INTERNAL</code>, identifies <code>astronomy-db</code> pool exhaustion, and passes safety gate.</li>
-              <li><strong>Small Model:</strong> Solves single-step classification faster, but requires constrained prompt formats to avoid repetitive tool loops.</li>
+              <li><strong>Frontier Model:</strong> Formulates complete 4-step Deep RCA: queries PromQL, isolates product-catalog gRPC status 13 <code>INTERNAL</code>, and traces it to <code>astronomy-db</code> (PostgreSQL) being unavailable.</li>
+              <li><strong>Small Model:</strong> Costs a fraction per run, but is easily misled by noise &mdash; in testing it blamed the unrelated <code>lookup opensearch</code> DNS errors and scored <code>⚠️ PARTIAL</code>. Look at its transcript for where it went wrong.</li>
               <li><strong>Scorecard Output:</strong> Verified ground truth <code>✅ SUCCESS</code> with breakdown of active vs cached tokens.</li>
             </ul>
           </div>
@@ -609,9 +614,8 @@
               <code>python3 mini_agent.py --scenario poisonedEntity --max-turns 15</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
-              scenario's fault in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
-              so expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
+              <strong class="text-emerald-400">🧪 Nothing to break here.</strong> The alert itself is the trap: <code>billing-worker</code> does not exist.
+              The <code>SCENARIO SETUP</code> block only clears faults left over from earlier runs, then Turn 1 starts straight away.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
             <div class="text-[11px] text-slate-400">
@@ -701,9 +705,9 @@
               <code>python3 mini_agent.py --scenario emailMemoryLeak</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
-              scenario's fault in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
-              so expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
+              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent turns on <code>emailMemoryLeak</code>
+              in <em>your</em> namespace, restarts <code>flagd</code>, then <strong>waits until the email container is really OOMKilled</strong> &mdash; usually 2&ndash;5 minutes,
+              because the leak grows with shop traffic. Expect a <code>SCENARIO SETUP</code> block and a longer pause before Turn 1. The fault is cleared automatically when the run ends.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
             <div class="text-[11px] text-slate-400 space-y-1">
@@ -711,7 +715,7 @@
               <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
                 <li><code>context_mode: "filtered_regex"</code> (~200 tokens per log read · error lines only)</li>
                 <li><code>context_mode: "raw_80k"</code> (every line in the window, uncurated · ~12k tokens per log read on a busy pod)</li>
-                <li><code>enable_prompt_caching: true</code> (Observe 75% prompt token discount on turns 2–5)</li>
+                <li><code>enable_prompt_caching: true</code> (only the <code>mock</code> model uses this switch &mdash; it simulates a 75% discount on turns 2+. Live runs report what the provider actually cached; see the <code>--cache-demo</code> step below)</li>
               </ul>
             </div>
           </div>
@@ -730,11 +734,12 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and note prompt token inflation on the scorecard.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and re-run. Compare Active Prompt Tokens and cost with run 1 &mdash; the gap grows with every <code>query_pod_logs</code> call the agent makes.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Check prompt cache savings (<code>cached_tokens_saved</code>) on the run scorecard and compare against the uncached run.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Check <code>Cached Tokens Saved</code> on the scorecard &mdash; usually 0, because Gemini rarely caches a prompt that grows every turn. Right after the <code>raw_80k</code> run, run <code>python3 mini_agent.py --cache-demo</code>: it replays your last 5 turns twice. Pass 1 gets ~0% from cache; pass 2, word-for-word identical, gets ~55&ndash;60% &mdash; and the summary prints the cost with vs without caching (~45% cheaper prompts).
+                  <br/>Fallback if the gateway gives no hits: <code>python3 mini_agent.py --scenario emailMemoryLeak --model mock</code> with <code>enable_prompt_caching</code> on, then off &mdash; a simulated 75% hit rate from turn 2.</span>
               </label>
             </div>
           </div>
@@ -743,10 +748,11 @@
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
-              <li><strong>Exit Code 137:</strong> Kernel OOMKill triggered when pod hits 100Mi cgroup limit.</li>
-              <li><strong>Derivative Slope:</strong> Positive rate (e.g. <code>+1272 B/s</code>) proves persistent in-code heap leak.</li>
+              <li><strong>Exit Code 137:</strong> <code>get_k8s_events</code> lists the email container under <code>CONTAINER RESTARTS</code> with <code>last_termination=OOMKilled exit_code=137</code> (100Mi limit). The kubelet emits no event for an OOMKill, so it shows up in pod status, not in the event list.</li>
+              <li><strong>Derivative Slope:</strong> Positive rate (e.g. <code>+4000 B/s</code>) proves persistent in-code heap leak.</li>
               <li><strong>Engineering Caveat:</strong> Agent correctly explains that bumping limit to 200Mi merely delays the next crash.</li>
-              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> in 4 turns.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> once the diagnosis names the email service, the OOMKill/137 and the leak.</li>
+              <li><strong>Noise to ignore:</strong> <code>lookup opensearch ... no such host</code> lines in every service's logs come from the telemetry exporter, not from this incident.</li>
             </ul>
           </div>
 
@@ -794,8 +800,8 @@
               <code>python3 mini_agent.py --scenario postgresSlow</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
-              scenario's fault in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
+              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent turns on <code>postgresSlow</code> (3s per DB query)
+              in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
               so expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
@@ -810,11 +816,11 @@
             <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">1. Run <code>postgresSlow</code>: store frontend p99 latency spikes past 6.5s, but pods remain Running 1/1 without 500 errors.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. Run <code>postgresSlow</code>: <code>product-catalog</code> p99 latency climbs to ~5s (and <code>checkout</code>'s calls to it with it), yet pods stay Running 1/1 with no 500 errors.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Watch for the turn where the agent queries <code>inspect_topology({"service_name": "product-catalog"})</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Find the turn where the agent queries <code>inspect_topology({"service_name": "product-catalog"})</code> (turn numbers vary run to run).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
@@ -822,7 +828,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-cyan-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Inspect logs: isolates injected <code>SELECT pg_sleep(...)</code> query delay.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Notice the logs stay quiet: nothing errors, so the slow DB query is only visible in latency metrics. Then run again with <code>inspect_topology</code> commented out in <code>enabled_tools</code> and compare how the agent locates the database.</span>
               </label>
             </div>
           </div>
@@ -833,8 +839,8 @@
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>1-Hop Topology Result:</strong> Resolves upstream callers (<code>['frontend', 'checkout']</code>) and downstream (<code>['astronomy-db (PostgreSQL)']</code>) in 0.00s.</li>
               <li><strong>Symptom Isolation:</strong> Identifies p99 latency cascade without relying on crash events.</li>
-              <li><strong>Root Cause:</strong> Injected query sleep (<code>pg_sleep</code>) holding database connection slots open.</li>
-              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> in 4 turns.</li>
+              <li><strong>Root Cause:</strong> Injected query delay (<code>pg_sleep</code>, 3s per query) on <code>astronomy-db</code> slowing every product-catalog call.</li>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> once the diagnosis names the database and the slow/delayed queries.</li>
             </ul>
           </div>
 
@@ -882,9 +888,9 @@
               <code>python3 mini_agent.py --scenario badDeploy1405</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
-              scenario's fault in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
-              so expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
+              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent rolls <code>checkout</code> out twice
+              in <em>your</em> namespace &mdash; a harmless base-image bump, then commit <code>a7f39b1</code> raising <code>PAYMENT_CLIENT_TIMEOUT</code> 500ms &rarr; 5000ms &mdash;
+              so the rollout history holds real evidence (~1 min). At the end the run rolls checkout back, which adds a "workshop reset" revision.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
             <div class="text-[11px] text-slate-400 space-y-1">
@@ -910,11 +916,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Watch for the turn where <code>get_deploy_history({"service_name": "checkout"})</code> parses rollout history.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Find the <code>get_deploy_history({"service_name": "checkout"})</code> call: its observation lists the revisions plus a <code>POD TEMPLATE DIFF</code> between the two newest.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-rose-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Then watch it request human approval to roll back to revision 2.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Watch for <code>ask_human_approval</code> proposing the rollback. In your terminal you can type <code>approve</code> or press Enter to reject &mdash; the agent never runs the command itself.</span>
               </label>
             </div>
           </div>
@@ -923,13 +929,14 @@
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
-              <li><strong>Bad Revision:</strong> Revision 3 deployed at 14:05 UTC by <code>payments@company.internal</code>.</li>
+              <li><strong>Bad Revision:</strong> The newest checkout revision, deployed at 14:05 UTC by <code>payments@company.internal</code> (revision numbers go up by 3 each time anyone reruns M6).</li>
+              <li><strong>Run 1 (no deploy tool):</strong> Expect <code>⚠️ PARTIAL</code> &mdash; the agent sees checkout misbehaving but cannot name the release. If it quotes a commit anyway, it made it up.</li>
               <li><strong>Commit Hash:</strong> <code>a7f39b1</code> (<em>"perf: tune client timeouts for downstream payment service"</em>).</li>
               <li><strong>Configuration Diff:</strong>
-                <pre class="p-2 rounded bg-black/40 text-[10px] text-rose-300 mt-1">- payment_client_timeout: 500ms
-+ payment_client_timeout: 5000ms</pre>
+                <pre class="p-2 rounded bg-black/40 text-[10px] text-rose-300 mt-1">-      PAYMENT_CLIENT_TIMEOUT:	500ms
++      PAYMENT_CLIENT_TIMEOUT:	5000ms</pre>
               </li>
-              <li><strong>Remediation:</strong> <code>kubectl -n group-1 rollout undo deployment/checkout --to-revision=2</code>.</li>
+              <li><strong>Remediation:</strong> <code>kubectl -n &lt;your-namespace&gt; rollout undo deployment/checkout --to-revision=&lt;previous revision&gt;</code>, proposed through the approval gate.</li>
               <li><strong>Ground Truth:</strong> <code>✅ SUCCESS (Root Cause Identified)</code>.</li>
             </ul>
           </div>
@@ -978,8 +985,8 @@
               <code>python3 mini_agent.py --scenario postgresFailure</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
-              scenario's fault in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
+              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent turns on <code>postgresFailure</code>
+              in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
               so expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
@@ -998,11 +1005,11 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Watch for the turn where the agent isolates the unavailable <code>astronomy-db</code> dependency and proposes a rollout restart.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Watch the agent trace product-catalog's gRPC 13 errors to <code>astronomy-db</code>. If it uses its whole turn budget, a <code>[Remediation Gate]</code> step follows in which it may only call <code>ask_human_approval</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Verify that instead of running kubectl directly, the agent invokes <code>ask_human_approval</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Verify that instead of running kubectl directly, the agent invokes <code>ask_human_approval</code>. Type <code>approve</code> or press Enter to reject &mdash; either way the agent only records your decision; it never runs the command.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-emerald-400 rounded">
@@ -1017,10 +1024,12 @@
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Security Gate Triggered:</strong>
                 <pre class="p-2 rounded bg-black/40 text-[10px] text-emerald-300 mt-1">🛡️ [SECURITY CONFIRMATION GATE TRIGGERED]
-├── Action       : Rollout restart product-catalog deployment
-├── Risk Level   : MEDIUM
-├── Command      : kubectl -n group-1 rollout restart deploy/product-catalog
-└── Blast Radius : Brief 5s transient latency; zero data loss.</pre>
+├── Proposed Action : Restart product-catalog pods to cycle database connections
+├── Risk Level      : LOW
+├── Command         : kubectl rollout restart deployment product-catalog -n &lt;your-namespace&gt;
+└── Blast Radius    : product-catalog pods recycle; brief transient errors for callers
+👉 OPERATOR DECISION: [DENIED] - Rejected by human operator.</pre>
+                <span class="text-[10px] text-slate-500">Wording varies by model and run.</span>
               </li>
               <li><strong>Audit Compliance:</strong> Zero mutating commands executed without prior authorization.</li>
               <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> with validated remediation.</li>
@@ -1057,7 +1066,7 @@
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
             <span class="text-purple-400 font-bold uppercase tracking-wider block text-[11px]">📌 Production Incident Context &amp; Why It Matters:</span>
             <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-              Incidents often repeat. Without persistent episodic memory, every on-call agent starts from zero, burning hundreds of thousands of tokens re-diagnosing known patterns. In this exercise, teams run Turn 1 (investigate from first principles and write post-mortem) versus Turn 2 (enable episodic recall, cite past incident <code>INC-4092</code>, and evaluate whether the previous fix held).
+              Incidents often repeat. Without persistent episodic memory, every on-call agent starts from zero, burning hundreds of thousands of tokens re-diagnosing known patterns. In this exercise, teams run Turn 1 (investigate from first principles and write post-mortem) versus Turn 2 (enable episodic recall, cite the matching past incident, and evaluate whether the previous fix held).
             </p>
           </div>
 
@@ -1071,16 +1080,17 @@
               <code>python3 mini_agent.py --scenario episodicRecurrence</code>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent enables this
-              scenario's fault in <em>your</em> namespace, restarts <code>flagd</code>, then waits ~45s for traffic to produce symptoms &mdash;
-              so expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
+              <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Both turns turn on <code>postgresFailure</code> &mdash; the same database
+              failure recurring &mdash; restart <code>flagd</code>, then wait ~45s for symptoms, so the agent always has a live incident to diagnose, with or without memory.
+              Expect a <code>SCENARIO SETUP</code> block and a short pause before Turn 1. The fault is cleared automatically when the run ends.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
             <div class="text-[11px] text-slate-400 space-y-1">
               <div><strong>The 2-Turn Experiment in <code>config.yaml</code>:</strong></div>
               <ul class="list-disc pl-4 space-y-0.5 text-[10px]">
-                <li><strong>Turn 1 (Recall OFF):</strong> Set <code>enable_memory_recall: false</code>. The agent works from live telemetry alone with no historical context. Expect <code>⚠️ UNVERIFIED</code> &mdash; this is the cold-start baseline you are measuring against, not a failure on your part.</li>
-                <li><strong>Turn 2 (Recall ON):</strong> Set <code>enable_memory_recall: true</code>. Agent immediately recalls the saved post-mortem via <code>search_incident_history</code> and accelerates resolution.</li>
+                <li><strong>Turn 1 (Recall OFF):</strong> Set <code>enable_memory_recall: false</code> (and <code>persist_verified_resolution: true</code>). Agent diagnoses from live telemetry only; a verified diagnosis is graded <code>✅ SUCCESS (cold start)</code> and saved to <code>memory/episodic_memory.md</code>.</li>
+                <li><strong>Turn 2 (Recall ON):</strong> Set <code>enable_memory_recall: true</code>. Agent recalls past post-mortems via <code>search_incident_history</code>, and must also confirm the failure in live telemetry. Passing requires citing the incident ID.</li>
+                <li><strong>Reset memory between attempts:</strong> every verified run appends to <code>memory/</code>. Restore the seeded ledger with <code>git checkout memory/</code>.</li>
               </ul>
             </div>
           </div>
@@ -1095,7 +1105,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Open <code>memory/episodic_memory.md</code> and read the seeded post-mortem <code>INC-20260914-153604</code>. This run wrote nothing new &mdash; without recall it cannot cite a prior incident, so it is graded UNVERIFIED, and only verified runs persist.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Open <code>memory/episodic_memory.md</code> : if Turn 1 scored <code>✅ SUCCESS (cold start)</code>, your diagnosis was appended as a new <code>INC-&lt;date&gt;-&lt;time&gt;</code> entry next to the seeded post-mortem <code>INC-20260914-153604</code>. Only verified runs are saved, so an <code>⚠️ UNVERIFIED</code> Turn 1 adds nothing.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
@@ -1103,7 +1113,7 @@
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-purple-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Observe agent query <code>search_incident_history</code>, match <code>INC-4092</code>, compare symptoms, and assess why the prior fix failed.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Observe agent query <code>search_incident_history</code>, cite a prior incident (a seeded <code>INC-2026…</code> record, a reference to <code>INC-4092</code>, or the one your Turn 1 saved), compare symptoms, and say whether the prior fix held.</span>
               </label>
             </div>
           </div>
@@ -1112,11 +1122,11 @@
           <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-xs">
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
-              <li><strong>Historical Citation:</strong> Agent matches seeded entry <code>INC-20260914-153604</code>, which records this failure as a recurrence of <strong>INC-4092</strong>.</li>
-              <li><strong>Symptom Comparison:</strong> Identical gRPC status 13 <code>INTERNAL</code> on product-catalog database queries.</li>
-              <li><strong>Why Prior Fix Failed:</strong> Prior fix increased PostgreSQL server <code>max_connections=300</code>, but client-side connection pooling (<code>max_idle_conns</code>) remained unbounded.</li>
-              <li><strong>Permanent Fix:</strong> Enforce client connection pool capping in product-catalog Helm values.</li>
-              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> with episodic incident citation.</li>
+              <li><strong>Live Evidence (both turns):</strong> frontend logs show HTTP 500s caused by product-catalog gRPC status 13 <code>INTERNAL</code>: <em>"failed to load products: PostgreSQL unavailable"</em>.</li>
+              <li><strong>Turn 1:</strong> <code>search_incident_history</code> answers <em>"Episodic memory is DISABLED"</em>; the agent must not name an incident ID.</li>
+              <li><strong>Turn 2 Historical Citation:</strong> Agent cites the matching post-mortem &mdash; e.g. seeded <code>INC-20260914-153604</code>, recorded as a recurrence of <strong>INC-4092</strong> (product-catalog → astronomy-db, gRPC 13) &mdash; and compares its symptoms with today's.</li>
+              <li><strong>Discussion Point:</strong> Memory makes the agent faster and more confident &mdash; but a recalled cause (e.g. pool starvation) is only right if live evidence confirms it. Today's failure is the DB being unavailable.</li>
+              <li><strong>Ground Truth:</strong> Turn 1 <code>✅ SUCCESS (cold start)</code>; Turn 2 <code>✅ SUCCESS</code> only with an episodic incident citation.</li>
             </ul>
           </div>
 

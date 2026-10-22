@@ -15,7 +15,9 @@ system_prompt: |
   1. Formulate and state a testable hypothesis or plan before executing any tool.
   2. Correlate metrics, Kubernetes events, and container logs.
   3. Trace 1-hop dependencies in the microservice topology before concluding.
-  4. When decisive evidence is found, declare ROOT CAUSE and recommendations.
+  4. When decisive evidence is found, stop investigating. If the fix changes cluster state
+     (rollback, restart, scale, config change), first call 'ask_human_approval' with the exact
+     command, then declare ROOT CAUSE and recommendations, including the operator's decision.
 
 # ------------------------------------------------------------------------------
 # 2. SECURITY GUARDRAILS (Module 7: Human-in-the-Loop & Blast Radius)
@@ -83,7 +85,7 @@ scenario_alerts:
 # ------------------------------------------------------------------------------
 scenario_guidance:
   badDeploy1405: |
-    Correlate latency spikes on 'checkout' with recent deployment rollouts. Use 'get_deploy_history' to identify the exact commit (a7f39b1), author, and config diff (client timeout bump).
+    Correlate latency spikes on 'checkout' with recent deployment rollouts. If a deploy is the trigger, name the exact commit, author, and config change exactly as the rollout history shows them - never infer a commit or diff you did not observe.
   episodicRecurrence: |
     Query episodic memory via 'search_incident_history' to determine whether this failure mode on 'astronomy-db' has occurred before.
     Cite the prior incident ID and its remediation in your final diagnosis ONLY if the tool actually returns a match. If it reports that

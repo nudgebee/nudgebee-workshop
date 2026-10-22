@@ -15,6 +15,7 @@
 #   - "gemini-3.8-flash"                       # High-end frontier reasoning model
 #   - "qwen/qwen3-235b-a22b-instruct-2507-maas" # High-end open model (235B parameters)
 #   - "NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"    # Small model (30B parameters)
+#   - "Qwen/Qwen3.6-35B-A3B-FP8"               # Small open model (35B, 3B active) - fallback if Nemotron is unavailable
 #   - "mock"                                   # Offline deterministic simulation
 model: "gemini-3.8-flash"
 
@@ -59,6 +60,8 @@ persist_verified_resolution: true
 # 5. CONTEXT MODE & PROMPT CACHING (Module 4 & 8)
 # ------------------------------------------------------------------------------
 context_mode: "filtered_regex"
+# enable_prompt_caching only affects model: mock (simulated 75% hit rate from turn 2).
+# Live runs report whatever the provider cached on its own, which is usually 0.
 enable_prompt_caching: true
 
 # ------------------------------------------------------------------------------

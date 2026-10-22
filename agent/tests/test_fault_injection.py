@@ -33,9 +33,34 @@ class FakeCluster:
         self.config = config if config is not None else sample_config()
         self.forbid_patch = forbid_patch
         self.calls = []
+        self.checkout = {"spec": {"template": {
+            "metadata": {"annotations": {}},
+            "spec": {"containers": [{"name": "checkout", "env": [{"name": "PORT", "value": "8080"}]}]},
+        }}}
+        self.change_causes = []
+
+    def checkout_env(self):
+        return {e["name"]: e["value"] for e in self.checkout["spec"]["template"]["spec"]["containers"][0]["env"]}
 
     def run_cmd(self, args, timeout=10):
         self.calls.append(args)
+        if "deployment" in args and "get" in args:
+            return 0, json.dumps(self.checkout), ""
+        if "deployment" in args and "patch" in args:
+            # Apply the merge patch the way the API server would for the fields we send.
+            body = json.loads(args[args.index("-p") + 1])
+            template = self.checkout["spec"]["template"]
+            annotations = template["metadata"]["annotations"]
+            for key, value in body["spec"]["template"]["metadata"]["annotations"].items():
+                if value is None:
+                    annotations.pop(key, None)
+                else:
+                    annotations[key] = value
+            template["spec"]["containers"] = body["spec"]["template"]["spec"]["containers"]
+            self.change_causes.append(body["metadata"]["annotations"][fi.CHANGE_CAUSE])
+            return 0, "deployment.apps/checkout patched", ""
+        if "pods" in args:
+            return 0, json.dumps({"items": []}), ""
         if "get" in args and "cm" in args:
             # Mirror the real `kubectl get cm -o json` shape: the flag document is a
             # JSON *string* under .data["demo.flagd.json"], not a nested object.
@@ -87,6 +112,32 @@ class TestInjection(unittest.TestCase):
             fi.inject_scenario("group-1", "postgresFailure", warmup_s=0)
             fi.inject_scenario("group-1", "postgresSlow", warmup_s=0)
         self.assertEqual({"postgresSlow": "3sec"}, fake.active())
+
+    def test_episodic_recurrence_has_a_live_fault_to_recur(self):
+        """Without one, recall-on runs only recite memory against a healthy cluster."""
+        fake = FakeCluster()
+        with patch.object(fi, "run_cmd", fake.run_cmd):
+            fi.inject_scenario("group-1", "episodicRecurrence", warmup_s=0)
+        self.assertEqual({"postgresFailure": "on"}, fake.active())
+
+    def test_bad_deploy_is_staged_as_real_revisions_and_reverted(self):
+        """get_deploy_history only reads the cluster, so the a7f39b1 rollout must exist there."""
+        fake = FakeCluster()
+        with patch.object(fi, "run_cmd", fake.run_cmd):
+            fi.inject_scenario("group-1", "badDeploy1405", warmup_s=0)
+            self.assertEqual("5000ms", fake.checkout_env()[fi.BAD_DEPLOY_ENV])
+            self.assertIn("a7f39b1", fake.change_causes[-1])
+            self.assertIn("500ms", fake.change_causes[-1])
+            self.assertIn("badDeploy1405", fi.active_faults("group-1"))
+            fi.clear_faults("group-1")
+        self.assertEqual({"PORT": "8080"}, fake.checkout_env())
+        self.assertNotIn(fi.BAD_DEPLOY_MARKER, fake.checkout["spec"]["template"]["metadata"]["annotations"])
+
+    def test_clearing_a_clean_namespace_does_not_touch_checkout(self):
+        fake = FakeCluster()
+        with patch.object(fi, "run_cmd", fake.run_cmd):
+            fi.clear_faults("group-1")
+        self.assertEqual([], fake.change_causes)
 
     def test_scenarios_needing_no_fault_leave_namespace_clean(self):
         fake = FakeCluster()
@@ -147,21 +198,30 @@ class TestFailureModes(unittest.TestCase):
         self.assertIn("configmaps: patch", message)
         self.assertIn("--no-inject", message)
 
-    def test_flag_absent_from_configmap_gives_actionable_error(self):
-        """A freshly deployed namespace ships without the postgres flags.
+    def test_missing_postgres_flags_are_added_together(self):
+        """A freshly deployed namespace ships without the postgres flags in its ConfigMap.
 
-        flagd serves them anyway (its initContainer splices them in at startup), but
-        they are absent from the ConfigMap. Patching them in fights that initContainer,
-        so the run must stop with an error naming the namespace instead.
+        flagd's initContainer only splices them in when postgresFailure is absent, and
+        exits 1 if postgresSlow is then missing - so both must be added, never one.
         """
         cfg = sample_config()
         del cfg["flags"]["postgresFailure"]
+        del cfg["flags"]["postgresSlow"]
+        fake = FakeCluster(cfg)
+        with patch.object(fi, "run_cmd", fake.run_cmd):
+            fi.inject_scenario("group-3", "postgresFailure", warmup_s=0)
+        self.assertEqual({"postgresFailure": "on"}, fake.active())
+        self.assertIn("postgresSlow", fake.config["flags"])
+
+    def test_unknown_flag_absent_from_configmap_gives_actionable_error(self):
+        cfg = sample_config()
+        del cfg["flags"]["emailMemoryLeak"]
         fake = FakeCluster(cfg)
         with patch.object(fi, "run_cmd", fake.run_cmd):
             with self.assertRaises(fi.InjectionError) as ctx:
-                fi.inject_scenario("group-3", "postgresFailure", warmup_s=0)
+                fi.inject_scenario("group-3", "emailMemoryLeak", warmup_s=0)
         message = str(ctx.exception)
-        self.assertIn("postgresFailure", message)
+        self.assertIn("emailMemoryLeak", message)
         self.assertIn("group-3", message)
         self.assertEqual({}, fake.active(), "no fault should be left behind on failure")
 

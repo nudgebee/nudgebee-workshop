@@ -25,21 +25,64 @@ from tools import run_cmd, validate_k8s_name
 CONFIGMAP = "flagd-config"
 CM_KEY = "demo.flagd.json"
 
-# Scenario -> (flagd flag, variant). Scenarios mapped to None need no cluster
-# fault: they are driven by rollout history, episodic memory, or a deliberately
-# non-existent service name.
+# Scenario -> (flagd flag, variant). Scenarios mapped to None need no flagd
+# fault: badDeploy1405 is staged as real rollout revisions instead (see
+# _stage_bad_deploy) and poisonedEntity names a deliberately non-existent service.
 SCENARIO_FAULTS: Dict[str, Optional[Tuple[str, str]]] = {
     "postgresFailure": ("postgresFailure", "on"),
     "postgresSlow": ("postgresSlow", "3sec"),
     # 10000x, not 100x: the email container is capped at 100Mi and sits near 65Mi.
     # At 100x it leaks ~10KB/s, needing ~1h to OOM - far longer than a run, so the
-    # Exit Code 137 this scenario is built around would never appear. 10000x reaches
-    # the limit during the warmup window, producing a real OOMKill to diagnose.
+    # Exit Code 137 this scenario is built around would never appear. Even at 10000x
+    # the leak is traffic-driven and takes a few minutes, so injection waits for the
+    # OOMKill itself (see SYMPTOM_WAITS) rather than a fixed warmup.
     "emailMemoryLeak": ("emailMemoryLeak", "10000x"),
     "badDeploy1405": None,
-    "episodicRecurrence": None,
+    # A recurrence needs a live failure to recur: without one the agent can only
+    # recite memory against a healthy cluster, which is exactly the habit M8 warns against.
+    "episodicRecurrence": ("postgresFailure", "on"),
     "poisonedEntity": None,
 }
+
+# The postgres flags are not in the chart's flagd-config. flagd's initContainer
+# splices them into its own copy - but only when "postgresFailure" is absent from
+# the ConfigMap, and it then exits 1 unless "postgresSlow" is also present. So the
+# two must always be added together, with the same definitions the initContainer uses.
+POSTGRES_FLAGS = {
+    "postgresFailure": {
+        "description": "Make the product-catalog PostgreSQL dependency unavailable - every product "
+                       "query fails fast, driving a gRPC error rate that cascades to its callers",
+        "state": "ENABLED",
+        "variants": {"on": True, "off": False},
+        "defaultVariant": "off",
+    },
+    "postgresSlow": {
+        "description": "Make every product-catalog PostgreSQL query genuinely slow via pg_sleep - "
+                       "variant value is the per-query delay in ms, visible as a slow DB span in traces",
+        "state": "ENABLED",
+        "variants": {"off": 0, "1sec": 1000, "3sec": 3000, "6sec": 6000},
+        "defaultVariant": "off",
+    },
+}
+
+# Scenarios whose symptom takes longer than the warmup to appear: (deployment,
+# termination reason, max seconds). Injection polls until a container of the
+# deployment has been terminated for that reason since the fault was enabled.
+SYMPTOM_WAITS: Dict[str, Tuple[str, str, int]] = {
+    "emailMemoryLeak": ("email", "OOMKilled", 360),
+}
+
+# badDeploy1405: two real rollouts on checkout so `kubectl rollout history` holds
+# the evidence. Removed again by clear_faults, which rolls back to the original template.
+BAD_DEPLOY_TARGET = "checkout"
+BAD_DEPLOY_ENV = "PAYMENT_CLIENT_TIMEOUT"
+BAD_DEPLOY_MARKER = "workshop.nudgebee.com/staged"
+CHANGE_CAUSE = "kubernetes.io/change-cause"
+BAD_DEPLOY_REVISIONS = [
+    ("500ms", "infra-team@company.internal 11:30 UTC: Bump base container image to alpine:3.19"),
+    ("5000ms", "payments@company.internal 14:05 UTC: Commit a7f39b1 'perf: tune client timeouts "
+               "for downstream payment service' (payment_client_timeout 500ms -> 5000ms)"),
+]
 
 # Cleared before every injection so scenarios can never contaminate each other.
 # postgresFailure (fail fast) and postgresSlow (pg_sleep delay) are mutually
@@ -155,16 +198,16 @@ def _set_flags(ns: str, target: Optional[Tuple[str, str]]) -> dict:
     active: dict = {}
     if target:
         flag_name, variant = target
+        if flag_name in POSTGRES_FLAGS and flag_name not in flags:
+            # Add both together - see POSTGRES_FLAGS for why one alone breaks flagd.
+            for name, definition in POSTGRES_FLAGS.items():
+                flags.setdefault(name, json.loads(json.dumps(definition)))
         spec = flags.get(flag_name)
         if not isinstance(spec, dict):
-            # A freshly deployed namespace ships without the postgres flags: flagd's
-            # initContainer splices them into its own copy at startup, so they are
-            # served but absent from the ConfigMap. Redeploy or fix the chart values
-            # rather than patching them in here, which fights that initContainer.
             raise InjectionError(
                 f"Flag '{flag_name}' is not present in namespace '{ns}'s flagd-config ConfigMap.\n"
                 f"   This namespace was deployed without it. Ask your facilitator to add the\n"
-                f"   postgres flags to the flagd-config for this namespace."
+                f"   flag to the flagd-config for this namespace."
             )
         variants = spec.get("variants", {})
         if variant not in variants:
@@ -180,6 +223,109 @@ def _set_flags(ns: str, target: Optional[Tuple[str, str]]) -> dict:
     return active
 
 
+def _get_deployment(ns: str, name: str) -> dict:
+    code, stdout, stderr = run_cmd(["kubectl", "-n", ns, "get", "deployment", name, "-o", "json"], timeout=20)
+    if code != 0 or not stdout:
+        raise InjectionError(f"Could not read deployment/{name} in '{ns}': {stderr or 'empty response'}")
+    try:
+        return json.loads(stdout)
+    except json.JSONDecodeError as err:
+        raise InjectionError(f"Could not parse deployment/{name}: {err}")
+
+
+def _rollout_checkout(ns: str, timeout_value: Optional[str], cause: str) -> None:
+    """Roll checkout to a template with PAYMENT_CLIENT_TIMEOUT=timeout_value (None removes it)."""
+    dep = _get_deployment(ns, BAD_DEPLOY_TARGET)
+    template = dep["spec"]["template"]
+    container = template["spec"]["containers"][0]
+    env = [e for e in container.get("env", []) if e.get("name") != BAD_DEPLOY_ENV]
+    if timeout_value is not None:
+        env.append({"name": BAD_DEPLOY_ENV, "value": timeout_value})
+    container["env"] = env
+    annotations = template.setdefault("metadata", {}).setdefault("annotations", {})
+    if timeout_value is None:
+        annotations.pop(BAD_DEPLOY_MARKER, None)
+    else:
+        annotations[BAD_DEPLOY_MARKER] = timeout_value
+
+    # A merge patch replaces the whole containers list, so send the full, edited list.
+    # Removed annotations need an explicit null to be deleted by the merge.
+    template_patch = {"metadata": {"annotations": {**annotations}}, "spec": {"containers": template["spec"]["containers"]}}
+    if timeout_value is None:
+        template_patch["metadata"]["annotations"][BAD_DEPLOY_MARKER] = None
+    patch = json.dumps({
+        "metadata": {"annotations": {CHANGE_CAUSE: cause}},
+        "spec": {"template": template_patch},
+    })
+    # Same slow-API-server allowance as _restart_flagd: a longer timeout and one retry.
+    # The patch is idempotent, so re-sending it after a timeout is safe.
+    for attempt in (1, 2):
+        code, _, stderr = run_cmd(
+            ["kubectl", "-n", ns, "patch", "deployment", BAD_DEPLOY_TARGET, "--type", "merge", "-p", patch],
+            timeout=90,
+        )
+        if code == 0:
+            break
+        if attempt == 1:
+            print(f"  ⚠️ checkout patch did not complete ({stderr or 'timeout'}); retrying once...")
+    else:
+        raise InjectionError(f"Could not roll out deployment/{BAD_DEPLOY_TARGET} in '{ns}': {stderr}")
+    code, _, stderr = run_cmd(
+        ["kubectl", "-n", ns, "rollout", "status", f"deployment/{BAD_DEPLOY_TARGET}", "--timeout=180s"],
+        timeout=200,
+    )
+    if code != 0:
+        raise InjectionError(f"deployment/{BAD_DEPLOY_TARGET} did not become ready in '{ns}': {stderr}")
+
+
+def _bad_deploy_staged(ns: str) -> bool:
+    dep = _get_deployment(ns, BAD_DEPLOY_TARGET)
+    annotations = dep["spec"]["template"].get("metadata", {}).get("annotations", {}) or {}
+    return BAD_DEPLOY_MARKER in annotations
+
+
+def _stage_bad_deploy(ns: str) -> None:
+    """Create the badDeploy1405 evidence as real checkout revisions, oldest first."""
+    for timeout_value, cause in BAD_DEPLOY_REVISIONS:
+        print(f"  ▶ Rolling out checkout: {cause.split(': ', 1)[-1][:70]}...")
+        _rollout_checkout(ns, timeout_value, cause)
+
+
+def _revert_bad_deploy(ns: str) -> None:
+    if _bad_deploy_staged(ns):
+        print("  ▶ Rolling checkout back to its original configuration...")
+        _rollout_checkout(ns, None, "workshop reset: revert to baseline configuration")
+
+
+def _termination_count(ns: str, deployment: str, reason: str) -> int:
+    """Restarts of the deployment's pods whose last termination matched `reason`."""
+    code, stdout, _ = run_cmd(["kubectl", "-n", ns, "get", "pods", "-o", "json"], timeout=20)
+    if code != 0 or not stdout:
+        return 0
+    total = 0
+    for pod in json.loads(stdout).get("items", []):
+        if not pod["metadata"]["name"].startswith(f"{deployment}-"):
+            continue
+        for status in pod.get("status", {}).get("containerStatuses", []):
+            last = status.get("lastState", {}).get("terminated", {})
+            if last.get("reason") == reason:
+                total += status.get("restartCount", 0)
+    return total
+
+
+def _wait_for_symptom(ns: str, scenario: str, baseline: int) -> None:
+    deployment, reason, limit = SYMPTOM_WAITS[scenario]
+    print(f"  ⏳ Waiting for {deployment} to be {reason} (up to {limit // 60} min; the leak is traffic-driven)...")
+    waited = 0
+    while waited < limit:
+        if _termination_count(ns, deployment, reason) > baseline:
+            print(f"  ✅ Symptom observed: {deployment} container {reason} after ~{waited}s.")
+            return
+        time.sleep(15)
+        waited += 15
+    print(f"  ⚠️ {deployment} was not {reason} within {limit}s - the agent may only see the memory growth.")
+
+
 def inject_scenario(namespace: str, scenario: str, warmup_s: int = 45) -> Optional[Tuple[str, str]]:
     """Enable the fault for `scenario`, clearing all others. Returns the fault set, or None."""
     ns = validate_k8s_name(namespace, "namespace")
@@ -190,14 +336,19 @@ def inject_scenario(namespace: str, scenario: str, warmup_s: int = 45) -> Option
 
     target = SCENARIO_FAULTS[scenario]
     if target is None:
-        print(f"  ℹ️  Scenario '{scenario}' needs no injected cluster fault "
-              f"(driven by deploy history, episodic memory, or a non-existent service).")
         print("  ▶ Clearing any previously injected faults so they cannot interfere...")
         _set_flags(ns, None)
+        if scenario == "badDeploy1405":
+            _revert_bad_deploy(ns)
+            _stage_bad_deploy(ns)
+            print("  ✅ Bad deploy staged: checkout revision with commit a7f39b1 is live.")
+            return ("badDeploy", BAD_DEPLOY_TARGET)
+        print(f"  ℹ️  Scenario '{scenario}' needs no injected cluster fault (it names a non-existent service).")
         print("  ✅ Namespace is clean.")
         return None
 
     flag_name, variant = target
+    baseline = _termination_count(ns, *SYMPTOM_WAITS[scenario][:2]) if scenario in SYMPTOM_WAITS else 0
     print(f"  ▶ Injecting fault for '{scenario}': {flag_name} = {variant} (namespace '{ns}')...")
     _set_flags(ns, target)
     print(f"  ✅ Fault active: {flag_name}={variant}")
@@ -205,16 +356,20 @@ def inject_scenario(namespace: str, scenario: str, warmup_s: int = 45) -> Option
     if warmup_s > 0:
         # Symptoms only exist once the load generator has driven traffic through the
         # faulted path; investigating immediately would show a still-healthy cluster.
-        print(f"  ⏳ Waiting {warmup_s}s for traffic to generate observable symptoms...")
-        time.sleep(warmup_s)
+        if scenario in SYMPTOM_WAITS:
+            _wait_for_symptom(ns, scenario, baseline)
+        else:
+            print(f"  ⏳ Waiting {warmup_s}s for traffic to generate observable symptoms...")
+            time.sleep(warmup_s)
     return target
 
 
 def clear_faults(namespace: str) -> None:
-    """Turn every chaos flag off, leaving the namespace healthy for the next run."""
+    """Turn every chaos flag off and undo a staged bad deploy, leaving the namespace healthy."""
     ns = validate_k8s_name(namespace, "namespace")
     print(f"  ▶ Clearing injected faults in namespace '{ns}'...")
     _set_flags(ns, None)
+    _revert_bad_deploy(ns)
     print("  ✅ Faults cleared - namespace is healthy again.")
 
 
@@ -229,4 +384,6 @@ def active_faults(namespace: str) -> dict:
         default = spec.get("defaultVariant")
         if default not in ("off", 0, "0", False, None):
             active[name] = default
+    if _bad_deploy_staged(ns):
+        active["badDeploy1405"] = f"{BAD_DEPLOY_TARGET} rolled out with {BAD_DEPLOY_ENV}"
     return active

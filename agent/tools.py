@@ -8,6 +8,7 @@ topology inspection, plus human-in-the-loop security approval gates.
 ===============================================================================
 """
 
+import difflib
 import json
 import os
 import re
@@ -81,16 +82,49 @@ def get_k8s_events(namespace: str) -> str:
 
     lines = stdout.splitlines()
     header, rows = lines[0], lines[1:]
-    if not rows:
+    restarts = _container_restarts(ns)
+    if not rows and not restarts:
         return f"No abnormal Kubernetes events recorded in namespace '{ns}'."
-    return "\n".join([header] + rows[-15:])
+    return "\n".join([header] + rows[-15:] + restarts)
 
 
-def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_proxy_ns: str = "nudgebee-agent") -> str:
+def _container_restarts(ns: str) -> List[str]:
+    """Restarted containers with their last termination (reason, exit code).
+
+    The kubelet emits no event when a container is OOMKilled - the evidence lives in
+    the pod's lastState - so without this the tool cannot show the OOMKills it promises.
+    """
+    code, stdout, _ = run_cmd(["kubectl", "-n", ns, "get", "pods", "-o", "json"])
+    if code != 0 or not stdout:
+        return []
+    try:
+        pods = json.loads(stdout).get("items", [])
+    except json.JSONDecodeError:
+        return []
+    rows = []
+    for pod in pods:
+        for status in pod.get("status", {}).get("containerStatuses", []):
+            if not status.get("restartCount"):
+                continue
+            last = status.get("lastState", {}).get("terminated", {})
+            rows.append(
+                f"  {pod['metadata']['name']}/{status.get('name')}: restarts={status['restartCount']} "
+                f"last_termination={last.get('reason', 'unknown')} exit_code={last.get('exitCode', '?')} "
+                f"finished_at={last.get('finishedAt', '?')}"
+            )
+    return ["CONTAINER RESTARTS (pod status lastState):"] + rows if rows else []
+
+
+def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_proxy_ns: str = "nudgebee-agent",
+                     scope_namespace: str = "") -> str:
     """
     Execute an instant PromQL query against Prometheus.
     Tries local HTTP endpoint first; if unavailable, seamlessly falls back to
     the Kubernetes API server proxy (kubectl get --raw) so zero port-forwarding is needed.
+
+    Prometheus is shared by every participant, so with scope_namespace set, series
+    labelled with another namespace are dropped - otherwise a neighbour's injected
+    fault shows up as evidence in this investigation.
     """
     base_url = prom_url.rstrip("/")
     params = urllib.parse.urlencode({"query": promql})
@@ -130,11 +164,23 @@ def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_p
     if not results:
         return "Prometheus query returned 0 active series."
 
+    note = ""
+    if scope_namespace:
+        own = [r for r in results if r.get("metric", {}).get("namespace", scope_namespace) == scope_namespace]
+        if not own:
+            return (f"Prometheus query returned {len(results)} series, all from other namespaces. "
+                    f"Add namespace=\"{scope_namespace}\" to the selector to query your own services.")
+        results = own
+        if not any("namespace" in r.get("metric", {}) for r in results):
+            note = (f" | NOTE: series carry no namespace label, so they may include other namespaces - "
+                    f"add namespace=\"{scope_namespace}\" to the selector and keep it in the 'by' clause.")
+
     simplified = []
     for r in results[:6]:
         metric = r.get("metric", {})
         val = r.get("value", [None, None])[1]
-        svc = metric.get("service_name") or metric.get("app") or metric.get("pod") or metric.get("job") or "target"
+        svc = (metric.get("service_name") or metric.get("app") or metric.get("pod")
+               or metric.get("container") or metric.get("job") or "target")
         try:
             f_val = float(val)
             val_str = f"{f_val:.4f}" if f_val < 1.0 else f"{f_val:.2f}"
@@ -142,7 +188,7 @@ def query_prometheus(promql: str, prom_url: str = "http://localhost:9090", k8s_p
             val_str = str(val)
         simplified.append(f"{svc} -> {val_str}")
 
-    return " | ".join(simplified)
+    return " | ".join(simplified) + note
 
 
 def query_pod_logs(pod_name_prefix: str, namespace: str, tail: int = 30, context_mode: str = "filtered_regex") -> str:
@@ -245,7 +291,7 @@ def get_deploy_history(service_name: str, namespace: str, is_mock: bool = False)
     code, stdout, stderr = run_cmd(cmd)
 
     if code == 0 and stdout:
-        return f"Deployment '{svc}' Rollout History (Namespace: {ns}):\n{stdout}"
+        return f"Deployment '{svc}' Rollout History (Namespace: {ns}):\n{stdout}{_latest_revision_diff(ns, svc, stdout)}"
 
     # In mock simulation mode, return curated historical scenario diff
     if is_mock:
@@ -271,6 +317,31 @@ def get_deploy_history(service_name: str, namespace: str, is_mock: bool = False)
 
     # In live mode, report the truthful Kubernetes error
     return f"Kubernetes API error inspecting rollout history for deployment/{svc} in namespace '{ns}' (exit {code}): {stderr or stdout}"
+
+
+def _latest_revision_diff(ns: str, svc: str, history: str) -> str:
+    """Pod-template diff between the two newest revisions - the config change a deploy made.
+
+    `rollout history` lists only revision numbers and change-causes; the diff is what
+    turns "something was deployed" into "this setting changed from X to Y".
+    """
+    revisions = sorted(int(m) for m in re.findall(r"^\s*(\d+)\s", history, flags=re.MULTILINE))
+    if len(revisions) < 2:
+        return ""
+
+    def template(rev: int) -> List[str]:
+        code, out, _ = run_cmd(["kubectl", "-n", ns, "rollout", "history", f"deployment/{svc}", f"--revision={rev}"])
+        if code != 0:
+            return []
+        return [l.rstrip() for l in out.splitlines()
+                if "pod-template-hash" not in l and "with revision #" not in l and l.strip()]
+
+    prev, latest = revisions[-2], revisions[-1]
+    diff = [l for l in difflib.unified_diff(template(prev), template(latest), lineterm="", n=0)
+            if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+    if not diff:
+        return ""
+    return f"\nPOD TEMPLATE DIFF (revision {prev} -> {latest}):\n" + "\n".join(diff[:20])
 
 
 def search_incident_history(query: str, service_name: str = "", enable_memory: bool = True) -> str:
@@ -432,7 +503,7 @@ OPENAI_TOOLS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "query_prometheus",
-            "description": "READ-ONLY: Execute instant PromQL query against Prometheus to retrieve error rates, latencies, or container memory saturation.",
+            "description": "READ-ONLY: Execute instant PromQL query against Prometheus to retrieve error rates, latencies, or container memory saturation. Prometheus is shared across namespaces: always filter with namespace=\"<your namespace>\" and keep namespace in any 'by' clause.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -563,7 +634,7 @@ OPENAI_TOOLS: List[Dict[str, Any]] = [
 
 TOOL_DISPATCH: Dict[str, Any] = {
     "get_k8s_events": lambda args: get_k8s_events(args.get("namespace", "default")),
-    "query_prometheus": lambda args: query_prometheus(args.get("promql", "")),
+    "query_prometheus": lambda args: query_prometheus(args.get("promql", ""), scope_namespace=args.get("scope_namespace", "")),
     "query_pod_logs": lambda args: query_pod_logs(
         args.get("pod_name", ""),
         args.get("namespace", "default"),
