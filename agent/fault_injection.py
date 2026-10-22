@@ -69,7 +69,7 @@ POSTGRES_FLAGS = {
 # termination reason, max seconds). Injection polls until a container of the
 # deployment has been terminated for that reason since the fault was enabled.
 SYMPTOM_WAITS: Dict[str, Tuple[str, str, int]] = {
-    "emailMemoryLeak": ("email", "OOMKilled", 360),
+    "emailMemoryLeak": ("email", "OOMKilled", 240),
 }
 
 # badDeploy1405: two real rollouts on checkout so `kubectl rollout history` holds

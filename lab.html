@@ -14,7 +14,7 @@
       document.documentElement.classList.remove('dark');
     }
   </script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -699,15 +699,31 @@
           <div class="p-4 rounded-xl bg-black/60 border border-slate-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between text-[11px] text-slate-400 uppercase font-bold">
               <span class="text-amber-400 flex items-center gap-1.5">⚡ How to Invoke in Lab</span>
-              <button onclick="copyCmd('python3 mini_agent.py --scenario emailMemoryLeak', this)" class="text-accent hover:underline lowercase">copy command</button>
             </div>
-            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
-              <code>python3 mini_agent.py --scenario emailMemoryLeak</code>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-[11px] uppercase font-bold">
+                <span class="text-amber-300">Run 1 &middot; filtered_regex (stages the fault, keeps it)</span>
+                <button onclick="copyCmd('python3 mini_agent.py --scenario emailMemoryLeak --keep-fault', this)" class="text-accent hover:underline lowercase">copy run 1</button>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
+                <code>python3 mini_agent.py --scenario emailMemoryLeak --keep-fault</code>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-[11px] uppercase font-bold">
+                <span class="text-amber-300">Run 2 &middot; raw_80k (reuses the fault, no wait)</span>
+                <button onclick="copyCmd('python3 mini_agent.py --scenario emailMemoryLeak --no-inject', this)" class="text-accent hover:underline lowercase">copy run 2</button>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 text-amber-300 font-mono text-xs overflow-x-auto">
+                <code>python3 mini_agent.py --scenario emailMemoryLeak --no-inject</code>
+              </div>
             </div>
             <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
               <strong class="text-emerald-400">🧪 The run stages its own fault.</strong> Before investigating, the agent turns on <code>emailMemoryLeak</code>
-              in <em>your</em> namespace, restarts <code>flagd</code>, then <strong>waits until the email container is really OOMKilled</strong> &mdash; usually 2&ndash;5 minutes,
-              because the leak grows with shop traffic. Expect a <code>SCENARIO SETUP</code> block and a longer pause before Turn 1. The fault is cleared automatically when the run ends.
+              in <em>your</em> namespace, restarts <code>flagd</code>, then <strong>waits until the email container is really OOMKilled</strong> &mdash; anywhere from seconds to 4 minutes,
+              because the leak grows with shop traffic. If no OOMKill arrives in 4 minutes the run continues and the agent sees the memory growth only.
+              <code>--keep-fault</code> leaves the leak running, so Run 2 uses <code>--no-inject</code> and starts straight away with the OOMKill already on record.
+              When you are done with M4, run <code>python3 mini_agent.py --clear-faults</code>.
               <br/>Stuck or interrupted? <code>python3 mini_agent.py --fault-status</code> shows what is active, <code>--clear-faults</code> resets it.
             </div>
             <div class="text-[11px] text-slate-400 space-y-1">
@@ -726,20 +742,21 @@
             <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">1. Run <code>emailMemoryLeak</code> with <code>context_mode: "filtered_regex"</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">1. With <code>context_mode: "filtered_regex"</code>, run <strong>Run 1</strong> (<code class="break-all">--keep-fault</code>).</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">2. Inspect PromQL derivative: <code>deriv(container_memory_working_set_bytes[5m])</code>.</span>
+                <span class="text-slate-700 dark:text-slate-300">2. Inspect PromQL derivative: <code class="break-all">deriv(container_memory_working_set_bytes[5m])</code>.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and re-run. Compare Active Prompt Tokens and cost with run 1 &mdash; the gap grows with every <code>query_pod_logs</code> call the agent makes.</span>
+                <span class="text-slate-700 dark:text-slate-300">3. Switch to <code>context_mode: "raw_80k"</code> and run <strong>Run 2</strong> (<code class="break-all">--no-inject</code>). Compare Active Prompt Tokens and cost with run 1 &mdash; the gap grows with every <code>query_pod_logs</code> call the agent makes.</span>
               </label>
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" class="mt-0.5 accent-amber-400 rounded">
-                <span class="text-slate-700 dark:text-slate-300">4. Check <code>Cached Tokens Saved</code> on the scorecard &mdash; usually 0, because Gemini rarely caches a prompt that grows every turn. Right after the <code>raw_80k</code> run, run <code>python3 mini_agent.py --cache-demo</code>: it replays your last 5 turns twice. Pass 1 gets ~0% from cache; pass 2, word-for-word identical, gets ~55&ndash;60% &mdash; and the summary prints the cost with vs without caching (~45% cheaper prompts).
-                  <br/>Fallback if the gateway gives no hits: <code>python3 mini_agent.py --scenario emailMemoryLeak --model mock</code> with <code>enable_prompt_caching</code> on, then off &mdash; a simulated 75% hit rate from turn 2.</span>
+                <span class="text-slate-700 dark:text-slate-300">4. Check <code>Cached Tokens Saved</code> on the scorecard &mdash; usually 0, because Gemini rarely caches a prompt that grows every turn. Right after Run 2, run <code class="break-all">python3 mini_agent.py --cache-demo</code>: it replays your last 5 turns twice. Pass 1 gets ~0% from cache; pass 2, word-for-word identical, gets ~55&ndash;60% &mdash; and the summary prints the cost with vs without caching (~45% cheaper prompts).
+                  <br/>Fallback if the gateway gives no hits: <code class="break-all">python3 mini_agent.py --scenario emailMemoryLeak --model mock</code> with <code>enable_prompt_caching</code> on, then off &mdash; a simulated 75% hit rate from turn 2.
+                  <br/>Finally reset your namespace: <code class="break-all">python3 mini_agent.py --clear-faults</code>.</span>
               </label>
             </div>
           </div>

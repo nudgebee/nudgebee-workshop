@@ -14,9 +14,9 @@
       document.documentElement.classList.remove("dark");
     }
   </script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -365,7 +365,7 @@
     // MQTT Relay Connection
     const MQTT_BROKER = "broker.emqx.io";
     const MQTT_PORT = 8084; // Secure WSS
-    const MQTT_TOPIC = "nudgebee/workshop/scoreboard/v1";
+    const MQTT_TOPIC = "nudgebee/aiops-workshop/d8c0b85d8830/scoreboard";
     const CLIENT_ID = "nb_sb_" + Math.random().toString(16).substring(2, 10);
     let mqttClient = null;
 
