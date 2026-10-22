@@ -288,27 +288,30 @@ fi
 # ------------------------------------------------------------------------------
 CONFIG_FILE="${REPO_ROOT}/agent/config.yaml"
 if [[ -f "$CONFIG_FILE" ]]; then
-  echo "▶ Configuring namespace and LLM credentials in ${CONFIG_FILE}..."
+  echo "▶ Configuring namespace in ${CONFIG_FILE}..."
+  # The key goes to the git-ignored .env only, never into config.yaml: that file is
+  # tracked, so a key written there ends up committed. A key an earlier bootstrap
+  # wrote there is cleared once .env holds it (mini_agent reads .env automatically).
   python3 -c "
 import sys, re
 
 config_path = sys.argv[1]
 namespace = sys.argv[2]
-api_key = sys.argv[3] if len(sys.argv) > 3 else ''
+clear_key = sys.argv[3] == 'clear'
 
 try:
     with open(config_path, 'r') as f:
         content = f.read()
     if namespace:
         content = re.sub(r'^(namespace:\s*)[\"\x27]?.*?[\"\x27]?(\s*(#.*)?)$', rf'\1\"{namespace}\"\2', content, flags=re.MULTILINE)
-    if api_key:
-        content = re.sub(r'^(api_key:\s*)[\"\x27]?.*?[\"\x27]?(\s*(#.*)?)$', rf'\1\"{api_key}\"\2', content, flags=re.MULTILINE)
+    if clear_key:
+        content = re.sub(r'^(api_key:\s*)[\"\x27]?.*?[\"\x27]?(\s*(#.*)?)$', r'\1\"\"\2', content, flags=re.MULTILINE)
     with open(config_path, 'w') as f:
         f.write(content)
 except Exception as e:
     print(f'Warning: Could not update config.yaml: {e}', file=sys.stderr)
-" "${CONFIG_FILE}" "${TARGET_NS}" "${API_KEY}"
-  echo "✅ Target namespace ('${TARGET_NS}') and API key configured in ${CONFIG_FILE}"
+" "${CONFIG_FILE}" "${TARGET_NS}" "$([[ -n "$API_KEY" ]] && echo clear || echo keep)"
+  echo "✅ Target namespace ('${TARGET_NS}') configured in ${CONFIG_FILE}"
 fi
 
 # Write local .env files for dotenv loaders and offline scripts
@@ -430,10 +433,9 @@ echo "==========================================================================
 echo "🎉 TEAM ${TEAM} (NAMESPACE: ${TARGET_NS}) SETUP COMPLETE!"
 echo "=========================================================================="
 if [[ -n "$API_KEY" ]]; then
+  # Never echo the key itself: setup output is often on a shared screen or projector.
   echo "Credentials configured:"
-  echo "  • LLM Gateway Key  : saved in agent/config.yaml & .env"
-  echo "  • Current Shell Tip: To use \$OPENAI_API_KEY directly in this specific terminal without opening a new tab, run:"
-  echo "                       export OPENAI_API_KEY=\"${API_KEY}\""
+  echo "  • LLM Gateway Key  : ${API_KEY:0:9}… saved in .env (git-ignored) and your shell profile"
   echo ""
 fi
 echo "Next Steps:"

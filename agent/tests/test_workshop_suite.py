@@ -116,6 +116,17 @@ class TestPrometheusNamespaceScope(unittest.TestCase):
         self.assertIn('namespace="group-b"', out)
 
 
+class TestTraceRedaction(unittest.TestCase):
+    """Traces are shown with --json and shared; the gateway key must never appear in them."""
+
+    def test_api_key_is_masked_in_config_snapshot(self):
+        from logger import redact_config
+        out = redact_config({"api_key": "sk-nb-gw-0123456789abcdef", "model": "gemini-3.8-flash", "max_turns": 10})
+        self.assertNotIn("0123456789abcdef", str(out))
+        self.assertEqual("gemini-3.8-flash", out["model"])
+        self.assertEqual(10, out["max_turns"])
+
+
 class TestHumanApprovalGate(unittest.TestCase):
     """Verifies security approval gate authorization behavior."""
 

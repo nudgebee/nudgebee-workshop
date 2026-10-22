@@ -15,6 +15,24 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 
+SECRET_KEYS = ("api_key", "token", "password", "secret")
+
+
+def redact_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Copy of the config with credentials masked.
+
+    Traces are printed with --json and shared around the room, so the gateway key
+    must never be written into them in clear text.
+    """
+    redacted = {}
+    for key, value in config.items():
+        if any(s in key.lower() for s in SECRET_KEYS) and value:
+            redacted[key] = f"{str(value)[:6]}…(redacted)"
+        else:
+            redacted[key] = value
+    return redacted
+
+
 class AuditLogger:
     """Records human-readable transcripts and complete machine-parseable JSON traces."""
     def __init__(
@@ -39,7 +57,7 @@ class AuditLogger:
             "metadata": {
                 "timestamp": self.timestamp,
                 "created_at": datetime.now().isoformat(),
-                "config": config_snapshot or {},
+                "config": redact_config(config_snapshot or {}),
             },
             "prompt_archive": {
                 "system_prompt": system_prompt,

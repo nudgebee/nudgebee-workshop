@@ -21,7 +21,10 @@ workshop-credentials/
 *.enc
 teams*.txt
 *teams*.txt
+*teams*.csv
 api-keys*.txt
+# Room passphrase and storage URL page - shared with attendees, never committed
+credentials.html
 *api-keys*.txt
 
 # App specific
