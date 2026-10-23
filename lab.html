@@ -565,7 +565,7 @@
             <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider block text-[11px]">🔍 What to Expect (Evidence &amp; Ground Truth):</span>
             <ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
               <li><strong>Frontier Model:</strong> Formulates complete 4-step Deep RCA: queries PromQL, isolates product-catalog gRPC status 13 <code>INTERNAL</code>, and traces it to <code>astronomy-db</code> (PostgreSQL) being unavailable.</li>
-              <li><strong>Small Model:</strong> Costs a fraction per run, but is easily misled by noise &mdash; in testing it blamed the unrelated <code>lookup opensearch</code> DNS errors and scored <code>⚠️ PARTIAL</code>. Look at its transcript for where it went wrong.</li>
+              <li><strong>Small Model:</strong> In testing Nemotron reached the same root cause for about half the cost (~$0.005 vs ~$0.012 per run). Compare the two transcripts: which tools each model chose, how many turns it took, and how specific its evidence is. Small models are also easier to mislead with noisy logs.</li>
               <li><strong>Scorecard Output:</strong> Verified ground truth <code>✅ SUCCESS</code> with breakdown of active vs cached tokens.</li>
             </ul>
           </div>
