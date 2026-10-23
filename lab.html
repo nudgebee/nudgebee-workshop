@@ -768,9 +768,7 @@
               <li><strong>Exit Code 137:</strong> <code>get_k8s_events</code> lists the email container under <code>CONTAINER RESTARTS</code> with <code>last_termination=OOMKilled exit_code=137</code> (100Mi limit). The kubelet emits no event for an OOMKill, so it shows up in pod status, not in the event list.</li>
               <li><strong>Derivative Slope:</strong> Positive rate (e.g. <code>+4000 B/s</code>) proves persistent in-code heap leak.</li>
               <li><strong>Engineering Caveat:</strong> Agent correctly explains that bumping limit to 200Mi merely delays the next crash.</li>
-              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> once the diagnosis names the email service, the OOMKill/137 and the leak.</li>
-              <li><strong>Noise to ignore:</strong> <code>lookup opensearch ... no such host</code> lines in every service's logs come from the telemetry exporter, not from this incident.</li>
-            </ul>
+              <li><strong>Ground Truth:</strong> <code>✅ SUCCESS</code> once the diagnosis names the email service, the OOMKill/137 and the leak.</li>            </ul>
           </div>
 
           <!-- Module Footer Nav -->
